@@ -74,7 +74,7 @@ Mohamad Merhy
 
 Team contact: kessarwani27@gmail.com
 
-5. Getting Started
+6. Getting Started
 
 Setup steps are being added as the project is scaffolded. This section will be filled in as commands become available.
 
