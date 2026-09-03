@@ -62,13 +62,13 @@ Postman — API testing during development
 
 Name	GitHub username	Role
 
-Joe Kesserwani Team Leader; 
+JoeKesserwani Team Leader; 
 
-Joe Keyrouz	
+JoeKeyrouz	
 
-Rim Baradie	
+RimBaradie	
 
-Fatima Ghandour	
+FatimaGhandour	
 
 Mohamad Merhy		
 
