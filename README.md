@@ -60,8 +60,6 @@ Postman — API testing during development
 
 5. Team & Responsibilities
 
-Name	GitHub username	Role
-
 JoeKesserwani Team Leader; 
 
 JoeKeyrouz	
@@ -87,29 +85,29 @@ Prerequisites:
 
 Install commands:
 
-npm install
+- npm install
 
 # Planned
 
 Run commands:
 
-docker compose up -d
-npm run dev
+- docker compose up -d
+- npm run dev
 
 # Planned
 
 Test commands:
 
-npm run lint
-npm run build
+- npm run lint
+- npm run build
 
 # Planned
 
 Database setup:
 
-cp .env.example .env
-npm run db:generate
-npm run db:push
+- cp .env.example .env
+- npm run db:generate
+- npm run db:push
 
 # Planned
 
