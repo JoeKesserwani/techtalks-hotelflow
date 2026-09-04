@@ -80,26 +80,37 @@ Setup steps are being added as the project is scaffolded. This section will be f
 
 Prerequisites:
 
-Planned 
+- Node.js 20+
+- npm
+- Docker Desktop
+- Git
 
 Install commands:
 
-bash
+npm install
+
 # Planned
 
 Run commands:
 
-bash
+docker compose up -d
+npm run dev
+
 # Planned
 
 Test commands:
 
-bash
+npm run lint
+npm run build
+
 # Planned
 
 Database setup:
 
-bash
+cp .env.example .env
+npm run db:generate
+npm run db:push
+
 # Planned
 
 6. Contribution Workflow
