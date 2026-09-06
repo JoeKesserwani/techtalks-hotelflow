@@ -86,30 +86,56 @@ Prerequisites:
 Install commands:
 
 - npm install
-
-# Planned
+- npm install -D dotenv
 
 Run commands:
 
-- docker compose up -d
 - npm run dev
+- npm run build
+- npm run start
 
-# Planned
+Open http://localhost:3000 after running `npm run dev`.
 
 Test commands:
 
 - npm run lint
 - npm run build
-
-# Planned
+- npx prisma validate
+- npx prisma migrate status
 
 Database setup:
 
-- cp .env.example .env
-- npm run db:generate
-- npm run db:push
+Start MySQL with Docker:
 
-# Planned
+```powershell
+docker run --name hotelflow-mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=hotelflow -e MYSQL_USER=hotelflow -e MYSQL_PASSWORD=hotelflow5 -p 3307:3306 -d mysql:8.0
+```
+
+Add this to `.env`:
+
+```env
+DATABASE_URL="mysql://hotelflow:hotelflow5@localhost:3307/hotelflow"
+```
+
+Generate Prisma Client and apply the migrations:
+
+```powershell
+npx prisma generate
+npx prisma migrate deploy
+```
+
+For future schema changes:
+
+```powershell
+npx prisma migrate dev --name describe_your_change
+npx prisma generate
+```
+
+Open Prisma Studio:
+
+```powershell
+npx prisma studio
+```
 
 6. Contribution Workflow
 Task branches: Create a branch per task/feature (e.g. feature/reservation-crud, fix/room-status-bug). Do not commit directly to main.
