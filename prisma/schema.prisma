@@ -11,13 +11,178 @@ generator client {
 datasource db {
   provider = "mysql"
 }
-model Hotel {
-  id        String   @id @default(uuid()) @db.Char(36)
-  name      String   @db.VarChar(150)
-  timezone  String   @default("Asia/Beirut") @db.VarChar(50)
-  currency  String   @default("USD") @db.VarChar(10)
-  createdAt DateTime @map("created_at")
-  updatedAt DateTime @map("updated_at")
 
-  @@map("hotels")
+model Hotel {
+  id        String   @id @default(uuid())
+  name      String
+  timezone  String   @default("Asia/Beirut")
+  currency  String   @default("USD")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users      User[]
+  rooms      Room[]
+  guests     Guest[]
+  reservations Reservation[]
+}
+
+enum Role {
+  MANAGER
+  RECEPTIONIST
+  HOUSEKEEPING
+}
+
+model User {
+  id           String   @id @default(uuid())
+  hotelId      String
+  hotel        Hotel    @relation(fields: [hotelId], references: [id])
+  fullName     String
+  email        String   @unique
+  passwordHash String
+  role         Role
+  isActive     Boolean  @default(true)
+  lastLoginAt  DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  sessions        Session[]
+  createdReservations Reservation[] @relation("CreatedBy")
+  auditLogs       AuditLog[]
+  housekeepingTasks HousekeepingTask[]
+}
+
+model Session {
+  id                String   @id @default(uuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id])
+  refreshTokenHash  String
+  userAgent         String?
+  ipAddress         String?
+  expiresAt         DateTime
+  revokedAt         DateTime?
+  createdAt         DateTime @default(now())
+}
+
+enum RoomStatus {
+  AVAILABLE
+  RESERVED
+  OCCUPIED
+  NEEDS_CLEANING
+  CLEANING
+  OUT_OF_SERVICE
+}
+
+model Room {
+  id           String     @id @default(uuid())
+  hotelId      String
+  hotel        Hotel      @relation(fields: [hotelId], references: [id])
+  roomNumber   String
+  roomType     String
+  floor        String?
+  maxOccupancy Int
+  basePrice    Decimal    @db.Decimal(10, 2)
+  description  String?
+  status       RoomStatus @default(AVAILABLE)
+  notes        String?
+  deletedAt    DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  reservations       Reservation[]
+  housekeepingTasks  HousekeepingTask[]
+
+  @@unique([hotelId, roomNumber])
+}
+
+model Guest {
+  id               String   @id @default(uuid())
+  hotelId          String
+  hotel            Hotel    @relation(fields: [hotelId], references: [id])
+  fullName         String
+  phone            String?
+  email            String?
+  idDocumentType   String?
+  idDocumentNumber String?
+  deletedAt        DateTime?
+  createdAt        DateTime @default(now())
+
+  reservations Reservation[]
+}
+
+enum ReservationStatus {
+  BOOKED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  UNPAID
+  PARTIAL
+  PAID
+}
+
+model Reservation {
+  id                  String             @id @default(uuid())
+  hotelId             String
+  hotel               Hotel              @relation(fields: [hotelId], references: [id])
+  roomId              String
+  room                Room               @relation(fields: [roomId], references: [id])
+  guestId             String
+  guest               Guest              @relation(fields: [guestId], references: [id])
+  createdByUserId     String
+  createdBy           User               @relation("CreatedBy", fields: [createdByUserId], references: [id])
+  checkInDate         DateTime           @db.Date
+  checkOutDate        DateTime           @db.Date
+  actualCheckInAt     DateTime?
+  actualCheckOutAt    DateTime?
+  status              ReservationStatus  @default(BOOKED)
+  numGuests           Int
+  pricePerNight       Decimal            @db.Decimal(10, 2)
+  totalPrice          Decimal            @db.Decimal(10, 2)
+  paymentStatus       PaymentStatus      @default(UNPAID)
+  source              String?
+  cancellationReason  String?
+  deletedAt           DateTime?
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+
+  housekeepingTasks HousekeepingTask[]
+
+  @@index([roomId, checkInDate, checkOutDate])
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  DONE
+}
+
+model HousekeepingTask {
+  id                        String       @id @default(uuid())
+  hotelId                   String
+  roomId                    String
+  room                      Room         @relation(fields: [roomId], references: [id])
+  triggeredByReservationId  String?
+  triggeredByReservation    Reservation? @relation(fields: [triggeredByReservationId], references: [id])
+  assignedToUserId          String?
+  assignedTo                User?        @relation(fields: [assignedToUserId], references: [id])
+  status                    TaskStatus   @default(PENDING)
+  startedAt                 DateTime?
+  completedAt               DateTime?
+  notes                     String?
+  createdAt                 DateTime     @default(now())
+}
+
+model AuditLog {
+  id            String   @id @default(uuid())
+  hotelId       String
+  userId        String?
+  user          User?    @relation(fields: [userId], references: [id])
+  action        String
+  entityType    String
+  entityId      String
+  metadataJson  Json?
+  createdAt     DateTime @default(now())
 }
