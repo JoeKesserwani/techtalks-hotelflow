@@ -114,7 +114,7 @@ docker run --name hotelflow-mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=
 Add this to `.env`:
 
 ```env
-DATABASE_URL="mysql://hotelflow:hotelflow5@localhost:3307/hotelflow"
+DATABASE_URL="mysql://root:311976Lh*C@158.101.239.181:3306/HotelFlow"
 ```
 
 Generate Prisma Client and apply the migrations:
