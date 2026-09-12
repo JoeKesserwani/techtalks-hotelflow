@@ -1,0 +1,77 @@
+"use client";
+
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import { useState } from "react";
+import styles from "./navbar.module.css";
+
+const navigation = [
+  { name: "Dashboard", href: "/Receptionist/Dashboard" },
+  { name: "Reservations", href: "/reservations" },
+  { name: "Guests", href: "/guests" },
+  { name: "Rooms setup", href: "/rooms" },
+  { name: "Housekeeping review", href: "/Receptionist/HousekeepingReview" },
+];
+
+export default function Sidebar() {
+  const pathname = usePathname();
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <>
+      <button
+        type="button"
+        className={styles.menuButton}
+        aria-label={isOpen ? "Close navigation" : "Open navigation"}
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen((open) => !open)}
+      >
+        <span />
+        <span />
+        <span />
+      </button>
+
+      {isOpen && (
+        <button
+          type="button"
+          className={styles.backdrop}
+          aria-label="Close navigation"
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      <aside className={`${styles.sidebar} ${isOpen ? styles.open : ""}`}>
+      {/* Hotel Logo / Name */}
+      <div className={styles.hotelHeader}>
+        <h1>HotelFlow</h1>
+        <p>Hotel Name - location</p>
+      </div>
+
+      {/* Navigation */}
+      <nav className={styles.navigation}>
+        {navigation.map((item) => {
+          const isActive = pathname === item.href;
+
+          return (
+            <Link
+              key={item.name}
+              href={item.href}
+              className={`${styles.navItem} ${isActive ? styles.active : ""}`}
+              onClick={() => setIsOpen(false)}
+            >
+              {item.name}
+            </Link>
+          );
+        })}
+      </nav>
+
+      {/* User section */}
+      <div className={styles.userSection}>
+        <p>Signed in as</p>
+        <strong>admin&apos;s name</strong>
+      </div>
+
+      </aside>
+    </>
+  );
+}
