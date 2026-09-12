@@ -1,4 +1,5 @@
 HotelFlow
+
 1. Project Overview
 
 Project name: HotelFlow
@@ -44,7 +45,7 @@ Advanced offline behavior
 Current project status: Planned — Assignment 1 (Product Discovery & Market Validation) revised per mentor feedback; scope narrowed to a single-pilot-hotel MVP. Implementation has not started. Pilot hotel confirmation and additional interviews/surveys in progress.
 
 3. Tech Stack
-Frontend: Next.js + Tailwind CSS
+   Frontend: Next.js + Tailwind CSS
 
 Backend: Next.js API routes / server backend
 
@@ -60,15 +61,15 @@ Postman — API testing during development
 
 5. Team & Responsibilities
 
-JoeKesserwani Team Leader; 
+JoeKesserwani Team Leader;
 
-JoeKeyrouz	
+JoeKeyrouz
 
-RimBaradie	
+RimBaradie
 
-FatimaGhandour	
+FatimaGhandour
 
-Mohamad Merhy		
+Mohamad Merhy
 
 Team contact: kessarwani27@gmail.com
 
@@ -105,16 +106,10 @@ Test commands:
 
 Database setup:
 
-Start MySQL with Docker:
-
-```powershell
-docker run --name hotelflow-mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=hotelflow -e MYSQL_USER=hotelflow -e MYSQL_PASSWORD=hotelflow5 -p 3307:3306 -d mysql:8.0
-```
-
 Add this to `.env`:
 
 ```env
-DATABASE_URL="mysql://hotelflow:hotelflow5@localhost:3307/hotelflow"
+DATABASE_URL="mysql://root:311976Lh*C@158.101.239.181:3306/HotelFlow"
 ```
 
 Generate Prisma Client and apply the migrations:
@@ -138,7 +133,7 @@ npx prisma studio
 ```
 
 6. Contribution Workflow
-Task branches: Create a branch per task/feature (e.g. feature/reservation-crud, fix/room-status-bug). Do not commit directly to main.
+   Task branches: Create a branch per task/feature (e.g. feature/reservation-crud, fix/room-status-bug). Do not commit directly to main.
 
 Meaningful commits: Write clear, descriptive commit messages that explain what changed and why.
 
