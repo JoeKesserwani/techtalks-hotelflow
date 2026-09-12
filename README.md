@@ -106,12 +106,6 @@ Test commands:
 
 Database setup:
 
-Start MySQL with Docker:
-
-```powershell
-docker run --name hotelflow-mysql -e MYSQL_ROOT_PASSWORD=root -e MYSQL_DATABASE=hotelflow -e MYSQL_USER=hotelflow -e MYSQL_PASSWORD=hotelflow5 -p 3307:3306 -d mysql:8.0
-```
-
 Add this to `.env`:
 
 ```env
