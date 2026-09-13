@@ -1,8 +1,59 @@
+"use client";
+
 import styles from "./page.module.css";
+import Sidebar from "@/components/Navbars/navbar";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const Router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  async function handleSubmit(event: React.FormEvent) {
+    event.preventDefault();
+    setError(null);
+    setIsSubmitting(true);
+
+    try {
+      {
+        const response = await fetch("/api/v1/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ email, password }),
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.message || "An error occurred");
+        }
+
+        const role = data.user.role;
+        if (role === "MANAGER") {
+          Router.push("/managerDashboard");
+        } else if (role === "RECEPTIONIST") {
+          Router.push("/receptionistDashboard");
+        } else if (role === "HOUSEKEEPING") {
+          Router.push("/housekeepingDashboard");
+        } else {
+          Router.push("/login");
+        }
+      }
+    } catch (error) {
+      setError("An error occurred");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
   return (
-     <main className={styles.page}>
+    <main className={styles.page}>
       <div className={styles.container}>
         <section className={styles.leftPanel}>
           <div className={styles.brand}>
@@ -36,13 +87,15 @@ export default function Home() {
               Enter your credentials to access your dashboard
             </p>
 
-            <form>
+            <form onSubmit={handleSubmit}>
               <div className={styles.formGroup}>
                 <label htmlFor="email">EMAIL OR USERNAME</label>
                 <input
                   id="email"
                   type="text"
                   placeholder="Enter your email or username"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
                 />
               </div>
 
@@ -53,6 +106,8 @@ export default function Home() {
                   id="password"
                   type="password"
                   placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
               <button type="submit" className={styles.signInButton}>
