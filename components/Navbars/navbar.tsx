@@ -8,7 +8,7 @@ import styles from "./navbar.module.css";
 const navigation = [
   { name: "Dashboard", href:"/Pages/Dashboard" },
   { name: "Housekeeping review", href: "/Pages/HousekeepingReview" },
-  { name: "Reservations", href: "/Pages/reservations" },
+  { name: "Reservations", href: "/Pages/Reservations" },
   { name: "Guests", href: "/Pages/guests" },
   { name: "Rooms setup", href: "/Pages/rooms" },
   { name: "Staff", href: "/Pages/staff" },
@@ -19,7 +19,7 @@ const navigation = [
 const ManagerNavigation = [
   { name: "Dashboard", href: "/Pages/Dashboard" },
   { name: "Housekeeping review", href: "/Pages/HousekeepingReview" },
-  { name: "Reservations", href: "/Pages/reservations" },
+  { name: "Reservations", href: "/Pages/Reservations" },
   { name: "Guests", href: "/Pages/guests" },
   { name: "Rooms setup", href: "/Pages/rooms" },
   { name: "Staff", href: "/Pages/staff" },
@@ -29,7 +29,7 @@ const ManagerNavigation = [
 const ReceptionistNavigation = [
   { name: "Dashboard", href: "/Pages/Dashboard" },
   { name: "Housekeeping review", href: "/Pages/HousekeepingReview" },
-  { name: "Reservations", href: "/Pages/reservations" },
+  { name: "Reservations", href: "/Pages/Reservations" },
   { name: "Guests", href: "/Pages/guests" },
   { name: "Rooms setup", href: "/Pages/rooms" },
 ];
