@@ -9,30 +9,30 @@ import styles from "./navbar.module.css";
 const navigation = [
   { name: "Dashboard", href:"/Pages/Dashboard" },
   { name: "Housekeeping review", href: "/Pages/HousekeepingReview" },
-  { name: "Reservations", href: "/Pages/reservations" },
-  { name: "Guests", href: "/Pages/guests" },
-  { name: "Rooms setup", href: "/Pages/rooms" },
-  { name: "Staff", href: "/Pages/staff" },
-  { name: "Hotel settings", href: "/Pages/settings" },
-  { name: "Activity log", href: "/Pages/activity-log" },
+  { name: "Reservations", href: "/Pages/Reservations" },
+  { name: "Guests", href: "/Pages/Guests" },
+  { name: "Rooms setup", href: "/Pages/Rooms" },
+  { name: "Staff", href: "/Pages/Staff" },
+  { name: "Hotel settings", href: "/Pages/Settings" },
+  { name: "Activity log", href: "/Pages/Activity-Log" },
 ];
 
 const ManagerNavigation = [
   { name: "Dashboard", href: "/Pages/Dashboard" },
   { name: "Housekeeping review", href: "/Pages/HousekeepingReview" },
-  { name: "Reservations", href: "/Pages/reservations" },
-  { name: "Guests", href: "/Pages/guests" },
-  { name: "Rooms setup", href: "/Pages/rooms" },
-  { name: "Staff", href: "/Pages/staff" },
-  { name: "Activity log", href: "/Pages/activity-log" },
+  { name: "Reservations", href: "/Pages/Reservations" },
+  { name: "Guests", href: "/Pages/Guests" },
+  { name: "Rooms setup", href: "/Pages/Rooms" },
+  { name: "Staff", href: "/Pages/Staff" },
+  { name: "Activity log", href: "/Pages/Activity-Log" },
 ];
 
 const ReceptionistNavigation = [
   { name: "Dashboard", href: "/Pages/Dashboard" },
   { name: "Housekeeping review", href: "/Pages/HousekeepingReview" },
-  { name: "Reservations", href: "/Pages/reservations" },
-  { name: "Guests", href: "/Pages/guests" },
-  { name: "Rooms setup", href: "/Pages/rooms" },
+  { name: "Reservations", href: "/Pages/Reservations" },
+  { name: "Guests", href: "/Pages/Guests" },
+  { name: "Rooms setup", href: "/Pages/Rooms" },
 ];
 
 export default function Sidebar() {

@@ -26,6 +26,7 @@ model Hotel {
 }
 
 enum Role {
+  ADMIN
   MANAGER
   RECEPTIONIST
   HOUSEKEEPING

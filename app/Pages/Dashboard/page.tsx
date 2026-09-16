@@ -2,11 +2,13 @@
 
 import React from "react";
 import { useAuth } from "@/components/Auth/AuthProvider";
+import AdminDash from "@/components/Dashboards/AdminDash";
 import ManagerDash from "@/components/Dashboards/ManagerDash";
 import ReceptionistDash from "@/components/Dashboards/ReceptionistDash";
 import HouseKeepingDash from "@/components/Dashboards/HouseKeepingDash";
 
 const dashboardByRole = {
+  ADMIN: AdminDash,
   MANAGER: ManagerDash,
   RECEPTIONIST: ReceptionistDash,
   HOUSEKEEPING: HouseKeepingDash,

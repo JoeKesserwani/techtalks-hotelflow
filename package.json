@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:admin": "node --env-file=.env scripts/create-admin-user.mjs"
   },
   "dependencies": {
     "@prisma/adapter-mariadb": "^7.10.0",

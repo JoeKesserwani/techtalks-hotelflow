@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 import { verifyAccessToken, AccessTokenPayload } from '../auth/jwt';
 
-export type Role = 'MANAGER' | 'RECEPTIONIST' | 'HOUSEKEEPING';
+export type Role = 'ADMIN' | 'MANAGER' | 'RECEPTIONIST' | 'HOUSEKEEPING';
 
 /**
  * Verifies the access token cookie and (optionally) checks the caller's role.
