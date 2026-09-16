@@ -1,0 +1,28 @@
+.page {
+  display: flex;
+  min-height: 100dvh;
+  background: #f5f1e8;
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  padding: 32px;
+}
+
+.content h1 {
+  margin: 0 0 16px;
+}
+
+.content p {
+  max-width: 70ch;
+  margin: 0;
+  line-height: 1.6;
+}
+
+@media (max-width: 768px) {
+  .content {
+    width: 100%;
+    padding: 80px 24px 32px;
+  }
+}
