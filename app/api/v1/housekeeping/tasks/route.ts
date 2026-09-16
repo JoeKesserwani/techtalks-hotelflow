@@ -6,7 +6,7 @@ import { ApiError, handleRouteError } from '../../../../../lib/api/errors';
 
 export async function GET() {
   try {
-    const user = await requireAuth({ roles: ['MANAGER', 'RECEPTIONIST', 'HOUSEKEEPING'] });
+    const user = await requireAuth({ roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST', 'HOUSEKEEPING'] });
     if (!user) throw new ApiError('Unauthorized', 401);
 
     // Housekeeping only ever sees tasks assigned to them; manager/receptionist see all.
@@ -17,7 +17,10 @@ export async function GET() {
 
     const tasks = await prisma.housekeepingTask.findMany({
       where,
-      include: { room: true },
+      include: {
+        room: true,
+        assignedTo: { select: { fullName: true } },
+      },
       orderBy: { createdAt: 'desc' },
     });
 
@@ -30,7 +33,7 @@ export async function GET() {
 export async function POST(req: Request) {
   try {
     // Only receptionist/manager create and assign tasks — housekeeping cannot self-assign.
-    const user = await requireAuth({ roles: ['MANAGER', 'RECEPTIONIST'] });
+    const user = await requireAuth({ roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'] });
     if (!user) throw new ApiError('Unauthorized', 401);
 
     const body = await req.json();
