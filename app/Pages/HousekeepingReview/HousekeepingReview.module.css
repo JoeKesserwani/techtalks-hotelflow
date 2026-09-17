@@ -257,6 +257,16 @@ body {
   color: #746d5d;
 }
 
+.pending {
+  background: #f3ead8;
+  color: #806b42;
+}
+
+.inProgress {
+  background: #e2eaf0;
+  color: #496579;
+}
+
 .approved {
   background: #e3eadc;
   color: #4d6242;

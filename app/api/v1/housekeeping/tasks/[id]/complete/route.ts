@@ -31,7 +31,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       const result = await tx.housekeepingTask.update({
         where: { id },
         data: {
-          status: 'DONE',
+          status: 'IN_REVIEW',
           completedAt: new Date(),
           photos: parsed.data.photos ?? undefined,
         },

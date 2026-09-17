@@ -5,7 +5,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/components/Auth/AuthProvider";
 import styles from "./navbar.module.css";
-import { Bree_Serif } from "next/font/google";
 
 const AdminNavigation = [
   { name: "Dashboard", href:"/Pages/Dashboard" },
@@ -36,7 +35,12 @@ const ReceptionistNavigation = [
   { name: "Rooms setup", href: "/Pages/Rooms" },
 ];
 
-let Navigation: any[] = [];
+const navigationByRole = {
+  ADMIN: AdminNavigation,
+  MANAGER: ManagerNavigation,
+  RECEPTIONIST: ReceptionistNavigation,
+} as const;
+
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -49,34 +53,18 @@ export default function Sidebar() {
     setIsLoggingOut(true);
     setLogoutError(null);
 
-    try {
-      const response = await fetch("/api/v1/auth/logout", {
-        method: "POST",
-      });
+    fetch("/api/v1/auth/logout", {
+      method: "POST",
+      keepalive: true,
+    }).catch(() => undefined);
 
-      if (!response.ok) {
-        throw new Error("Logout failed");
-      }
-
-      setUser(null);
-      router.replace("/");
-    } catch {
-      setLogoutError("Unable to log out. Please try again.");
-      setIsLoggingOut(false);
-    }
+    setUser(null);
+    router.replace("/");
   }
-  switch (user?.role) {
-    case "ADMIN":
-      Navigation = AdminNavigation;
-      break;
-    case "MANAGER":
-      Navigation = ManagerNavigation;
-      break;
-    case "RECEPTIONIST":
-      Navigation = ReceptionistNavigation;
-      break;
-  }
-  console.log(Navigation);
+  const navigation =
+    user?.role && user.role in navigationByRole
+      ? navigationByRole[user.role as keyof typeof navigationByRole]
+      : [];
   return (
     <>
       <button
@@ -107,7 +95,7 @@ export default function Sidebar() {
       </div>
 
       <nav className={styles.navigation}>
-        {Navigation.map((item) => {
+        {navigation.map((item) => {
           const isActive = pathname === item.href;
 
           return (
