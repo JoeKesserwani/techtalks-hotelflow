@@ -1,0 +1,991 @@
+:root {
+  --font-heading: "Fraunces", serif;
+  --font-body: "IBM Plex Sans", sans-serif;
+}
+
+/* =========================
+   MAIN DASHBOARD
+========================= */
+
+.dashboard {
+  min-height: 100vh;
+  display: flex;
+
+  background: #f6f2e7;
+  color: #26332a;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+
+  padding: 32px 40px;
+
+  background: #f6f2e7;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding-bottom: 20px;
+  margin-bottom: 28px;
+
+  border-bottom: 2px solid #dcd3be;
+}
+
+.title {
+  margin: 0;
+
+  font-family: var(--font-heading);
+  font-size: 34px;
+  font-weight: 400;
+
+  letter-spacing: -0.5px;
+
+  color: #26332a;
+}
+
+.date {
+  margin: 7px 0 0;
+
+  font-family: var(--font-body);
+  font-size: 13px;
+
+  color: #7a7a70;
+}
+
+.user {
+  display: flex;
+  align-items: center;
+}
+
+.role {
+  min-width: 140px;
+  height: 46px;
+
+  padding: 0 20px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #c1633b;
+  color: #ffffff;
+
+  border-radius: 10px;
+
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 700;
+
+  letter-spacing: 2px;
+}
+
+/* =========================
+   STATISTICS
+========================= */
+
+.statsGrid {
+  width: 100%;
+
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+
+  gap: 14px;
+}
+
+.statCard {
+  min-width: 0;
+  min-height: 120px;
+
+  padding: 22px 24px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+
+  background: #fffdf8;
+
+  border: 2px solid #ddd8ca;
+  border-radius: 8px;
+}
+
+.statValue {
+  color: #292722;
+
+  font-family: var(--font-heading);
+  font-size: 30px;
+  font-weight: 500;
+}
+
+.statLabel {
+  margin: 0;
+
+  color: #aaa6a6;
+
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 700;
+
+  letter-spacing: 1.2px;
+}
+
+.awaitingValue {
+  color: #c1633b;
+}
+
+/* =========================
+   SECTION HEADER
+========================= */
+
+.sectionHeader {
+  width: 100%;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  margin-bottom: 10px;
+}
+
+.sectionHeader h2 {
+  margin: 0;
+
+  color: #292722;
+
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.viewAll {
+  padding: 0;
+
+  border: none;
+  background: transparent;
+
+  color: #c1633b;
+
+  font-family: var(--font-body);
+  font-size: 12px;
+
+  cursor: pointer;
+}
+
+.viewAll:hover {
+  text-decoration: underline;
+}
+
+/* =========================
+   HOUSEKEEPING
+========================= */
+
+.housekeepingSection {
+  width: 100%;
+
+  margin-top: 28px;
+}
+
+.housekeepingList {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+.housekeepingCard {
+  width: 100%;
+  min-height: 72px;
+
+  padding: 8px 12px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 14px;
+
+  background: #fffdf8;
+
+  border: 1px solid #ddd8ca;
+
+  transition: border-color 0.2s ease, transform 0.2s ease;
+}
+
+.housekeepingCard:hover {
+  border-color: #c9bda7;
+  transform: translateY(-1px);
+}
+
+/* =========================
+   PHOTO
+========================= */
+
+.photo {
+  min-width: 200px;
+  min-height: 100px;
+
+  flex-shrink: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0;
+
+  border: none;
+  cursor: pointer;
+
+  background: #ebe4d4;
+  color: #aaa39a;
+
+  font-family: var(--font-body);
+  font-size: 10px;
+}
+
+/* =========================
+   ROOM INFORMATION
+========================= */
+
+.roomInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.roomInfo h3 {
+  margin: 0 0 3px;
+
+  color: #292722;
+
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.roomInfo p {
+  margin: 0;
+
+  color: #77736c;
+
+  font-family: var(--font-body);
+  font-size: 12px;
+}
+
+/* =========================
+   ACTIONS
+========================= */
+
+.actions {
+  display: flex;
+  align-items: center;
+
+  gap: 7px;
+
+  flex-shrink: 0;
+}
+
+.actions button{
+  height: 70px;
+
+  padding: 0 12px;
+
+  border-radius: 6px;
+  border: 1px solid #ddd8ca;
+
+  background: transparent;
+
+  font-family: var(--font-body);
+  font-size: 200px;
+
+  cursor: pointer;
+
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.actions button:hover {
+  background: #f4f0e7;
+  color: #494640;
+}
+
+/* Comment */
+
+.commentButton {
+ height: 35px;
+
+  padding: 0 12px;
+
+  border-radius: 6px;
+  border: 1px solid #ddd8ca;
+
+  background: transparent;
+
+  font-family: var(--font-body);
+    border: 1px solid #e1ddd3 !important;
+  color: #494640;
+}
+
+.commentButton:hover {
+  background: #f4f0e7 !important;
+}
+
+/* Reject */
+
+.rejectButton {
+   height: 35px;
+
+  padding: 0 12px;
+
+  border-radius: 6px;
+  border: 1px solid #ddd8ca;
+
+  background: transparent;
+
+  font-family: var(--font-body);
+  border: 1px solid #d98a70 !important;
+  color: #c1633b;
+}
+
+.rejectButton:hover {
+  background: #fbede7 !important;
+}
+
+/* Approve */
+
+.approveButton {
+   height: 35px;
+
+  padding: 0 12px;
+
+  border-radius: 6px;
+  border: 1px solid #ddd8ca;
+
+  background: transparent;
+
+  font-family: var(--font-body);
+  border: 1px solid #aebba5 !important;
+
+  background: #aebba5 !important;
+
+  color: #ffffff;
+}
+
+.approveButton:hover {
+  background: #98a991 !important;
+}
+
+/* =========================
+   EMPTY STATE
+========================= */
+
+.emptyMessage {
+  width: 100%;
+  min-height: 74px;
+
+  padding: 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  box-sizing: border-box;
+
+  background: #fffdf8;
+
+  border: 1px solid #ddd8ca;
+
+  color: #aaa6a6;
+
+  font-family: var(--font-body);
+  font-size: 12px;
+}
+
+/* =========================
+   MODAL
+========================= */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+
+  background: rgba(38, 51, 42, 0.35);
+
+  z-index: 1000;
+}
+
+.modal {
+  position: relative;
+
+  width: min(500px, 100%);
+
+  padding: 28px;
+
+  background: #fffdf8;
+
+  border: 1px solid #ddd8ca;
+  border-radius: 10px;
+
+  box-shadow: 0 20px 60px rgba(38, 51, 42, 0.18);
+}
+
+.modalClose {
+  position: absolute;
+
+  top: 12px;
+  right: 15px;
+
+  border: none;
+  background: transparent;
+
+  font-size: 24px;
+  color: #77736c;
+
+  cursor: pointer;
+}
+
+.modal h2 {
+  margin: 0 30px 6px 0;
+
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 600;
+
+  color: #292722;
+}
+
+.modalRoom {
+  margin: 0 0 20px;
+
+  font-size: 12px;
+  color: #77736c;
+}
+
+.modalPhoto {
+  width: 100%;
+  height: 280px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: #ebe4d4;
+
+  color: #aaa39a;
+
+  font-size: 12px;
+}
+
+.modalTextarea {
+  width: 100%;
+  min-height: 110px;
+
+  padding: 12px;
+
+  resize: vertical;
+
+  border: 1px solid #ddd8ca;
+  border-radius: 6px;
+
+  background: #fffdf8;
+
+  font-family: var(--font-body);
+  font-size: 13px;
+
+  outline: none;
+
+  box-sizing: border-box;
+}
+
+.modalTextarea:focus {
+  border-color: #c9bda7;
+}
+
+.modalText {
+  margin: 0 0 16px;
+
+  font-size: 13px;
+  line-height: 1.5;
+
+  color: #55544e;
+}
+
+.modalRejectButton,
+.modalApproveButton {
+  width: 100%;
+  height: 42px;
+
+  margin-top: 14px;
+
+  border: none;
+  border-radius: 6px;
+
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.modalRejectButton {
+  background: #c1633b;
+  color: white;
+}
+
+.modalApproveButton {
+  background: #aebba5;
+  color: white;
+}
+
+/* =========================
+   ROOM STATUS
+========================= */
+
+.roomStatusSection {
+  width: 100%;
+
+  margin-top: 28px;
+}
+
+.roomStatusGrid {
+  width: 100%;
+
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+
+  gap: 4px;
+}
+
+.roomStatusCard {
+  min-width: 0;
+  height: 92px;
+
+  padding: 8px 10px;
+
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+
+  background: #fffdf8;
+
+  border-top: 2px solid #eee8da;
+  border-right: 2px solid #eee8da;
+  border-bottom: 2px solid #eee8da;
+}
+
+/* Left status line */
+
+.roomStatusCard.available {
+  border-left: 5px solid #7d9169;
+}
+
+.roomStatusCard.reserved {
+  border-left: 5px solid #cfc5a9;
+}
+
+.roomStatusCard.occupied {
+  border-left: 5px solid #26332a;
+}
+
+.roomStatusCard.needsCleaning {
+  border-left: 5px solid #c96b3c;
+}
+
+.roomStatusCard.awaitingApproval {
+  border-left: 5px solid #b65c35;
+}
+
+/* Number */
+
+.roomStatusCard strong {
+  font-family: var(--font-heading);
+
+  font-size: 30px;
+  line-height: 1;
+
+  font-weight: 500;
+
+  color: #26332a;
+}
+
+/* Label */
+
+.roomStatusCard span {
+  margin-top: 5px;
+
+  font-family: var(--font-body);
+
+  font-size: 14px;
+  font-weight: 400;
+
+  color: #8a8a80;
+}
+
+/* =========================
+   LEGEND
+========================= */
+
+.roomStatusLegend {
+  display: flex;
+  align-items: center;
+
+  gap: 13px;
+
+  margin-top: 7px;
+
+  font-size: 13px;
+
+  color: #77796f;
+}
+
+.roomStatusLegend > div {
+  display: flex;
+  align-items: center;
+
+  gap: 4px;
+}
+
+.legendDot {
+  width: 10px;
+  height: 10px;
+
+  display: inline-block;
+
+  border-radius: 50%;
+}
+
+.availableDot {
+  background: #7d9169;
+}
+
+.reservedDot {
+  background: #cfc5a9;
+}
+
+.occupiedDot {
+  background: #26332a;
+}
+
+.cleaningDot {
+  background: #c96b3c;
+}
+
+.approvalDot {
+  background: #b65c35;
+}
+
+/* =========================
+   900px
+========================= */
+
+@media (max-width: 900px) {
+  .main {
+    padding: 28px 30px;
+  }
+
+  .title {
+    font-size: 30px;
+  }
+
+  .role {
+    min-width: 120px;
+    height: 42px;
+
+    font-size: 17px;
+  }
+
+  .statsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .housekeepingCard {
+    gap: 10px;
+  }
+
+  .actions {
+    gap: 5px;
+  }
+
+  .actions button {
+    padding: 0 9px;
+  }
+
+  .roomStatusGrid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* =========================
+   700px
+========================= */
+
+@media (max-width: 700px) {
+  .main {
+    padding: 24px 20px;
+  }
+
+  .header {
+    gap: 15px;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .date {
+    font-size: 12px;
+  }
+
+  .role {
+    min-width: 100px;
+    height: 40px;
+
+    padding: 0 15px;
+
+    font-size: 12px;
+  }
+
+  .statCard {
+    min-height: 140px;
+
+    padding: 20px;
+  }
+
+  .statValue {
+    font-size: 38px;
+  }
+
+  .housekeepingCard {
+    padding: 8px;
+
+    gap: 9px;
+  }
+
+  .photo {
+    width: 62px;
+  }
+
+  .roomInfo h3 {
+    font-size: 14px;
+  }
+
+ .actions button {
+  height: 32px;
+  padding: 0 9px;
+  font-size: 10px;
+}
+
+  .roomStatusGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+}
+
+/* =========================
+   550px
+========================= */
+
+@media (max-width: 550px) {
+  .main {
+    padding: 22px 18px;
+  }
+
+  .header {
+    flex-direction: row;
+
+    align-items: center;
+    justify-content: space-between;
+
+    gap: 10px;
+
+    padding-bottom: 18px;
+    margin-bottom: 24px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .date {
+    font-size: 11px;
+  }
+
+  .user {
+    margin-left: auto;
+
+    align-self: center;
+
+    flex-shrink: 0;
+  }
+
+  .role {
+    min-width: 90px;
+    height: 38px;
+
+    padding: 0 12px;
+
+    border-radius: 7px;
+
+    font-size: 11px;
+    letter-spacing: 0.8px;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr;
+
+    gap: 12px;
+  }
+
+  .statCard {
+    min-height: 125px;
+  }
+
+  .statValue {
+    font-size: 36px;
+  }
+
+  .housekeepingSection,
+  .roomStatusSection {
+    margin-top: 22px;
+  }
+
+  .sectionHeader h2 {
+    font-size: 15px;
+  }
+
+  .housekeepingCard {
+    min-height: 68px;
+
+    gap: 8px;
+  }
+
+  .photo {
+    width: 55px;
+    height: 34px;
+  }
+
+  .roomInfo h3 {
+    font-size: 13px;
+  }
+
+  .roomInfo p {
+    font-size: 10px;
+  }
+
+  .actions {
+    gap: 4px;
+  }
+
+  .actions button {
+  height: 30px;
+  padding: 0 8px;
+  font-size: 9px;
+}
+
+  .roomStatusGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================
+   360px
+========================= */
+
+@media (max-width: 360px) {
+  .main {
+    padding: 18px 12px;
+  }
+
+  .header {
+    flex-direction: row;
+
+    align-items: center;
+
+    gap: 7px;
+
+    padding-bottom: 16px;
+    margin-bottom: 20px;
+  }
+
+  .title {
+    font-size: 20px;
+
+    letter-spacing: -0.3px;
+  }
+
+  .date {
+    font-size: 9px;
+
+    white-space: nowrap;
+  }
+
+  .user {
+    flex-shrink: 0;
+  }
+
+  .role {
+    min-width: 70px;
+    height: 34px;
+
+    padding: 0 8px;
+
+    border-radius: 7px;
+
+    font-size: 10px;
+    letter-spacing: 0.7px;
+  }
+
+  .statCard {
+    min-height: 115px;
+
+    padding: 16px;
+  }
+
+  .statValue {
+    font-size: 32px;
+  }
+
+  .statLabel {
+    font-size: 10px;
+  }
+
+  .housekeepingCard {
+    gap: 6px;
+
+    padding: 7px;
+  }
+
+  .photo {
+    width: 48px;
+    height: 32px;
+  }
+
+  .roomInfo h3 {
+    font-size: 12px;
+  }
+
+  .roomInfo p {
+    font-size: 9px;
+  }
+
+  .actions {
+    gap: 3px;
+  }
+
+  .actions button {
+  height: 28px;
+  padding: 0 6px;
+  font-size: 8px;
+}
+}
