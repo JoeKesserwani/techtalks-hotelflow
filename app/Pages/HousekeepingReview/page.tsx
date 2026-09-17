@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import styles from "./HousekeepingReview.module.css";
 import Sidebar from "@/components/Navbars/navbar";
+import { useAuth } from "@/components/Auth/AuthProvider";
 
 type Status = "awaiting" | "approved" | "rejected";
 
@@ -66,7 +67,7 @@ export default function HousekeepingReviewPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Status>("awaiting");
-
+  const { user, setUser } = useAuth();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
 
@@ -185,12 +186,12 @@ export default function HousekeepingReviewPage() {
 
           <div className={styles.receptionist}>
             <div className={styles.receptionistInfo}>
-              <strong>Receptionist name</strong>
+              <strong>{user?.fullName}</strong>
               <span>Currently reviewing rooms</span>
             </div>
 
             <div className={styles.receptionistBadge}>
-              Receptionist
+              {user?.role }
             </div>
           </div>
         </header>

@@ -5,8 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/components/Auth/AuthProvider";
 import styles from "./navbar.module.css";
+import { Bree_Serif } from "next/font/google";
 
-const navigation = [
+const AdminNavigation = [
   { name: "Dashboard", href:"/Pages/Dashboard" },
   { name: "Housekeeping review", href: "/Pages/HousekeepingReview" },
   { name: "Reservations", href: "/Pages/Reservations" },
@@ -35,6 +36,7 @@ const ReceptionistNavigation = [
   { name: "Rooms setup", href: "/Pages/Rooms" },
 ];
 
+let Navigation: any[] = [];
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -63,7 +65,18 @@ export default function Sidebar() {
       setIsLoggingOut(false);
     }
   }
-
+  switch (user?.role) {
+    case "ADMIN":
+      Navigation = AdminNavigation;
+      break;
+    case "MANAGER":
+      Navigation = ManagerNavigation;
+      break;
+    case "RECEPTIONIST":
+      Navigation = ReceptionistNavigation;
+      break;
+  }
+  console.log(Navigation);
   return (
     <>
       <button
@@ -94,7 +107,7 @@ export default function Sidebar() {
       </div>
 
       <nav className={styles.navigation}>
-        {navigation.map((item) => {
+        {Navigation.map((item) => {
           const isActive = pathname === item.href;
 
           return (
