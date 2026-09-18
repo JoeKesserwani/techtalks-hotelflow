@@ -200,13 +200,13 @@ export default function GuestsPage() {
 
                   <div className={styles.actionsCell}>
                     <Link
-                      href={`/dashboard/guests/${guest.id}`}
+                      href={`/guests/${guest.id}`}
                       className={styles.viewLink}
                     >
                       View
                     </Link>
                     <Link
-                      href={`/dashboard/reservations/new?guestId=${guest.id}`}
+                      href={`/reservations/new?guestId=${guest.id}`}
                       className={styles.bookLink}
                     >
                       Book a room

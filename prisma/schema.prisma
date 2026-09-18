@@ -1,6 +1,6 @@
 generator client {
   provider = "prisma-client"
-  output   = "../app/generated/prisma"
+  output = "../app/generated/prisma"
 }
 
 datasource db {
@@ -8,19 +8,19 @@ datasource db {
 }
 
 model Hotel {
-  id        String   @id @default(uuid())
-  name      String
-  timezone  String
-  currency  String
+  id String @id @default(uuid())
+  name String
+  timezone String
+  currency String
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  users             User[]
-  rooms             Room[]
-  guests            Guest[]
-  reservations      Reservation[]
+  users User[]
+  rooms Room[]
+  guests Guest[]
+  reservations Reservation[]
   housekeepingTasks HousekeepingTask[]
-  auditLogs         AuditLog[]
+  auditLogs AuditLog[]
 
   @@map("hotels")
 }
@@ -33,32 +33,32 @@ enum Role {
 }
 
 model User {
-  id           String   @id @default(uuid())
-  hotelId      String   @map("hotel_id")
-  hotel        Hotel    @relation(fields: [hotelId], references: [id])
-  fullName     String   @map("full_name")
-  email        String   @unique
-  passwordHash String   @map("password_hash")
-  role         Role
-  isActive     Boolean  @default(true) @map("is_active")
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id String @id @default(uuid())
+  hotelId String @map("hotel_id")
+  hotel Hotel @relation(fields: [hotelId], references: [id])
+  fullName String @map("full_name")
+  email String @unique
+  passwordHash String @map("password_hash")
+  role Role
+  isActive Boolean @default(true) @map("is_active")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  sessions            Session[]
-  createdReservations Reservation[]      @relation("CreatedBy")
-  auditLogs           AuditLog[]
-  housekeepingTasks   HousekeepingTask[] @relation("AssignedTo")
+  sessions Session[]
+  createdReservations Reservation[] @relation("CreatedBy")
+  auditLogs AuditLog[]
+  housekeepingTasks HousekeepingTask[] @relation("AssignedTo")
 
   @@map("users")
 }
 
 model Session {
-  id               String   @id @default(uuid())
-  userId           String   @map("user_id")
-  user             User     @relation(fields: [userId], references: [id])
-  refreshTokenHash String   @map("refresh_token_hash")
-  expiresAt        DateTime @map("expires_at")
-  createdAt        DateTime @default(now()) @map("created_at")
+  id String @id @default(uuid())
+  userId String @map("user_id")
+  user User @relation(fields: [userId], references: [id])
+  refreshTokenHash String @map("refresh_token_hash")
+  expiresAt DateTime @map("expires_at")
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@map("sessions")
 }
@@ -73,17 +73,17 @@ enum RoomStatus {
 }
 
 model Room {
-  id         String     @id @default(uuid())
-  hotelId    String     @map("hotel_id")
-  hotel      Hotel      @relation(fields: [hotelId], references: [id])
-  roomNumber String     @map("room_number")
-  roomType   String     @map("room_type")
-  basePrice  Decimal    @map("base_price") @db.Decimal(10, 2)
-  status     RoomStatus @default(AVAILABLE)
-  createdAt  DateTime   @default(now()) @map("created_at")
-  updatedAt  DateTime   @updatedAt @map("updated_at")
+  id String @id @default(uuid())
+  hotelId String @map("hotel_id")
+  hotel Hotel @relation(fields: [hotelId], references: [id])
+  roomNumber String @map("room_number")
+  roomType String @map("room_type")
+  basePrice Decimal @map("base_price") @db.Decimal(10, 2)
+  status RoomStatus @default(AVAILABLE)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
-  reservations      Reservation[]
+  reservations Reservation[]
   housekeepingTasks HousekeepingTask[]
 
   @@unique([hotelId, roomNumber])
@@ -91,16 +91,16 @@ model Room {
 }
 
 model Guest {
-  id              String   @id @default(uuid())
-  hotelId         String   @map("hotel_id")
-  hotel           Hotel    @relation(fields: [hotelId], references: [id])
-  fullName        String   @map("full_name")
-  phone           String?
-  email           String?
+  id String @id @default(uuid())
+  hotelId String @map("hotel_id")
+  hotel Hotel @relation(fields: [hotelId], references: [id])
+  fullName String @map("full_name")
+  phone String?
+  email String?
   passportNumber  String?  @map("passport_number")
   note            String?
-  createdAt       DateTime @default(now()) @map("created_at")
-  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   reservations Reservation[]
 
@@ -122,23 +122,23 @@ enum PaymentStatus {
 }
 
 model Reservation {
-  id              String            @id @default(uuid())
-  hotelId         String            @map("hotel_id")
-  hotel           Hotel             @relation(fields: [hotelId], references: [id])
-  roomId          String            @map("room_id")
-  room            Room              @relation(fields: [roomId], references: [id])
-  guestId         String            @map("guest_id")
-  guest           Guest             @relation(fields: [guestId], references: [id])
-  createdByUserId String            @map("created_by_user_id")
-  createdBy       User              @relation("CreatedBy", fields: [createdByUserId], references: [id])
-  checkInDate     DateTime          @map("check_in_date") @db.Date
-  checkOutDate    DateTime          @map("check_out_date") @db.Date
-  status          ReservationStatus @default(BOOKED)
-  pricePerNight   Decimal           @map("price_per_night") @db.Decimal(10, 2)
-  totalPrice      Decimal           @map("total_price") @db.Decimal(10, 2)
-  paymentStatus   PaymentStatus     @default(UNPAID) @map("payment_status")
-  createdAt       DateTime          @default(now()) @map("created_at")
-  updatedAt       DateTime          @updatedAt @map("updated_at")
+  id String @id @default(uuid())
+  hotelId String @map("hotel_id")
+  hotel Hotel @relation(fields: [hotelId], references: [id])
+  roomId String @map("room_id")
+  room Room @relation(fields: [roomId], references: [id])
+  guestId String @map("guest_id")
+  guest Guest @relation(fields: [guestId], references: [id])
+  createdByUserId String @map("created_by_user_id")
+  createdBy User @relation("CreatedBy", fields: [createdByUserId], references: [id])
+  checkInDate DateTime @map("check_in_date") @db.Date
+  checkOutDate DateTime @map("check_out_date") @db.Date
+  status ReservationStatus @default(BOOKED)
+  pricePerNight Decimal @map("price_per_night") @db.Decimal(10, 2)
+  totalPrice Decimal @map("total_price") @db.Decimal(10, 2)
+  paymentStatus PaymentStatus @default(UNPAID) @map("payment_status")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([roomId, checkInDate, checkOutDate])
   @@map("reservations")
@@ -147,37 +147,41 @@ model Reservation {
 enum TaskStatus {
   PENDING
   IN_PROGRESS
+  IN_REVIEW
   DONE
 }
 
 model HousekeepingTask {
-  id               String     @id @default(uuid())
-  hotelId          String     @map("hotel_id")
-  hotel            Hotel      @relation(fields: [hotelId], references: [id])
-  roomId           String     @map("room_id")
-  room             Room       @relation(fields: [roomId], references: [id])
-  assignedToUserId String     @map("assigned_to_user_id")
-  assignedTo       User       @relation("AssignedTo", fields: [assignedToUserId], references: [id])
-  status           TaskStatus @default(PENDING)
-  startedAt        DateTime?  @map("started_at")
-  completedAt      DateTime?  @map("completed_at")
-  notes            String?
-  photos           Json?      @map("photos")
-  createdAt        DateTime   @default(now()) @map("created_at")
+  id String @id @default(uuid())
+  hotelId String @map("hotel_id")
+  hotel Hotel @relation(fields: [hotelId], references: [id])
+  roomId String @map("room_id")
+  room Room @relation(fields: [roomId], references: [id])
+  assignedToUserId String @map("assigned_to_user_id")
+  assignedTo User @relation("AssignedTo", fields: [assignedToUserId], references: [id])
+  status TaskStatus @default(PENDING)
+  startedAt DateTime? @map("started_at")
+  completedAt DateTime? @map("completed_at")
+  notes String?
+  photos Json? @map("photos")
+  createdAt DateTime @default(now()) @map("created_at")
 
+  @@index([hotelId, createdAt])
+  @@index([hotelId, assignedToUserId, createdAt])
+  @@index([hotelId, status])
   @@map("housekeeping_tasks")
 }
 
 model AuditLog {
-  id           String   @id @default(uuid())
-  hotelId      String   @map("hotel_id")
-  hotel        Hotel    @relation(fields: [hotelId], references: [id])
-  userId       String?  @map("user_id")
-  user         User?    @relation(fields: [userId], references: [id])
-  action       String
-  entityType   String   @map("entity_type")
-  metadataJson Json?    @map("metadata_json")
-  createdAt    DateTime @default(now()) @map("created_at")
+  id String @id @default(uuid())
+  hotelId String @map("hotel_id")
+  hotel Hotel @relation(fields: [hotelId], references: [id])
+  userId String? @map("user_id")
+  user User? @relation(fields: [userId], references: [id])
+  action String
+  entityType String @map("entity_type")
+  metadataJson Json? @map("metadata_json")
+  createdAt DateTime @default(now()) @map("created_at")
 
   @@map("audit_logs")
 }
