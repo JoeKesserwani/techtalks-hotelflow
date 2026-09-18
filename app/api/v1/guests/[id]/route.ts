@@ -10,7 +10,15 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
     const user = await requireAuth({ roles: ['MANAGER', 'RECEPTIONIST'] });
     if (!user) throw new ApiError('Unauthorized', 401);
 
-    const guest = await prisma.guest.findFirst({ where: { id, hotelId: user.hotelId } });
+    const guest = await prisma.guest.findFirst({
+      where: { id, hotelId: user.hotelId },
+      include: {
+        reservations: {
+          include: { room: true },
+          orderBy: { checkInDate: 'desc' },
+        },
+      },
+    });
     if (!guest) throw new ApiError('Guest not found', 404);
 
     return Response.json(guest);
