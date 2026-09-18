@@ -164,6 +164,9 @@ model HousekeepingTask {
   photos           Json?      @map("photos")
   createdAt        DateTime   @default(now()) @map("created_at")
 
+  @@index([hotelId, createdAt])
+  @@index([hotelId, assignedToUserId, createdAt])
+  @@index([hotelId, status])
   @@map("housekeeping_tasks")
 }
 

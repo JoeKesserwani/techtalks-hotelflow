@@ -40,6 +40,26 @@ type ApiHousekeepingTask = {
   };
 };
 
+let tasksRequest: Promise<ApiHousekeepingTask[]> | null = null;
+
+function loadHousekeepingTasks() {
+  if (!tasksRequest) {
+    tasksRequest = fetch("/api/v1/housekeeping/tasks")
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error ?? "Unable to load housekeeping tasks.");
+        }
+        return data as ApiHousekeepingTask[];
+      })
+      .finally(() => {
+        tasksRequest = null;
+      });
+  }
+
+  return tasksRequest;
+}
+
 function mapApiTask(task: ApiHousekeepingTask): HousekeepingTask {
   const pictures = Array.isArray(task.photos)
     ? task.photos.filter(
@@ -94,14 +114,8 @@ export default function HousekeepingReviewPage() {
   useEffect(() => {
     async function loadTasks() {
       try {
-        const response = await fetch("/api/v1/housekeeping/tasks");
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error ?? "Unable to load housekeeping tasks.");
-        }
-
-        setTasks((data as ApiHousekeepingTask[]).map(mapApiTask));
+        const data = await loadHousekeepingTasks();
+        setTasks(data.map(mapApiTask));
       } catch (error) {
         setLoadError(
           error instanceof Error
