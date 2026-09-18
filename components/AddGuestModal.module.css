@@ -1,0 +1,189 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(46, 42, 34, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 50;
+}
+
+.modal {
+  background: #f3eee2;
+  border: 1px solid #d8cfb7;
+  border-radius: 8px;
+  width: 420px;
+  max-width: 92vw;
+  padding: 28px 32px;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  color: #2e2a22;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.modal h3 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.3rem;
+  margin: 0 0 4px;
+}
+
+.subtitle {
+  font-size: 0.8rem;
+  color: #8a8577;
+  margin: 0 0 16px;
+}
+
+.steps {
+  display: flex;
+  gap: 16px;
+  font-size: 0.78rem;
+  margin-bottom: 16px;
+}
+
+.stepInactive {
+  color: #a8a292;
+}
+
+.stepActive {
+  color: #c1573c;
+  font-weight: 600;
+}
+
+.selectedChip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: #fdfbf5;
+  border: 1px solid #e3dcc9;
+  border-radius: 6px;
+  padding: 10px 14px;
+  margin-bottom: 18px;
+}
+
+.chipAvatar {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: #c1573c;
+  color: #fdf8ef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.chipText {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.chipText strong {
+  font-size: 0.85rem;
+}
+
+.chipText span {
+  font-size: 0.72rem;
+  color: #8a8577;
+}
+
+.selectedTag {
+  background: #dce8c8;
+  color: #4c6b2f;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 4px;
+}
+
+.changeLink {
+  background: none;
+  border: none;
+  color: #c1573c;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+
+.label {
+  display: block;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #4b4636;
+  margin-bottom: 6px;
+  margin-top: 14px;
+}
+
+.input,
+.textarea {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 10px 12px;
+  border: 1px solid #ddd5c3;
+  border-radius: 6px;
+  background: #fdfbf5;
+  font-size: 0.85rem;
+  color: #2e2a22;
+  font-family: inherit;
+}
+
+.input::placeholder,
+.textarea::placeholder {
+  color: #a8a292;
+}
+
+.textarea {
+  min-height: 70px;
+  resize: vertical;
+}
+
+.row {
+  display: flex;
+  gap: 16px;
+}
+
+.col {
+  flex: 1;
+}
+
+.errorText {
+  color: #b14b36;
+  font-size: 0.8rem;
+  margin: 14px 0 0;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+.backButton {
+  background: #fdfbf5;
+  border: 1px solid #ddd5c3;
+  color: #4b4636;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.saveButton {
+  background: #c1573c;
+  border: none;
+  color: #fdf8ef;
+  padding: 10px 20px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.saveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}

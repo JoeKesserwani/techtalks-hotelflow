@@ -26,6 +26,7 @@ model Hotel {
 }
 
 enum Role {
+  ADMIN
   MANAGER
   RECEPTIONIST
   HOUSEKEEPING
@@ -90,14 +91,16 @@ model Room {
 }
 
 model Guest {
-  id        String   @id @default(uuid())
-  hotelId   String   @map("hotel_id")
-  hotel     Hotel    @relation(fields: [hotelId], references: [id])
-  fullName  String   @map("full_name")
-  phone     String?
-  email     String?
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  id              String   @id @default(uuid())
+  hotelId         String   @map("hotel_id")
+  hotel           Hotel    @relation(fields: [hotelId], references: [id])
+  fullName        String   @map("full_name")
+  phone           String?
+  email           String?
+  passportNumber  String?  @map("passport_number")
+  note            String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
 
   reservations Reservation[]
 
