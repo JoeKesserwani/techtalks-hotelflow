@@ -8,28 +8,20 @@ datasource db {
 }
 
 model Hotel {
-  id String @id @default(uuid())
-  name String
-  timezone String
-  currency String
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
-
-  users User[]
-  rooms Room[]
-  guests Guest[]
-  reservations Reservation[]
+  id                String             @id @default(uuid())
+  name              String
+  timezone          String
+  currency          String
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  auditLogs         AuditLog[]
+  guests            Guest[]
   housekeepingTasks HousekeepingTask[]
-  auditLogs AuditLog[]
+  reservations      Reservation[]
+  rooms             Room[]
+  users             User[]
 
   @@map("hotels")
-}
-
-enum Role {
-  ADMIN
-  MANAGER
-  RECEPTIONIST
-  HOUSEKEEPING
 }
 
 model User {
@@ -49,6 +41,7 @@ model User {
   auditLogs AuditLog[]
   housekeepingTasks HousekeepingTask[] @relation("AssignedTo")
 
+  @@index([hotelId], map: "users_hotel_id_fkey")
   @@map("users")
 }
 
@@ -60,16 +53,8 @@ model Session {
   expiresAt DateTime @map("expires_at")
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@index([userId], map: "sessions_user_id_fkey")
   @@map("sessions")
-}
-
-enum RoomStatus {
-  AVAILABLE
-  RESERVED
-  OCCUPIED
-  NEEDS_CLEANING
-  CLEANING
-  OUT_OF_SERVICE
 }
 
 model Room {
@@ -85,6 +70,8 @@ model Room {
 
   reservations Reservation[]
   housekeepingTasks HousekeepingTask[]
+  reservations      Reservation[]
+  hotel             Hotel              @relation(fields: [hotelId], references: [id])
 
   @@unique([hotelId, roomNumber])
   @@map("rooms")
@@ -104,21 +91,8 @@ model Guest {
 
   reservations Reservation[]
 
+  @@index([hotelId], map: "guests_hotel_id_fkey")
   @@map("guests")
-}
-
-enum ReservationStatus {
-  BOOKED
-  CHECKED_IN
-  CHECKED_OUT
-  CANCELLED
-  NO_SHOW
-}
-
-enum PaymentStatus {
-  UNPAID
-  PARTIAL
-  PAID
 }
 
 model Reservation {
@@ -141,6 +115,9 @@ model Reservation {
   updatedAt DateTime @updatedAt @map("updated_at")
 
   @@index([roomId, checkInDate, checkOutDate])
+  @@index([createdByUserId], map: "reservations_created_by_user_id_fkey")
+  @@index([guestId], map: "reservations_guest_id_fkey")
+  @@index([hotelId], map: "reservations_hotel_id_fkey")
   @@map("reservations")
 }
 
@@ -183,5 +160,7 @@ model AuditLog {
   metadataJson Json? @map("metadata_json")
   createdAt DateTime @default(now()) @map("created_at")
 
+  @@index([hotelId], map: "audit_logs_hotel_id_fkey")
+  @@index([userId], map: "audit_logs_user_id_fkey")
   @@map("audit_logs")
 }
