@@ -34,6 +34,7 @@ export async function POST(req: Request) {
       userId: user.id,
       hotelId: user.hotelId,
       role: user.role,
+      fullName: user.fullName,
     });
     const { rawToken: refreshToken, expiresAt } = await createSession(user.id);
 

@@ -3,7 +3,8 @@ import { PrismaMariaDb } from "@prisma/adapter-mariadb";
 
 const globalForPrisma = global as unknown as { prisma: PrismaClient };
 
-const adapter = new PrismaMariaDb(process.env.DATABASE_URL!);
+const databaseUrl = process.env.DATABASE_URL?.replace(/^mysql:\/\//, "mariadb://");
+const adapter = new PrismaMariaDb(databaseUrl!);
 
 export const prisma = globalForPrisma.prisma || new PrismaClient({ adapter });
 

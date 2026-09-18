@@ -7,6 +7,7 @@ export type AccessTokenPayload = {
   userId: string;
   hotelId: string;
   role: 'ADMIN' | 'MANAGER' | 'RECEPTIONIST' | 'HOUSEKEEPING';
+  fullName: string;
 };
 
 export function signAccessToken(payload: AccessTokenPayload): string {
