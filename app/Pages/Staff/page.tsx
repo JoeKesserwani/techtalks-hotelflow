@@ -3,6 +3,7 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Role } from "@/app/generated/prisma/enums";
 import styles from "./page.module.css";
+import { useAuth } from "@/components/Auth/AuthProvider";
 
 type StaffMember = {
   id: string;
@@ -48,7 +49,7 @@ export default function StaffPage() {
   const [mode, setMode] = useState<"create" | "edit" | null>(null);
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
   const [form, setForm] = useState<StaffForm>(emptyForm);
-
+  const {user} = useAuth();
   async function loadStaff() {
     setIsLoading(true);
     setError(null);
@@ -71,7 +72,36 @@ export default function StaffPage() {
   }
 
   useEffect(() => {
-    void loadStaff();
+    let cancelled = false;
+
+    async function fetchStaff() {
+      try {
+        const response = await fetch("/api/v1/users");
+
+        if (!response.ok) {
+          throw new Error("Unable to load staff members.");
+        }
+
+        const data = await response.json();
+        if (!cancelled) setStaff(data);
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error
+              ? err.message
+              : "Unable to load staff members.",
+          );
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    }
+
+    void fetchStaff();
+
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const filteredStaff = useMemo(() => {
@@ -211,12 +241,22 @@ export default function StaffPage() {
     <main className={styles.page}>
       <header className={styles.header}>
         <div>
-          <h1>Staff</h1>
+          <h1>Staff Management</h1>
           <p>
             {staff.length} {staff.length === 1 ? "account" : "accounts"} ·
             Manage roles and access
           </p>
         </div>
+        <div className={styles.role}>
+            <div className={styles.roleInfo}>
+              <strong>{user?.fullName}</strong>
+              <span>Currently reviewing rooms</span>
+            </div>
+
+            <div className={styles.roleBadge}>
+              {user?.role }
+            </div>
+          </div>
       </header>
 
       <section className={styles.toolbar} aria-label="Staff controls">
@@ -224,7 +264,7 @@ export default function StaffPage() {
           <span className="sr-only">Search staff</span>
           <input
             type="search"
-            placeholder="Search staff by name or email"
+            placeholder="Search staff by name, email or Role"
             value={query}
             onChange={(event) => setQuery(event.target.value)}
           />

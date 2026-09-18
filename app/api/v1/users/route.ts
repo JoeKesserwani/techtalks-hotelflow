@@ -26,7 +26,11 @@ export async function GET() {
     if (!user) throw new ApiError('Unauthorized', 401);
 
     const users = await prisma.user.findMany({
-      where: { hotelId: user.hotelId },
+      where: {
+        hotelId: user.hotelId,
+        isActive: true,
+        role: { not: 'ADMIN' },
+      },
       orderBy: { fullName: 'asc' },
     });
 
