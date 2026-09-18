@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useMemo, useState } from "react";
-import Sidebar from "@/components/Navbars/navbar";
 import styles from "./page.module.css";
 
 type Guest = {
@@ -174,9 +173,7 @@ const Page = () => {
   function handleRoomChange(roomId: string) {
     const selectedRoom = rooms.find((room) => room.id === roomId);
 
-    const price = selectedRoom
-      ? Number(selectedRoom.basePrice)
-      : 0;
+    const price = selectedRoom ? Number(selectedRoom.basePrice) : 0;
 
     setForm((previous) => ({
       ...previous,
@@ -188,7 +185,7 @@ const Page = () => {
   function calculateTotal(
     checkInDate: string,
     checkOutDate: string,
-    pricePerNight: string
+    pricePerNight: string,
   ) {
     if (!checkInDate || !checkOutDate || !pricePerNight) {
       return "";
@@ -210,7 +207,7 @@ const Page = () => {
 
   function handleDateChange(
     field: "checkInDate" | "checkOutDate",
-    value: string
+    value: string,
   ) {
     const updatedForm = {
       ...form,
@@ -220,7 +217,7 @@ const Page = () => {
     const total = calculateTotal(
       updatedForm.checkInDate,
       updatedForm.checkOutDate,
-      updatedForm.pricePerNight
+      updatedForm.pricePerNight,
     );
 
     setForm({
@@ -300,16 +297,14 @@ const Page = () => {
     } catch (err) {
       console.error(err);
       setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to save reservation."
+        err instanceof Error ? err.message : "Failed to save reservation.",
       );
     }
   }
 
   async function deleteReservation(id: string) {
     const confirmed = window.confirm(
-      "Are you sure you want to delete this reservation?"
+      "Are you sure you want to delete this reservation?",
     );
 
     if (!confirmed) {
@@ -335,9 +330,7 @@ const Page = () => {
     } catch (err) {
       console.error(err);
       setError(
-        err instanceof Error
-          ? err.message
-          : "Failed to delete reservation."
+        err instanceof Error ? err.message : "Failed to delete reservation.",
       );
     }
   }
@@ -346,17 +339,13 @@ const Page = () => {
     const now = new Date();
 
     return reservations.filter((reservation) => {
-      const guestName =
-        reservation.guest?.fullName?.toLowerCase() || "";
+      const guestName = reservation.guest?.fullName?.toLowerCase() || "";
 
-      const phone =
-        reservation.guest?.phone?.toLowerCase() || "";
+      const phone = reservation.guest?.phone?.toLowerCase() || "";
 
-      const roomNumber =
-        reservation.room?.roomNumber?.toLowerCase() || "";
+      const roomNumber = reservation.room?.roomNumber?.toLowerCase() || "";
 
-      const reservationId =
-        reservation.id.toLowerCase();
+      const reservationId = reservation.id.toLowerCase();
 
       const searchValue = search.toLowerCase();
 
@@ -370,9 +359,7 @@ const Page = () => {
         return false;
       }
 
-      const reservationDate = new Date(
-        reservation.checkInDate
-      );
+      const reservationDate = new Date(reservation.checkInDate);
 
       let matchesTime = true;
 
@@ -391,8 +378,7 @@ const Page = () => {
 
       if (statusFilter !== "all") {
         matchesTime =
-          matchesTime &&
-          reservation.status.toLowerCase() === statusFilter;
+          matchesTime && reservation.status.toLowerCase() === statusFilter;
       }
 
       return matchesTime;
@@ -440,32 +426,22 @@ const Page = () => {
 
   return (
     <div className={styles.page}>
-      <Sidebar />
-
       <main className={styles.content}>
         <div className={styles.header}>
           <div className={styles.title}>
             <h1>Reservations</h1>
 
-            <p>
-              {filteredReservations.length} reservations
-            </p>
+            <p>{filteredReservations.length} reservations</p>
           </div>
 
           <div className={styles.userInfo}>
             <strong>Receptionist&apos;s name</strong>
 
-            <span className={styles.userRole}>
-              Receptionist
-            </span>
+            <span className={styles.userRole}>Receptionist</span>
           </div>
         </div>
 
-        {error && (
-          <div className={styles.error}>
-            {error}
-          </div>
-        )}
+        {error && <div className={styles.error}>{error}</div>}
 
         <div className={styles.toolbar}>
           <input
@@ -473,17 +449,13 @@ const Page = () => {
             type="text"
             placeholder="Search by guest's name, ID, room number"
             value={search}
-            onChange={(event) =>
-              setSearch(event.target.value)
-            }
+            onChange={(event) => setSearch(event.target.value)}
           />
 
           <select
             className={styles.filter}
             value={timeFilter}
-            onChange={(event) =>
-              setTimeFilter(event.target.value)
-            }
+            onChange={(event) => setTimeFilter(event.target.value)}
           >
             <option value="month">This month</option>
             <option value="week">Last 7 days</option>
@@ -493,23 +465,16 @@ const Page = () => {
           <select
             className={styles.filter}
             value={statusFilter}
-            onChange={(event) =>
-              setStatusFilter(event.target.value)
-            }
+            onChange={(event) => setStatusFilter(event.target.value)}
           >
             <option value="all">All statuses</option>
             <option value="booked">Upcoming</option>
             <option value="checked_in">In stay</option>
-            <option value="checked_out">
-              Checked-out
-            </option>
+            <option value="checked_out">Checked-out</option>
             <option value="cancelled">Cancelled</option>
           </select>
 
-          <button
-            className={styles.newButton}
-            onClick={openNewReservation}
-          >
+          <button className={styles.newButton} onClick={openNewReservation}>
             + New reservation
           </button>
         </div>
@@ -530,86 +495,56 @@ const Page = () => {
             <tbody>
               {filteredReservations.length === 0 ? (
                 <tr>
-                  <td
-                    colSpan={6}
-                    className={styles.empty}
-                  >
+                  <td colSpan={6} className={styles.empty}>
                     No reservations found.
                   </td>
                 </tr>
               ) : (
-                filteredReservations.map(
-                  (reservation) => (
-                    <tr key={reservation.id}>
-                      <td>
-                        <div className={styles.guest}>
-                          <strong>
-                            {reservation.guest?.fullName ||
-                              "Unknown guest"}
-                          </strong>
+                filteredReservations.map((reservation) => (
+                  <tr key={reservation.id}>
+                    <td>
+                      <div className={styles.guest}>
+                        <strong>
+                          {reservation.guest?.fullName || "Unknown guest"}
+                        </strong>
 
-                          <small>
-                            {reservation.guest?.phone ||
-                              "No phone"}
-                          </small>
-                        </div>
-                      </td>
+                        <small>{reservation.guest?.phone || "No phone"}</small>
+                      </div>
+                    </td>
 
-                      <td>
-                        {reservation.room?.roomNumber ||
-                          "-"}
-                      </td>
+                    <td>{reservation.room?.roomNumber || "-"}</td>
 
-                      <td>
-                        {formatDate(
-                          reservation.checkInDate
-                        )}
-                      </td>
+                    <td>{formatDate(reservation.checkInDate)}</td>
 
-                      <td>
-                        {formatDate(
-                          reservation.checkOutDate
-                        )}
-                      </td>
+                    <td>{formatDate(reservation.checkOutDate)}</td>
 
-                      <td>
-                        <span
-                          className={`${styles.status} ${getStatusClass(
-                            reservation.status
-                          )}`}
-                        >
-                          {getStatusLabel(
-                            reservation.status
-                          )}
-                        </span>
-                      </td>
+                    <td>
+                      <span
+                        className={`${styles.status} ${getStatusClass(
+                          reservation.status,
+                        )}`}
+                      >
+                        {getStatusLabel(reservation.status)}
+                      </span>
+                    </td>
 
-                      <td>
-                        <button
-                          className={styles.editButton}
-                          onClick={() =>
-                            openEditReservation(
-                              reservation
-                            )
-                          }
-                        >
-                          Edit
-                        </button>
+                    <td>
+                      <button
+                        className={styles.editButton}
+                        onClick={() => openEditReservation(reservation)}
+                      >
+                        Edit
+                      </button>
 
-                        <button
-                          className={styles.deleteButton}
-                          onClick={() =>
-                            deleteReservation(
-                              reservation.id
-                            )
-                          }
-                        >
-                          Delete
-                        </button>
-                      </td>
-                    </tr>
-                  )
-                )
+                      <button
+                        className={styles.deleteButton}
+                        onClick={() => deleteReservation(reservation.id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
@@ -621,15 +556,10 @@ const Page = () => {
           <div className={styles.modal}>
             <div className={styles.modalHeader}>
               <h2>
-                {editingReservation
-                  ? "Edit reservation"
-                  : "New reservation"}
+                {editingReservation ? "Edit reservation" : "New reservation"}
               </h2>
 
-              <button
-                className={styles.closeButton}
-                onClick={closeModal}
-              >
+              <button className={styles.closeButton} onClick={closeModal}>
                 ×
               </button>
             </div>
@@ -648,15 +578,10 @@ const Page = () => {
                     }
                     disabled={!!editingReservation}
                   >
-                    <option value="">
-                      Select hotel
-                    </option>
+                    <option value="">Select hotel</option>
 
                     {hotels.map((hotel) => (
-                      <option
-                        key={hotel.id}
-                        value={hotel.id}
-                      >
+                      <option key={hotel.id} value={hotel.id}>
                         {hotel.name}
                       </option>
                     ))}
@@ -675,15 +600,10 @@ const Page = () => {
                     }
                     disabled={!!editingReservation}
                   >
-                    <option value="">
-                      Select guest
-                    </option>
+                    <option value="">Select guest</option>
 
                     {guests.map((guest) => (
-                      <option
-                        key={guest.id}
-                        value={guest.id}
-                      >
+                      <option key={guest.id} value={guest.id}>
                         {guest.fullName}
                       </option>
                     ))}
@@ -694,24 +614,14 @@ const Page = () => {
                   Room
                   <select
                     value={form.roomId}
-                    onChange={(event) =>
-                      handleRoomChange(
-                        event.target.value
-                      )
-                    }
+                    onChange={(event) => handleRoomChange(event.target.value)}
                     disabled={!!editingReservation}
                   >
-                    <option value="">
-                      Select room
-                    </option>
+                    <option value="">Select room</option>
 
                     {rooms.map((room) => (
-                      <option
-                        key={room.id}
-                        value={room.id}
-                      >
-                        Room {room.roomNumber} —{" "}
-                        {room.roomType}
+                      <option key={room.id} value={room.id}>
+                        Room {room.roomNumber} — {room.roomType}
                       </option>
                     ))}
                   </select>
@@ -724,21 +634,15 @@ const Page = () => {
                     onChange={(event) =>
                       setForm({
                         ...form,
-                        createdByUserId:
-                          event.target.value,
+                        createdByUserId: event.target.value,
                       })
                     }
                     disabled={!!editingReservation}
                   >
-                    <option value="">
-                      Select user
-                    </option>
+                    <option value="">Select user</option>
 
                     {users.map((user) => (
-                      <option
-                        key={user.id}
-                        value={user.id}
-                      >
+                      <option key={user.id} value={user.id}>
                         {user.fullName} — {user.role}
                       </option>
                     ))}
@@ -751,10 +655,7 @@ const Page = () => {
                     type="date"
                     value={form.checkInDate}
                     onChange={(event) =>
-                      handleDateChange(
-                        "checkInDate",
-                        event.target.value
-                      )
+                      handleDateChange("checkInDate", event.target.value)
                     }
                   />
                 </label>
@@ -765,10 +666,7 @@ const Page = () => {
                     type="date"
                     value={form.checkOutDate}
                     onChange={(event) =>
-                      handleDateChange(
-                        "checkOutDate",
-                        event.target.value
-                      )
+                      handleDateChange("checkOutDate", event.target.value)
                     }
                   />
                 </label>
@@ -781,13 +679,12 @@ const Page = () => {
                     step="0.01"
                     value={form.pricePerNight}
                     onChange={(event) => {
-                      const price =
-                        event.target.value;
+                      const price = event.target.value;
 
                       const total = calculateTotal(
                         form.checkInDate,
                         form.checkOutDate,
-                        price
+                        price,
                       );
 
                       setForm({
@@ -801,11 +698,7 @@ const Page = () => {
 
                 <label>
                   Total price
-                  <input
-                    type="number"
-                    value={form.totalPrice}
-                    readOnly
-                  />
+                  <input type="number" value={form.totalPrice} readOnly />
                 </label>
 
                 <label>
@@ -819,25 +712,15 @@ const Page = () => {
                       })
                     }
                   >
-                    <option value="BOOKED">
-                      Upcoming
-                    </option>
+                    <option value="BOOKED">Upcoming</option>
 
-                    <option value="CHECKED_IN">
-                      In stay
-                    </option>
+                    <option value="CHECKED_IN">In stay</option>
 
-                    <option value="CHECKED_OUT">
-                      Checked-out
-                    </option>
+                    <option value="CHECKED_OUT">Checked-out</option>
 
-                    <option value="CANCELLED">
-                      Cancelled
-                    </option>
+                    <option value="CANCELLED">Cancelled</option>
 
-                    <option value="NO_SHOW">
-                      No-show
-                    </option>
+                    <option value="NO_SHOW">No-show</option>
                   </select>
                 </label>
 
@@ -848,22 +731,15 @@ const Page = () => {
                     onChange={(event) =>
                       setForm({
                         ...form,
-                        paymentStatus:
-                          event.target.value,
+                        paymentStatus: event.target.value,
                       })
                     }
                   >
-                    <option value="UNPAID">
-                      Unpaid
-                    </option>
+                    <option value="UNPAID">Unpaid</option>
 
-                    <option value="PARTIAL">
-                      Partial
-                    </option>
+                    <option value="PARTIAL">Partial</option>
 
-                    <option value="PAID">
-                      Paid
-                    </option>
+                    <option value="PAID">Paid</option>
                   </select>
                 </label>
               </div>
@@ -877,13 +753,8 @@ const Page = () => {
                   Cancel
                 </button>
 
-                <button
-                  type="submit"
-                  className={styles.saveButton}
-                >
-                  {editingReservation
-                    ? "Save changes"
-                    : "Create reservation"}
+                <button type="submit" className={styles.saveButton}>
+                  {editingReservation ? "Save changes" : "Create reservation"}
                 </button>
               </div>
             </form>

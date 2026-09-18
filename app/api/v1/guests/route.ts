@@ -18,7 +18,7 @@ export async function GET() {
         reservations: {
           include: { room: true },
           orderBy: { checkInDate: "desc" },
-          take: 1, // most recent reservation only — enough to derive a "current stay" status
+          take: 1,
         },
       },
     });
