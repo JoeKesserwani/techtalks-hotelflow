@@ -12,6 +12,13 @@ export async function GET() {
     const guests = await prisma.guest.findMany({
       where: { hotelId: user.hotelId },
       orderBy: { fullName: 'asc' },
+      include: {
+        reservations: {
+          include: { room: true },
+          orderBy: { checkInDate: 'desc' },
+          take: 1, // most recent reservation only — enough to derive a "current stay" status
+        },
+      },
     });
 
     return Response.json(guests);
@@ -36,6 +43,8 @@ export async function POST(req: Request) {
           fullName: parsed.data.fullName,
           phone: parsed.data.phone,
           email: parsed.data.email,
+          passportNumber: parsed.data.passportNumber,
+          note: parsed.data.note,
         },
       });
 

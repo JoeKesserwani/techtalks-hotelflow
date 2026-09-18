@@ -1,0 +1,626 @@
+.page {
+  display: flex;
+  min-height: 100vh;
+  background: #f5f1e7;
+  color: #292821;
+}
+body {
+  overflow: hidden;
+}
+.container {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  flex: 1;
+  height: 100dvh;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Header */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #d9d3c4;
+}
+
+.title {
+  margin: 0;
+  font-family: Georgia, serif;
+  font-size: 34px;
+  font-weight: 600;
+}
+
+.subtitle {
+  margin-top: 4px;
+  color: #8a877e;
+  font-size: 14px;
+}
+
+.receptionist {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.receptionistInfo {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+  font-size: 12px;
+}
+
+.receptionistInfo span {
+  color: #99958a;
+  margin-top: 3px;
+}
+
+.receptionistBadge {
+  background: #c76543;
+  color: white;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* Tabs */
+
+.tabs {
+  display: flex;
+  border-bottom: 1px solid #d9d3c4;
+}
+
+.tab {
+  position: relative;
+  padding: 13px 20px;
+  border: none;
+  background: transparent;
+  color: #77736a;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: #3f5033;
+}
+
+.activeTab {
+  color: #3f5033;
+  font-weight: 600;
+}
+
+.activeTab::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: #4b5d3b;
+}
+
+/* Tab header */
+
+.tabHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin: 18px 0;
+}
+
+.tabHeader p {
+  margin: 0;
+  color: #77736a;
+  font-size: 14px;
+}
+
+.viewAll {
+  border: none;
+  background: transparent;
+  color: #bd5d3e;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+/* Task list */
+
+.taskList {
+  min-height: 0;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  overflow-y: auto;
+  padding-right: 8px;
+  scrollbar-color: #b8b09f transparent;
+  scrollbar-width: thin;
+}
+
+.taskList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.taskList::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.taskList::-webkit-scrollbar-thumb {
+  border-radius: 4px;
+  background: #b8b09f;
+}
+
+/* Task card */
+
+.taskCard {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 12px;
+  background: white;
+  border: 1px solid #ded8ca;
+}
+
+/* Pictures */
+
+.pictures {
+  display: flex;
+  gap: 8px;
+  width: 260px;
+  overflow-x: auto;
+  flex-shrink: 0;
+}
+
+.pictureButton {
+  position: relative;
+  width: 110px;
+  height: 90px;
+  padding: 0;
+  border: none;
+  overflow: hidden;
+  background: #ece4d4;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+.pictureButton img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.25s;
+}
+
+.pictureButton:hover img {
+  transform: scale(1.06);
+}
+
+.pictureCount {
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  padding: 3px 7px;
+  background: rgba(0, 0, 0, 0.65);
+  color: white;
+  font-size: 11px;
+}
+
+/* Task information */
+
+.taskInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.roomTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.roomTitle h2 {
+  margin: 0;
+  font-family: Georgia, serif;
+  font-size: 21px;
+}
+
+.taskInfo > p {
+  margin: 7px 0 0;
+  color: #77736a;
+  font-size: 14px;
+}
+
+.taskInfo small {
+  display: block;
+  margin-top: 4px;
+  color: #aaa59a;
+  font-size: 12px;
+}
+
+/* Status */
+
+.statusBadge {
+  display: inline-block;
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.awaiting {
+  background: #eee8d9;
+  color: #746d5d;
+}
+
+.approved {
+  background: #e3eadc;
+  color: #4d6242;
+}
+
+.rejected {
+  background: #f8e4dc;
+  color: #a84e34;
+}
+
+/* Comment */
+
+.comment {
+  margin-top: 10px;
+  padding: 8px 12px;
+  border-left: 2px solid #c76543;
+  background: #f8f3e8;
+}
+
+.comment strong {
+  font-size: 12px;
+}
+
+.comment p {
+  margin: 3px 0 0;
+  color: #77736a;
+  font-size: 13px;
+}
+
+/* Actions */
+
+.actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.actions button {
+  padding: 9px 18px;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.commentButton {
+  border: 1px solid #ddd6c8;
+  background: white;
+  color: #555149;
+}
+
+.commentButton:hover {
+  background: #f6f2e9;
+}
+
+.rejectButton {
+  border: 1px solid #d77d61;
+  background: white;
+  color: #c45e3d;
+}
+
+.rejectButton:hover {
+  background: #fff3ee;
+}
+
+.approveButton {
+  border: 1px solid #a8b499;
+  background: #a8b499;
+  color: white;
+}
+
+.approveButton:hover {
+  background: #899b7c;
+}
+
+/* Empty state */
+
+.emptyState {
+  padding: 60px 20px;
+  text-align: center;
+  border: 1px dashed #d8d1c1;
+  background: #faf7ef;
+}
+
+.emptyState h2 {
+  margin: 0;
+  font-family: Georgia, serif;
+  font-size: 21px;
+}
+
+.emptyState p {
+  margin-top: 8px;
+  color: #89857b;
+  font-size: 14px;
+}
+
+/* Review modal */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.reviewModal {
+  width: 100%;
+  max-width: 500px;
+  padding: 26px;
+  background: #fffdf8;
+}
+
+.modalLabel {
+  margin: 0;
+  color: #8b877d;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.reviewModal h2 {
+  margin: 5px 0 0;
+  font-family: Georgia, serif;
+  font-size: 25px;
+}
+
+.modalDescription {
+  color: #77736a;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.textareaLabel {
+  display: block;
+  margin-bottom: 7px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.textareaLabel span {
+  color: #99958a;
+  font-weight: normal;
+}
+
+.textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 12px;
+  resize: vertical;
+  border: 1px solid #d9d3c4;
+  outline: none;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.textarea:focus {
+  border-color: #687a5b;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.cancelButton,
+.modalApprove,
+.modalReject {
+  padding: 10px 18px;
+  border: none;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.cancelButton {
+  border: 1px solid #d9d3c4;
+  background: white;
+  color: #555149;
+}
+
+.modalApprove {
+  background: #718264;
+  color: white;
+}
+
+.modalReject {
+  background: #c76543;
+  color: white;
+}
+
+/* Image modal */
+
+.imageOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.imageContainer {
+  max-width: 90vw;
+  max-height: 85vh;
+  overflow: auto;
+}
+
+.imageContainer img {
+  display: block;
+  max-width: 90vw;
+  max-height: 85vh;
+  object-fit: contain;
+  transition: transform 0.2s;
+}
+
+.closeImage {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 28px;
+  cursor: pointer;
+}
+
+.zoomControls {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.65);
+}
+
+.zoomControls button {
+  width: 40px;
+  height: 40px;
+  border: none;
+  background: transparent;
+  color: white;
+  font-size: 20px;
+  cursor: pointer;
+}
+
+.zoomControls button:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.zoomControls span {
+  min-width: 50px;
+  text-align: center;
+  color: white;
+  font-size: 12px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Responsive                                                                 */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .taskCard {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+
+  .pictures {
+    width: 100%;
+  }
+
+  .taskInfo {
+    width: calc(100% - 280px);
+  }
+
+  .actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+}
+
+@media (max-width: 768px) {
+  .container {
+    padding: 80px 24px 32px;
+  }
+}
+
+@media (max-width: 650px) {
+  .page {
+    display: block;
+  }
+
+  .container {
+    padding: 80px 16px 24px;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .receptionist {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .receptionistInfo {
+    text-align: left;
+  }
+
+  .tabs {
+    margin-right: -16px;
+  }
+
+  .tab {
+    padding: 12px 14px;
+    font-size: 13px;
+  }
+
+  .viewAll {
+    display: none;
+  }
+
+  .taskCard {
+    flex-direction: column;
+    gap: 14px;
+  }
+
+  .pictures {
+    width: 100%;
+  }
+
+  .pictureButton {
+    width: 130px;
+    height: 100px;
+  }
+
+  .taskInfo {
+    width: 100%;
+  }
+
+  .actions {
+    width: 100%;
+  }
+
+  .actions button {
+    flex: 1;
+  }
+
+  .reviewModal {
+    padding: 20px;
+  }
+}

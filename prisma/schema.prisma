@@ -24,6 +24,13 @@ model Hotel {
   @@map("hotels")
 }
 
+enum Role {
+  ADMIN
+  MANAGER
+  RECEPTIONIST
+  HOUSEKEEPING
+}
+
 model User {
   id                  String             @id @default(uuid())
   hotelId             String             @map("hotel_id")
@@ -74,14 +81,17 @@ model Room {
 }
 
 model Guest {
-  id           String        @id @default(uuid())
-  hotelId      String        @map("hotel_id")
-  fullName     String        @map("full_name")
-  phone        String?
-  email        String?
-  createdAt    DateTime      @default(now()) @map("created_at")
-  updatedAt    DateTime      @updatedAt @map("updated_at")
-  hotel        Hotel         @relation(fields: [hotelId], references: [id])
+  id              String   @id @default(uuid())
+  hotelId         String   @map("hotel_id")
+  hotel           Hotel    @relation(fields: [hotelId], references: [id])
+  fullName        String   @map("full_name")
+  phone           String?
+  email           String?
+  passportNumber  String?  @map("passport_number")
+  note            String?
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
   reservations Reservation[]
 
   @@index([hotelId], map: "guests_hotel_id_fkey")
@@ -149,39 +159,4 @@ model AuditLog {
   @@index([hotelId], map: "audit_logs_hotel_id_fkey")
   @@index([userId], map: "audit_logs_user_id_fkey")
   @@map("audit_logs")
-}
-
-enum Role {
-  MANAGER
-  RECEPTIONIST
-  HOUSEKEEPING
-}
-
-enum RoomStatus {
-  AVAILABLE
-  RESERVED
-  OCCUPIED
-  NEEDS_CLEANING
-  CLEANING
-  OUT_OF_SERVICE
-}
-
-enum ReservationStatus {
-  BOOKED
-  CHECKED_IN
-  CHECKED_OUT
-  CANCELLED
-  NO_SHOW
-}
-
-enum PaymentStatus {
-  UNPAID
-  PARTIAL
-  PAID
-}
-
-enum TaskStatus {
-  PENDING
-  IN_PROGRESS
-  DONE
 }

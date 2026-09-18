@@ -5,9 +5,9 @@
 }
 
 .content {
-  flex: 1 1 auto;
+  flex: 1;
   min-width: 0;
-  padding: clamp(32px, 5vw, 72px);
+  padding: 32px;
 }
 
 .content h1 {
