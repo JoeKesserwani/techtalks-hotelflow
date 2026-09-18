@@ -24,13 +24,6 @@ model Hotel {
   @@map("hotels")
 }
 
-enum Role {
-  ADMIN
-  MANAGER
-  RECEPTIONIST
-  HOUSEKEEPING
-}
-
 model User {
   id                  String             @id @default(uuid())
   hotelId             String             @map("hotel_id")

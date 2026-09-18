@@ -21,11 +21,15 @@ export async function POST(req: Request) {
     const { email, password } = parsed.data;
 
     const user = await prisma.user.findUnique({ where: { email } });
+//     console.log("Login email:", email);
+// console.log("User found:", !!user);
+// console.log("User active:", user?.isActive);
     if (!user || !user.isActive) {
       throw new ApiError("Invalid credentials", 401);
     }
 
     const validPassword = await verifyPassword(password, user.passwordHash);
+    // console.log("Password valid:", validPassword);
     if (!validPassword) {
       throw new ApiError("Invalid credentials", 401);
     }
