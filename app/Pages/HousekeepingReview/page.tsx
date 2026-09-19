@@ -253,13 +253,13 @@ export default function HousekeepingReviewPage() {
             </p>
           </div>
 
-          <div className={styles.receptionist}>
-            <div className={styles.receptionistInfo}>
+          <div className={styles.role}>
+            <div className={styles.roleInfo}>
               <strong>{user?.fullName}</strong>
               <span>Currently reviewing rooms</span>
             </div>
 
-            <div className={styles.receptionistBadge}>
+            <div className={styles.roleBadge}>
               {user?.role }
             </div>
           </div>
