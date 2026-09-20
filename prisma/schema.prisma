@@ -70,8 +70,6 @@ model Room {
 
   reservations Reservation[]
   housekeepingTasks HousekeepingTask[]
-  reservations      Reservation[]
-  hotel             Hotel              @relation(fields: [hotelId], references: [id])
 
   @@unique([hotelId, roomNumber])
   @@map("rooms")
