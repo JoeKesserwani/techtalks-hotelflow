@@ -22,11 +22,15 @@ function toSafeUser(user: {
 
 export async function GET() {
   try {
-    const user = await requireAuth({ roles: ['MANAGER'] });
+    const user = await requireAuth({ roles: ['ADMIN', 'MANAGER'] });
     if (!user) throw new ApiError('Unauthorized', 401);
 
     const users = await prisma.user.findMany({
-      where: { hotelId: user.hotelId },
+      where: {
+        hotelId: user.hotelId,
+        isActive: true,
+        role: { not: 'ADMIN' },
+      },
       orderBy: { fullName: 'asc' },
     });
 
@@ -38,7 +42,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const user = await requireAuth({ roles: ['MANAGER'] });
+    const user = await requireAuth({ roles: ['ADMIN', 'MANAGER'] });
     if (!user) throw new ApiError('Unauthorized', 401);
 
     const body = await req.json();

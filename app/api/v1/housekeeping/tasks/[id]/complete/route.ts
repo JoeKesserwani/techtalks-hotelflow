@@ -7,7 +7,7 @@ import { ApiError, handleRouteError } from '../../../../../../../lib/api/errors'
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const user = await requireAuth({ roles: ['MANAGER', 'HOUSEKEEPING'] });
+    const user = await requireAuth({ roles: ['ADMIN', 'MANAGER','RECEPTIONIST', 'HOUSEKEEPING'] });
     if (!user) throw new ApiError('Unauthorized', 401);
 
     // Body is optional — completing without photos is still allowed.
@@ -31,7 +31,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       const result = await tx.housekeepingTask.update({
         where: { id },
         data: {
-          status: 'DONE',
+          status: 'IN_REVIEW',
           completedAt: new Date(),
           photos: parsed.data.photos ?? undefined,
         },

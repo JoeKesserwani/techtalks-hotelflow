@@ -44,25 +44,25 @@ body {
   font-size: 14px;
 }
 
-.receptionist {
+.role {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-.receptionistInfo {
+.roleInfo {
   display: flex;
   flex-direction: column;
   text-align: right;
   font-size: 12px;
 }
 
-.receptionistInfo span {
+.roleInfo span {
   color: #99958a;
   margin-top: 3px;
 }
 
-.receptionistBadge {
+.roleBadge {
   background: #c76543;
   color: white;
   padding: 9px 18px;
@@ -255,6 +255,16 @@ body {
 .awaiting {
   background: #eee8d9;
   color: #746d5d;
+}
+
+.pending {
+  background: #f3ead8;
+  color: #806b42;
+}
+
+.inProgress {
+  background: #e2eaf0;
+  color: #496579;
 }
 
 .approved {

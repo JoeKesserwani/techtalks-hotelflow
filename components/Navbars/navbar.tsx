@@ -6,7 +6,7 @@ import { useState } from "react";
 import { useAuth } from "@/components/Auth/AuthProvider";
 import styles from "./navbar.module.css";
 
-const navigation = [
+const AdminNavigation = [
   { name: "Dashboard", href:"/Pages/Dashboard" },
   { name: "Housekeeping review", href: "/Pages/HousekeepingReview" },
   { name: "Reservations", href: "/Pages/Reservations" },
@@ -35,6 +35,12 @@ const ReceptionistNavigation = [
   { name: "Rooms setup", href: "/Pages/Rooms" },
 ];
 
+const navigationByRole = {
+  ADMIN: AdminNavigation,
+  MANAGER: ManagerNavigation,
+  RECEPTIONIST: ReceptionistNavigation,
+} as const;
+
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -47,23 +53,18 @@ export default function Sidebar() {
     setIsLoggingOut(true);
     setLogoutError(null);
 
-    try {
-      const response = await fetch("/api/v1/auth/logout", {
-        method: "POST",
-      });
+    fetch("/api/v1/auth/logout", {
+      method: "POST",
+      keepalive: true,
+    }).catch(() => undefined);
 
-      if (!response.ok) {
-        throw new Error("Logout failed");
-      }
-
-      setUser(null);
-      router.replace("/");
-    } catch {
-      setLogoutError("Unable to log out. Please try again.");
-      setIsLoggingOut(false);
-    }
+    setUser(null);
+    router.replace("/");
   }
-
+  const navigation =
+    user?.role && user.role in navigationByRole
+      ? navigationByRole[user.role as keyof typeof navigationByRole]
+      : [];
   return (
     <>
       <button
