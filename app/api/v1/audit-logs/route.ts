@@ -4,7 +4,7 @@ import { ApiError, handleRouteError } from '../../../../lib/api/errors';
 
 export async function GET(req: Request) {
   try {
-    const user = await requireAuth({ roles: ['MANAGER'] });
+    const user = await requireAuth({ roles: ['ADMIN', 'MANAGER'] });
     if (!user) throw new ApiError('Unauthorized', 401);
 
     const url = new URL(req.url);
@@ -14,6 +14,7 @@ export async function GET(req: Request) {
     const limit = Number.isFinite(limitParam) ? Math.min(Math.max(limitParam, 1), 500) : 100;
 
     const logs = await prisma.auditLog.findMany({
+      include: { user: { select: { fullName: true } } },
       where: {
         hotelId: user.hotelId,
         ...(entityType ? { entityType } : {}),

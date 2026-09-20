@@ -5,7 +5,7 @@ import { ApiError, handleRouteError } from '../../../../lib/api/errors';
 
 export async function GET() {
   try {
-    const user = await requireAuth({ roles: ['MANAGER', 'RECEPTIONIST', 'HOUSEKEEPING'] });
+    const user = await requireAuth({ roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST', 'HOUSEKEEPING'] });
     if (!user) throw new ApiError('Unauthorized', 401);
 
     const hotel = await prisma.hotel.findUnique({ where: { id: user.hotelId } });
@@ -19,7 +19,7 @@ export async function GET() {
 
 export async function PATCH(req: Request) {
   try {
-    const user = await requireAuth({ roles: ['MANAGER'] });
+    const user = await requireAuth({ roles: ['ADMIN', 'MANAGER'] });
     if (!user) throw new ApiError('Unauthorized', 401);
 
     const body = await req.json();
