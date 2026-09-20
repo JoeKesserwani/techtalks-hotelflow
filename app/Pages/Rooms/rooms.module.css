@@ -1,41 +1,24 @@
-:root {
-  --font-heading: "Fraunces", serif;
-  --font-body: "IBM Plex Sans", sans-serif;
-}
-<<<<<<< Updated upstream
-
 .page {
   min-height: 100vh;
   display: flex;
   background: #f7f4ec;
-=======
-.page {
-  min-height: 100vh;
-  display: flex;
-  background: #f6f2e7;
-  color: #26332a;
->>>>>>> Stashed changes
+  overflow-x: hidden;
 }
 
 .main {
   flex: 1;
   min-width: 0;
-<<<<<<< Updated upstream
+  width: 100%;
   padding: 38px 42px;
   box-sizing: border-box;
 }
 
-=======
-  padding: 32px 40px;
-}
->>>>>>> Stashed changes
 /* =========================
    HEADER
 ========================= */
 
 .header {
   display: flex;
-<<<<<<< Updated upstream
   justify-content: space-between;
   align-items: flex-start;
   gap: 24px;
@@ -49,8 +32,8 @@
 .title {
   margin: 0;
 
-  font-family: var(--font-heading);
-  font-size: 34px;
+  font-family: Georgia, serif;
+  font-size: clamp(26px, 2.4vw, 34px);
   font-weight: 600;
   line-height: 1.2;
 
@@ -62,8 +45,8 @@
 
   color: #8a877e;
 
-  font-family: var(--font-body);
-  font-size: 14px;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: clamp(11px, 1vw, 14px);
 }
 
 .role {
@@ -79,13 +62,15 @@
 
   text-align: right;
 
-  font-family: var(--font-body);
+  font-family: "IBM Plex Sans", sans-serif;
   font-size: 12px;
 }
 
 .roleInfo strong {
   color: #292821;
   font-weight: 600;
+
+  overflow-wrap: anywhere;
 }
 
 .roleInfo span {
@@ -102,12 +87,16 @@
   min-height: 36px;
   padding: 0 14px;
 
+  box-sizing: border-box;
+
   background: #c76543;
   color: white;
 
-  font-family: var(--font-body);
+  font-family: "IBM Plex Sans", sans-serif;
   font-size: 12px;
   font-weight: 600;
+
+  white-space: nowrap;
 }
 
 /* =========================
@@ -120,6 +109,8 @@
   gap: 10px;
 
   margin: 22px 0 14px;
+
+  min-width: 0;
 }
 
 .searchInput {
@@ -136,7 +127,7 @@
   background: #fffdf9;
   color: #26332a;
 
-  font-family: var(--font-body);
+  font-family: "IBM Plex Sans", sans-serif;
   font-size: 12px;
 
   outline: none;
@@ -153,7 +144,7 @@
 .addButton {
   flex-shrink: 0;
 
-  height: 38px;
+  min-height: 38px;
   padding: 0 18px;
 
   border: none;
@@ -162,11 +153,15 @@
   background: #c1633b;
   color: white;
 
-  font-family: var(--font-body);
+  font-family: "IBM Plex Sans", sans-serif;
   font-size: 12px;
   font-weight: 600;
 
   cursor: pointer;
+
+  white-space: nowrap;
+
+  transition: background 0.2s ease;
 }
 
 .addButton:hover {
@@ -179,7 +174,11 @@
 
 .tableWrapper {
   width: 100%;
+  max-width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
+
+  box-sizing: border-box;
 
   border: 1px solid #e0d8c9;
   background: #fffdf9;
@@ -197,7 +196,7 @@
 
   color: #26332a;
 
-  font-family: var(--font-body);
+  font-family: "IBM Plex Sans", sans-serif;
   font-size: 12px;
 }
 
@@ -271,7 +270,9 @@
   min-height: 23px;
   padding: 3px 10px;
 
-  font-family: var(--font-body);
+  box-sizing: border-box;
+
+  font-family: "IBM Plex Sans", sans-serif;
   font-size: 10px;
   font-weight: 600;
 
@@ -321,7 +322,7 @@
 
   border-radius: 2px;
 
-  font-family: var(--font-body);
+  font-family: "IBM Plex Sans", sans-serif;
   font-size: 10px;
   font-weight: 600;
 
@@ -331,6 +332,8 @@
     background 0.2s ease,
     border-color 0.2s ease,
     color 0.2s ease;
+
+  white-space: nowrap;
 }
 
 .viewButton {
@@ -363,6 +366,8 @@
 .filterSelect {
   height: 40px;
   min-width: 145px;
+  max-width: 220px;
+
   padding: 0 12px;
 
   border: 1px solid #d9d3c4;
@@ -371,10 +376,12 @@
   background: #ffffff;
   color: #334238;
 
-  font-family: var(--font-body);
+  font-family: "IBM Plex Sans", sans-serif;
   font-size: 12px;
 
   outline: none;
+
+  cursor: pointer;
 }
 
 .filterSelect:focus {
@@ -399,6 +406,9 @@
   box-sizing: border-box;
 
   background: rgba(38, 51, 42, 0.58);
+
+  overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 /* =========================
@@ -420,6 +430,8 @@
   border: 1px solid #ded8ca;
 
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+
+  box-sizing: border-box;
 }
 
 /* =========================
@@ -444,7 +456,7 @@
 
   color: #8a877e;
 
-  font-family: var(--font-body);
+  font-family: "IBM Plex Sans", sans-serif;
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 1.5px;
@@ -455,7 +467,7 @@
 
   color: #26332a;
 
-  font-family: var(--font-heading);
+  font-family: Georgia, serif;
   font-size: 25px;
   font-weight: 600;
   line-height: 1.2;
@@ -499,6 +511,7 @@
   padding: 24px 26px;
 
   overflow-y: auto;
+  overscroll-behavior: contain;
 }
 
 .formRow {
@@ -518,7 +531,7 @@
 .formGroup label {
   color: #4c5149;
 
-  font-family: var(--font-body);
+  font-family: "IBM Plex Sans", sans-serif;
   font-size: 12px;
   font-weight: 600;
 }
@@ -538,7 +551,7 @@
   background: #fffefa;
   color: #26332a;
 
-  font-family: var(--font-body);
+  font-family: "IBM Plex Sans", sans-serif;
   font-size: 13px;
 
   outline: none;
@@ -547,6 +560,10 @@
 .formGroup input:focus,
 .formGroup select:focus {
   border-color: #7c8b6f;
+}
+
+.formGroup input::placeholder {
+  color: #aaa49a;
 }
 
 /* =========================
@@ -558,7 +575,7 @@
 
   color: #a56a32;
 
-  font-family: var(--font-body);
+  font-family: "IBM Plex Sans", sans-serif;
   font-size: 12px;
   line-height: 1.4;
 }
@@ -577,7 +594,7 @@
   background: #f8e4dc;
   color: #984d36;
 
-  font-family: var(--font-body);
+  font-family: "IBM Plex Sans", sans-serif;
   font-size: 11px;
   line-height: 1.4;
 }
@@ -609,7 +626,7 @@
 
   border: none;
 
-  font-family: var(--font-body);
+  font-family: "IBM Plex Sans", sans-serif;
   font-size: 12px;
   font-weight: 600;
 
@@ -646,62 +663,14 @@
 
 .loading {
   min-height: 250px;
-=======
-  align-items: flex-start;
-  justify-content: space-between;
-
-  padding-bottom: 12px;
-  border-bottom: 2px solid #dcd3be;
-}
-
-.headerLeft h1 {
-  margin: 0;
-
-  font-family: "Fraunces", serif;
-  font-size: 28px;
-  font-weight: 500;
-
-  color: #292722;
-}
-
-.headerLeft p {
-  margin: 4px 0 0;
-
-  font-family: "IBM Plex Sans", sans-serif;
-  font-size: 12px;
-
-  color: #aaa6a6;
-}
-
-.headerRight {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-
-  gap: 3px;
-}
-
-.adminName {
-  font-family: "Fraunces", serif;
-  font-size: 16px;
-  font-weight: 600;
-
-  color: #292722;
-}
-
-.adminRole {
-  min-width: 78px;
-  height: 22px;
->>>>>>> Stashed changes
 
   display: flex;
   align-items: center;
   justify-content: center;
 
-<<<<<<< Updated upstream
   color: #8a877e;
 
-  font-family: var(--font-body);
+  font-family: "IBM Plex Sans", sans-serif;
   font-size: 13px;
 }
 
@@ -714,36 +683,51 @@
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+
   margin-top: 14px;
   padding: 12px 4px;
+
+  min-width: 0;
 }
 
 .paginationInfo {
   color: #8a877e;
-  font-family: var(--font-body);
+
+  font-family: "IBM Plex Sans", sans-serif;
   font-size: 11px;
 }
 
 .paginationControls {
   display: flex;
   align-items: center;
+  justify-content: flex-end;
   gap: 5px;
+
+  flex-wrap: wrap;
 }
 
 .paginationButton,
 .pageButton {
   height: 32px;
   min-width: 32px;
+
   padding: 0 10px;
+
   border: 1px solid #d9d3c4;
   border-radius: 2px;
+
   background: #fffdf9;
   color: #4f554d;
-  font-family: var(--font-body);
+
+  font-family: "IBM Plex Sans", sans-serif;
   font-size: 11px;
   font-weight: 600;
+
   cursor: pointer;
-  transition: all 0.2s ease;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease;
 }
 
 .paginationButton:hover:not(:disabled),
@@ -763,42 +747,85 @@
   cursor: not-allowed;
 }
 
-/* =========================
-   TABLET
-========================= */
+/* =========================================================
+   LARGE TABLET / SMALL LAPTOP
+========================================================= */
 
-@media (max-width: 1000px) {
+@media (max-width: 1100px) {
   .main {
-    padding: 30px 28px;
+    padding: 32px 30px;
   }
 
   .header {
-    gap: 20px;
+    gap: 18px;
+  }
+
+  .roleInfo {
+    font-size: 11px;
+  }
+
+  .roleBadge {
+    min-width: 64px;
+    padding: 0 11px;
   }
 
   .toolbar {
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto auto;
+    gap: 8px;
   }
 
   .searchInput {
-    flex: 1 1 100%;
-    order: 1;
+    width: 100%;
   }
 
   .filterSelect {
-    flex: 1;
-    min-width: 0;
-    order: 2;
-  }
-
-  .addButton {
-    order: 2;
+    min-width: 125px;
   }
 }
 
-/* =========================
-   MOBILE
-========================= */
+/* =========================================================
+   TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+  .main {
+    padding: 30px 24px;
+  }
+
+  .header {
+    align-items: flex-start;
+  }
+
+  .title {
+    font-size: 30px;
+  }
+
+  .subtitle {
+    font-size: 12px;
+  }
+
+  .toolbar {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .searchInput {
+    grid-column: 1 / -1;
+  }
+
+  .filterSelect {
+    width: 100%;
+    max-width: none;
+  }
+
+  .addButton {
+    width: 100%;
+  }
+}
+
+/* =========================================================
+   SMALL TABLET
+========================================================= */
 
 @media (max-width: 700px) {
   .main {
@@ -806,10 +833,14 @@
     padding: 24px 18px 35px;
   }
 
-  /* Header becomes vertical */
+  /* Header */
+
   .header {
     flex-direction: column;
     gap: 18px;
+
+    padding-bottom: 18px;
+    margin-bottom: 18px;
   }
 
   .title {
@@ -829,7 +860,8 @@
     text-align: left;
   }
 
-  /* Toolbar becomes vertical */
+  /* Toolbar */
+
   .toolbar {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -842,27 +874,51 @@
     grid-column: 1 / -1;
 
     width: 100%;
+    min-height: 40px;
   }
 
   .filterSelect {
     width: 100%;
     min-width: 0;
+    height: 40px;
   }
 
   .addButton {
     width: 100%;
+    min-height: 40px;
   }
 
-  /* Table stays wide and scrolls horizontally */
+  /* Table */
+
   .tableWrapper {
+    width: 100%;
+    max-width: 100%;
+
     overflow-x: auto;
   }
 
   .table {
-    min-width: 700px;
+    min-width: 720px;
+  }
+
+  /* Pagination */
+
+  .pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .paginationInfo {
+    text-align: center;
+  }
+
+  .paginationControls {
+    justify-content: center;
   }
 
   /* Modal */
+
   .modalOverlay {
     align-items: flex-start;
 
@@ -873,7 +929,10 @@
   }
 
   .editModal {
-    max-height: calc(100vh - 60px);
+    width: 100%;
+    max-width: 500px;
+
+    max-height: calc(100vh - 44px);
   }
 
   .modalHeader {
@@ -894,23 +953,48 @@
   }
 }
 
-/* =========================
-   SMALL MOBILE
-========================= */
+/* =========================================================
+   MOBILE
+========================================================= */
 
-@media (max-width: 480px) {
+@media (max-width: 520px) {
   .main {
-    padding: 20px 12px 30px;
+    padding: 22px 14px 30px;
   }
 
+  /* Header */
+
   .title {
-    font-size: 26px;
+    font-size: 27px;
+  }
+
+  .subtitle {
+    font-size: 12px;
+  }
+
+  .role {
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .roleInfo {
+    min-width: 0;
+    font-size: 11px;
+  }
+
+  .roleInfo strong {
+    max-width: 180px;
+    overflow-wrap: anywhere;
   }
 
   .roleBadge {
     min-width: auto;
+    min-height: 34px;
     padding: 0 11px;
+    font-size: 10px;
   }
+
+  /* Toolbar */
 
   .toolbar {
     grid-template-columns: 1fr;
@@ -925,14 +1009,13 @@
     width: 100%;
   }
 
-  .roomActions {
-    gap: 5px;
+  /* Table */
+
+  .table {
+    min-width: 680px;
   }
 
-  .viewButton,
-  .editButton {
-    padding: 5px 8px;
-  }
+  /* Modal */
 
   .modalOverlay {
     padding: 10px;
@@ -940,7 +1023,7 @@
   }
 
   .editModal {
-    max-height: calc(100vh - 40px);
+    max-height: calc(100vh - 30px);
   }
 
   .modalHeader {
@@ -951,14 +1034,28 @@
     font-size: 20px;
   }
 
+  .modalLabel {
+    font-size: 9px;
+  }
+
+  .closeButton {
+    width: 32px;
+    height: 32px;
+  }
+
   .form {
     padding: 18px;
   }
 
-  /* Form fields become one column */
   .formRow {
     grid-template-columns: 1fr;
     gap: 15px;
+  }
+
+  .formGroup input,
+  .formGroup select {
+    min-height: 40px;
+    font-size: 13px;
   }
 
   .modalActions {
@@ -971,12 +1068,13 @@
   .cancelButton,
   .saveButton {
     width: 100%;
+    min-height: 40px;
   }
 }
 
-/* =========================
+/* =========================================================
    VERY SMALL PHONES
-========================= */
+========================================================= */
 
 @media (max-width: 360px) {
   .main {
@@ -987,23 +1085,102 @@
     font-size: 24px;
   }
 
-  .roleInfo {
+  .subtitle {
     font-size: 11px;
   }
 
-  .roleBadge {
+  .roleInfo {
     font-size: 10px;
   }
 
-  .table {
-    min-width: 680px;
+  .roleInfo strong {
+    max-width: 145px;
   }
-=======
-  background: #c1633b;
-  color: #ffffff;
 
-  font-family: "IBM Plex Sans", sans-serif;
-  font-size: 10px;
-  font-weight: 600;
->>>>>>> Stashed changes
+  .roleInfo span {
+    font-size: 9px;
+  }
+
+  .roleBadge {
+    min-height: 32px;
+    padding: 0 9px;
+
+    font-size: 9px;
+  }
+
+  .toolbar {
+    gap: 7px;
+  }
+
+  .searchInput,
+  .filterSelect,
+  .addButton {
+    min-height: 40px;
+  }
+
+  .table {
+    min-width: 660px;
+  }
+
+  .table th {
+    padding: 0 11px;
+  }
+
+  .table td {
+    padding: 0 11px;
+  }
+
+  .roomActions {
+    gap: 5px;
+  }
+
+  .viewButton,
+  .editButton {
+    min-height: 30px;
+    padding: 5px 8px;
+  }
+
+  .pagination {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  .paginationControls {
+    gap: 4px;
+  }
+
+  .paginationButton,
+  .pageButton {
+    height: 30px;
+    min-width: 30px;
+    padding: 0 7px;
+    font-size: 10px;
+  }
+
+  /* Modal */
+
+  .modalOverlay {
+    padding: 8px;
+    padding-top: 15px;
+  }
+
+  .editModal {
+    max-height: calc(100vh - 25px);
+  }
+
+  .modalHeader {
+    padding: 16px;
+  }
+
+  .modalHeader h2 {
+    font-size: 19px;
+  }
+
+  .form {
+    padding: 16px;
+  }
+
+  .modalActions {
+    padding: 14px 16px 16px;
+  }
 }

@@ -1,5 +1,4 @@
 "use client";
-<<<<<<< Updated upstream
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -92,6 +91,11 @@ function getStatusClass(status: RoomStatus) {
       return styles.availableStatus;
   }
 }
+function sortRoomsByNumber(rooms: Room[]) {
+  return [...rooms].sort(
+    (a, b) => Number(a.roomNumber) - Number(b.roomNumber),
+  );
+}
 
 const Page = () => {
   const { user } = useAuth();
@@ -168,7 +172,7 @@ const Page = () => {
           throw new Error(data.error ?? "Unable to load rooms.");
         }
 
-        setRooms(data as Room[]);
+        setRooms(sortRoomsByNumber(data as Room[]));
       } catch (error) {
         setError(
           error instanceof Error ? error.message : "Unable to load rooms.",
@@ -325,7 +329,9 @@ const Page = () => {
 
       const createdRoom = data as Room;
 
-      setRooms((currentRooms) => [...currentRooms, createdRoom]);
+     setRooms((currentRooms) =>
+  sortRoomsByNumber([...currentRooms, createdRoom]),
+);
 
       setIsAddRoomOpen(false);
       setCreateError(null);
@@ -461,11 +467,13 @@ const Page = () => {
 
       const updatedRoom = data as Room;
 
-      setRooms((currentRooms) =>
-        currentRooms.map((room) =>
-          room.id === updatedRoom.id ? updatedRoom : room,
-        ),
-      );
+    setRooms((currentRooms) =>
+  sortRoomsByNumber(
+    currentRooms.map((room) =>
+      room.id === updatedRoom.id ? updatedRoom : room,
+    ),
+  ),
+);
 
       setEditingRoom(null);
       setSaveError(null);
@@ -492,7 +500,6 @@ const Page = () => {
 
   return (
     <div className={styles.page}>
-        <Sidebar />
       <main className={styles.main}>
 
         {/* Header */}
@@ -1105,41 +1112,3 @@ const Page = () => {
 };
 
 export default Page;
-=======
-
-import React from "react";
-import Sidebar from "@/components/Navbars/navbar";
-import styles from "./rooms.module.css";
-import { useAuth } from "@/components/Auth/AuthProvider";
-//import { prisma } from '@/lib/db';
-
-const Page = () => {
-  const { user } = useAuth();
-
-  return (
-    <div className={styles.page}>
-      <Sidebar />
-
-      <main className={styles.main}>
-        <header className={styles.header}>
-          <div className={styles.headerLeft}>
-            <h1>Room Setup</h1>
-            <p>24 rooms across 3 floors</p>
-          </div>
-
-          <div className={styles.headerRight}>
-            <span className={styles.adminName}>
-              {user?.fullName}
-            </span>
-
-            <span className={styles.adminRole}>
-              {user?.role}
-            </span>
-          </div>
-        </header>
-      </main>
-    </div>
-  );
-};
-export default Page;
->>>>>>> Stashed changes

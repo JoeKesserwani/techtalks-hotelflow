@@ -133,7 +133,7 @@ const ViewRoomPage = () => {
   if (isLoading) {
     return (
       <div className={styles.page}>
-        <Sidebar />
+       
 
         <main className={styles.main}>
           <div className={styles.loading}>
@@ -151,7 +151,7 @@ const ViewRoomPage = () => {
   if (error || !room) {
     return (
       <div className={styles.page}>
-        <Sidebar />
+        
 
         <main className={styles.main}>
           <header className={styles.header}>
@@ -213,7 +213,6 @@ const ViewRoomPage = () => {
 
   return (
     <div className={styles.page}>
-      <Sidebar />
 
       <main className={styles.main}>
 
