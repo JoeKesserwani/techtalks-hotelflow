@@ -17,8 +17,20 @@ export async function GET() {
 
     const tasks = await prisma.housekeepingTask.findMany({
       where,
-      include: {
-        room: true,
+      select: {
+        id: true,
+        status: true,
+        startedAt: true,
+        completedAt: true,
+        notes: true,
+        photos: true,
+        createdAt: true,
+        room: {
+          select: {
+            roomNumber: true,
+            roomType: true,
+          },
+        },
         assignedTo: { select: { fullName: true } },
       },
       orderBy: { createdAt: 'desc' },

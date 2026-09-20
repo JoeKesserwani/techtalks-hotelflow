@@ -58,7 +58,9 @@ export default function AddGuestModal({
     <div className={styles.overlay} onClick={onClose}>
       <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
         <h3>New guest profile</h3>
-        <p className={styles.subtitle}>No match found — add their details below.</p>
+        <p className={styles.subtitle}>
+          No match found — add their details below.
+        </p>
 
         <div className={styles.steps}>
           <span className={styles.stepInactive}>1 Find guest</span>
@@ -68,8 +70,8 @@ export default function AddGuestModal({
         <div className={styles.selectedChip}>
           <span className={styles.chipAvatar}>GS</span>
           <div className={styles.chipText}>
-            <strong>Guest's name</strong>
-            <span>Phone number - ID</span>
+            <strong>{fullName || "Guest's Name"}</strong>
+            <span>{phone || "Phone number"}</span>
           </div>
           <span className={styles.selectedTag}>selected</span>
           <button type="button" className={styles.changeLink} onClick={onClose}>

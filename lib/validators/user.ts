@@ -9,6 +9,7 @@ export const createUserSchema = z.object({
 
 export const updateUserSchema = z.object({
   fullName: z.string().min(1).max(150).optional(),
+  email: z.string().email().optional(),
   role: z.enum(['ADMIN', 'MANAGER', 'RECEPTIONIST', 'HOUSEKEEPING']).optional(),
   isActive: z.boolean().optional(),
   password: z.string().min(8).optional(), // allows a manager to reset someone's password

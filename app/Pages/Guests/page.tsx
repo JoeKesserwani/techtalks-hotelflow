@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Navbar from "../../../components/Navbars/navbar"; // adjust this path if your Navbar lives elsewhere
 import AddGuestModal from "../../../components/AddGuestModal";
 import styles from "./page.module.css";
 
@@ -116,17 +115,11 @@ export default function GuestsPage() {
 
   return (
     <div className={styles.layout}>
-      <Navbar />
-
       <main className={styles.main}>
         <header className={styles.topBar}>
           <div>
             <h2>Guests</h2>
             <p className={styles.subtitle}>{guests.length} guests</p>
-          </div>
-          <div className={styles.adminBadge}>
-            <span>Admin's name</span>
-            <span className={styles.adminPill}>Admin</span>
           </div>
         </header>
 
@@ -200,13 +193,13 @@ export default function GuestsPage() {
 
                   <div className={styles.actionsCell}>
                     <Link
-                      href={`/dashboard/guests/${guest.id}`}
+                      href={`/Pages/Guests/${guest.id}`}
                       className={styles.viewLink}
                     >
                       View
                     </Link>
                     <Link
-                      href={`/dashboard/reservations/new?guestId=${guest.id}`}
+                      href={`/reservations/new?guestId=${guest.id}`}
                       className={styles.bookLink}
                     >
                       Book a room

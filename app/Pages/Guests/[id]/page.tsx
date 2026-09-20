@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import Navbar from "../../../../components/Navbars/navbar";
 import styles from "./page.module.css";
 
 type Room = { roomNumber: string };
@@ -97,8 +96,6 @@ export default function GuestDetailPage() {
 
   return (
     <div className={styles.layout}>
-      <Navbar />
-
       <main className={styles.main}>
         <header className={styles.topBar}>
           <div>
@@ -106,10 +103,6 @@ export default function GuestDetailPage() {
             <p className={styles.breadcrumb}>
               Guests &rarr; {guest ? guest.fullName : "..."}
             </p>
-          </div>
-          <div className={styles.adminBadge}>
-            <span>Admin's name</span>
-            <span className={styles.adminPill}>ADMIN</span>
           </div>
         </header>
 

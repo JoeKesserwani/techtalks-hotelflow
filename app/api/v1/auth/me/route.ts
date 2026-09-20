@@ -1,4 +1,3 @@
-import { prisma } from '../../../../../lib/db';
 import { requireAuth } from '../../../../../lib/middleware/requireAuth';
 import { ApiError, handleRouteError } from '../../../../../lib/api/errors';
 
@@ -7,17 +6,12 @@ export async function GET() {
     const sessionUser = await requireAuth();
     if (!sessionUser) throw new ApiError('Unauthorized', 401);
 
-    const user = await prisma.user.findUnique({
-      where: { id: sessionUser.userId },
-      select: {
-        fullName: true,
-        role: true,
+    return Response.json({
+      user: {
+        fullName: sessionUser.fullName,
+        role: sessionUser.role,
       },
     });
-
-    if (!user) throw new ApiError('User not found', 404);
-
-    return Response.json({ user });
   } catch (err) {
     return handleRouteError(err);
   }

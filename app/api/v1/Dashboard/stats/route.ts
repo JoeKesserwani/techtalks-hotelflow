@@ -53,16 +53,13 @@ import { requireAuth } from "@/lib/middleware/requireAuth";
 export async function GET() {
   try {
     const authUser = await requireAuth({
-  roles: ["ADMIN"],
-});
+      roles: ["ADMIN"],
+    });
 
     if (!authUser) {
-      return NextResponse.json(
-        { message: "Unauthorized" },
-        { status: 401 }
-      );
+      return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
-  
+
     // Get the current date
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -85,9 +82,7 @@ export async function GET() {
     });
 
     const occupancy =
-      totalRooms === 0
-        ? 0
-        : Math.round((occupiedRooms / totalRooms) * 100);
+      totalRooms === 0 ? 0 : Math.round((occupiedRooms / totalRooms) * 100);
 
     // -------------------------
     // Arrivals Today
@@ -114,47 +109,46 @@ export async function GET() {
     });
 
     //-------------------------
-  //  AWAITING_APPROVAL
- //-------------------------
- const awaitingApproval = await prisma.housekeepingTask.count({
-  where: {
-    hotelId: authUser.hotelId,
-    status: "IN_REVIEW",
-  },
-});
+    //  AWAITING_APPROVAL
+    //-------------------------
+    const awaitingApproval = await prisma.housekeepingTask.count({
+      where: {
+        hotelId: authUser.hotelId,
+        status: "IN_REVIEW",
+      },
+    });
 
-// -------------------------
-//housekeeping review tasks
-// -------------------------
+    // -------------------------
+    //housekeeping review tasks
+    // -------------------------
 
-
-const housekeepingReview = await prisma.housekeepingTask.findMany({
-  where: {
-    hotelId: authUser.hotelId,
-    status: "IN_REVIEW",
-  },
-  include: {
-    room: true,
-    assignedTo: true,
-  },
-  orderBy: {
-    completedAt: "desc",
-  },
-});
-const rooms = await prisma.room.findMany({
-  where: {
-    hotelId: authUser.hotelId,
-  },
-  select: {
-    id: true,
-    roomNumber: true,
-    roomType: true,
-    status: true,
-  },
-  orderBy: {
-    roomNumber: "asc",
-  },
-});
+    const housekeepingReview = await prisma.housekeepingTask.findMany({
+      where: {
+        hotelId: authUser.hotelId,
+        status: "IN_REVIEW",
+      },
+      include: {
+        room: true,
+        assignedTo: true,
+      },
+      orderBy: {
+        completedAt: "desc",
+      },
+    });
+    const rooms = await prisma.room.findMany({
+      where: {
+        hotelId: authUser.hotelId,
+      },
+      select: {
+        id: true,
+        roomNumber: true,
+        roomType: true,
+        status: true,
+      },
+      orderBy: {
+        roomNumber: "asc",
+      },
+    });
 
     return NextResponse.json({
       occupancy,
@@ -163,15 +157,13 @@ const rooms = await prisma.room.findMany({
       awaitingApproval,
       housekeepingReview,
       rooms,
-
     });
   } catch (error) {
     console.error("Dashboard stats error:", error);
 
     return NextResponse.json(
       { message: "Internal server error" },
-      { status: 500 }
+      { status: 500 },
     );
   }
-  
 }

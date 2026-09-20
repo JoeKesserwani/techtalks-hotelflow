@@ -53,7 +53,8 @@
 .stateText {
   color: #8a8577;
   font-size: 0.85rem;
-  padding: 16px 0;
+  padding: 16px;
+  text-align: center;
 }
 
 .profileCard {

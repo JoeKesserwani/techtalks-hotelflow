@@ -2,9 +2,14 @@
 
 import { useEffect, useState } from "react";
 import styles from "./HousekeepingReview.module.css";
-import Sidebar from "@/components/Navbars/navbar";
+import { useAuth } from "@/components/Auth/AuthProvider";
 
-type Status = "awaiting" | "approved" | "rejected";
+type Status =
+  | "active"
+  | "awaiting"
+  | "approved"
+  | "pending"
+  | "in-progress";
 
 type HousekeepingTask = {
   id: string;
@@ -20,7 +25,7 @@ type HousekeepingTask = {
 
 type ApiHousekeepingTask = {
   id: string;
-  status: "PENDING" | "IN_PROGRESS" | "DONE";
+  status: "PENDING" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
   startedAt: string | null;
   completedAt: string | null;
   notes: string | null;
@@ -35,6 +40,26 @@ type ApiHousekeepingTask = {
   };
 };
 
+let tasksRequest: Promise<ApiHousekeepingTask[]> | null = null;
+
+function loadHousekeepingTasks() {
+  if (!tasksRequest) {
+    tasksRequest = fetch("/api/v1/housekeeping/tasks")
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) {
+          throw new Error(data.error ?? "Unable to load housekeeping tasks.");
+        }
+        return data as ApiHousekeepingTask[];
+      })
+      .finally(() => {
+        tasksRequest = null;
+      });
+  }
+
+  return tasksRequest;
+}
+
 function mapApiTask(task: ApiHousekeepingTask): HousekeepingTask {
   const pictures = Array.isArray(task.photos)
     ? task.photos.filter(
@@ -48,7 +73,14 @@ function mapApiTask(task: ApiHousekeepingTask): HousekeepingTask {
     roomType: task.room.roomType,
     cleanerName: task.assignedTo.fullName,
     cleanedAt: formatTaskDate(task.completedAt ?? task.createdAt),
-    status: "awaiting",
+    status:
+      task.status === "DONE"
+        ? "approved"
+        : task.status === "IN_REVIEW"
+        ? "awaiting"
+        : task.status === "IN_PROGRESS"
+        ? "in-progress"
+        : "pending",
     pictures,
     comment: task.notes ?? undefined,
   };
@@ -65,8 +97,9 @@ export default function HousekeepingReviewPage() {
   const [tasks, setTasks] = useState<HousekeepingTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
+  const [reviewError, setReviewError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Status>("awaiting");
-
+  const { user } = useAuth();
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
 
@@ -81,14 +114,8 @@ export default function HousekeepingReviewPage() {
   useEffect(() => {
     async function loadTasks() {
       try {
-        const response = await fetch("/api/v1/housekeeping/tasks");
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error ?? "Unable to load housekeeping tasks.");
-        }
-
-        setTasks((data as ApiHousekeepingTask[]).map(mapApiTask));
+        const data = await loadHousekeepingTasks();
+        setTasks(data.map(mapApiTask));
       } catch (error) {
         setLoadError(
           error instanceof Error
@@ -103,44 +130,89 @@ export default function HousekeepingReviewPage() {
     loadTasks();
   }, []);
 
-  const awaitingTasks = tasks.filter(
-    (task) => task.status === "awaiting"
-  );
+  const awaitingTasks = tasks.filter((task) => task.status === "awaiting");
 
   const approvedTasks = tasks.filter(
     (task) => task.status === "approved"
   );
 
-  const rejectedTasks = tasks.filter(
-    (task) => task.status === "rejected"
+  const activeTasks = tasks.filter(
+    (task) => task.status === "pending" || task.status === "in-progress"
   );
 
   const visibleTasks =
-    activeTab === "awaiting"
+    activeTab === "active"
+      ? activeTasks
+      : activeTab === "awaiting"
       ? awaitingTasks
-      : activeTab === "approved"
-      ? approvedTasks
-      : rejectedTasks;
+      : approvedTasks;
 
   function openReview(
     task: HousekeepingTask,
     action: "approved" | "rejected"
   ) {
+    setReviewError(null);
     setReviewTask(task);
     setReviewAction(action);
     setComment("");
   }
 
-  function confirmReview() {
+  async function submitReview(taskId: string, action: "approve" | "reject", reviewComment?: string) {
+    const request = () =>
+      fetch(`/api/v1/housekeeping/tasks/${taskId}/review`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action, comment: reviewComment }),
+      });
+
+    let response = await request();
+
+    if (response.status === 401) {
+      const refreshResponse = await fetch("/api/v1/auth/refresh", {
+        method: "POST",
+      });
+
+      if (refreshResponse.ok) response = await request();
+    }
+
+    return response;
+  }
+
+  async function confirmReview() {
     if (!reviewTask || !reviewAction) return;
+
+    const response = await submitReview(
+      reviewTask.id,
+      reviewAction === "approved" ? "approve" : "reject",
+      comment.trim() || undefined
+    );
+
+    if (response.status === 409) {
+      const refreshResponse = await fetch("/api/v1/housekeeping/tasks");
+      if (refreshResponse.ok) {
+        const refreshedTasks = await refreshResponse.json();
+        setTasks((refreshedTasks as ApiHousekeepingTask[]).map(mapApiTask));
+      }
+
+      setReviewTask(null);
+      setReviewAction(null);
+      setReviewError("This task changed status. The task list was refreshed.");
+      return;
+    }
+
+    const data = await response.json();
+    if (!response.ok) {
+      setReviewError(data.error ?? "Unable to review housekeeping task.");
+      return;
+    }
 
     setTasks((current) =>
       current.map((task) =>
         task.id === reviewTask.id
           ? {
               ...task,
-              status: reviewAction,
-              comment: comment.trim() || undefined,
+              status: reviewAction === "approved" ? "approved" : "pending",
+              comment: comment.trim() || task.comment,
               reviewedAt: "Just now",
             }
           : task
@@ -151,7 +223,7 @@ export default function HousekeepingReviewPage() {
     setReviewAction(null);
     setComment("");
 
-    setActiveTab(reviewAction);
+    setActiveTab(reviewAction === "approved" ? "approved" : "active");
   }
 
   function openImage(image: string) {
@@ -166,7 +238,6 @@ export default function HousekeepingReviewPage() {
 
   return (
     <main className={styles.page}>
-      <Sidebar />
       <div className={styles.container}>
 
         {/* Header */}
@@ -177,26 +248,26 @@ export default function HousekeepingReviewPage() {
             </h1>
 
             <p className={styles.subtitle}>
-              {awaitingTasks.length} awaiting -{" "}
-              {approvedTasks.length} approved today -{" "}
-              {rejectedTasks.length} rejected
+                {awaitingTasks.length} awaiting -{" "}
+              {approvedTasks.length} done-{activeTasks.length} active
             </p>
           </div>
 
-          <div className={styles.receptionist}>
-            <div className={styles.receptionistInfo}>
-              <strong>Receptionist name</strong>
+          <div className={styles.role}>
+            <div className={styles.roleInfo}>
+              <strong>{user?.fullName}</strong>
               <span>Currently reviewing rooms</span>
             </div>
 
-            <div className={styles.receptionistBadge}>
-              Receptionist
+            <div className={styles.roleBadge}>
+              {user?.role }
             </div>
           </div>
         </header>
 
         {/* Tabs */}
         <div className={styles.tabs}>
+
 
           <button
             className={`${styles.tab} ${
@@ -217,34 +288,32 @@ export default function HousekeepingReviewPage() {
             }`}
             onClick={() => setActiveTab("approved")}
           >
-            Approved today ({approvedTasks.length})
+            Done ({approvedTasks.length})
           </button>
 
           <button
             className={`${styles.tab} ${
-              activeTab === "rejected"
-                ? styles.activeTab
-                : ""
+              activeTab === "active" ? styles.activeTab : ""
             }`}
-            onClick={() => setActiveTab("rejected")}
+            onClick={() => setActiveTab("active")}
           >
-            Rejected ({rejectedTasks.length})
+            Active ({activeTasks.length})
           </button>
-
         </div>
 
         {/* Description */}
         <div className={styles.tabHeader}>
           <p>
+            {activeTab === "active" &&
+              "Tasks that are pending or currently in progress."}
+
             {activeTab === "awaiting" &&
               "Recently cleaned rooms waiting for approval."}
 
             {activeTab === "approved" &&
-              "Housekeeping tasks approved today."}
-
-            {activeTab === "rejected" &&
-              "Housekeeping tasks that were rejected."}
+              "Housekeeping tasks marked as done."}
           </p>
+          {reviewError && <p>{reviewError}</p>}
         </div>
 
         {/* Tasks */}
@@ -400,7 +469,7 @@ function HousekeepingCard({
             </button>
           </>
         ) : (
-          <StatusBadge status={task.status} />
+          <h1   />
         )}
       </div>
     </article>
@@ -422,15 +491,19 @@ function StatusBadge({
       className={`${styles.statusBadge} ${
         status === "approved"
           ? styles.approved
-          : status === "rejected"
-          ? styles.rejected
+          : status === "pending"
+          ? styles.pending
+          : status === "in-progress"
+          ? styles.inProgress
           : styles.awaiting
       }`}
     >
       {status === "approved"
-        ? "Approved"
-        : status === "rejected"
-        ? "Rejected"
+        ? "Done"
+        : status === "pending"
+        ? "Pending"
+        : status === "in-progress"
+        ? "In progress"
         : "Awaiting approval"}
     </span>
   );
