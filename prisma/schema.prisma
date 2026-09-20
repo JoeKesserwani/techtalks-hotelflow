@@ -57,17 +57,20 @@ model Session {
 }
 
 model Room {
-  id                String             @id @default(uuid())
-  hotelId           String             @map("hotel_id")
-  roomNumber        String             @map("room_number")
-  roomType          String             @map("room_type")
-  basePrice         Decimal            @map("base_price") @db.Decimal(10, 2)
-  status            RoomStatus         @default(AVAILABLE)
-  createdAt         DateTime           @default(now()) @map("created_at")
-  updatedAt         DateTime           @updatedAt @map("updated_at")
-  housekeepingTasks HousekeepingTask[]
-  reservations      Reservation[]
-  hotel             Hotel              @relation(fields: [hotelId], references: [id])
+  id                 String             @id @default(uuid())
+  hotelId            String             @map("hotel_id")
+  hotel              Hotel              @relation(fields: [hotelId], references: [id])
+  roomNumber         String             @map("room_number")
+  roomType           String             @map("room_type")
+  floor              Int                @default(1)
+  capacity           Int                @default(1)
+  basePrice          Decimal            @map("base_price") @db.Decimal(10, 2)
+  status             RoomStatus         @default(AVAILABLE)
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+
+  reservations       Reservation[]
+  housekeepingTasks  HousekeepingTask[]
 
   @@unique([hotelId, roomNumber])
   @@map("rooms")
@@ -152,4 +155,42 @@ model AuditLog {
   @@index([hotelId], map: "audit_logs_hotel_id_fkey")
   @@index([userId], map: "audit_logs_user_id_fkey")
   @@map("audit_logs")
+}
+
+enum TaskStatus {
+  PENDING
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
+
+enum PaymentStatus {
+  UNPAID
+  PARTIAL
+  PAID
+}
+
+enum ReservationStatus {
+  BOOKED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  NO_SHOW
+}
+
+enum RoomStatus {
+  AVAILABLE
+  RESERVED
+  OCCUPIED
+  IN_REVIEW
+  NEEDS_CLEANING
+  CLEANING
+  OUT_OF_SERVICE
+}
+
+enum Role {
+  ADMIN
+  MANAGER
+  RECEPTIONIST
+  HOUSEKEEPING
 }

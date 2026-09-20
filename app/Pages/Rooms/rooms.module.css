@@ -1,0 +1,939 @@
+:root {
+  --font-heading: "Fraunces", serif;
+  --font-body: "IBM Plex Sans", sans-serif;
+}
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  background: #f7f4ec;
+}
+
+.main {
+  flex: 1;
+  min-width: 0;
+  padding: 38px 42px;
+  box-sizing: border-box;
+}
+
+/* =========================
+   HEADER
+========================= */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 24px;
+
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+
+  border-bottom: 1px solid #d9d3c4;
+}
+
+.title {
+  margin: 0;
+
+  font-family: var(--font-heading);
+  font-size: 34px;
+  font-weight: 600;
+  line-height: 1.2;
+
+  color: #292821;
+}
+
+.subtitle {
+  margin-top: 4px;
+
+  color: #8a877e;
+
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+
+.role {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.roleInfo {
+  display: flex;
+  flex-direction: column;
+
+  text-align: right;
+
+  font-family: var(--font-body);
+  font-size: 12px;
+}
+
+.roleInfo strong {
+  color: #292821;
+  font-weight: 600;
+}
+
+.roleInfo span {
+  margin-top: 3px;
+  color: #99958a;
+}
+
+.roleBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 70px;
+  min-height: 36px;
+  padding: 0 14px;
+
+  background: #c76543;
+  color: white;
+
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* =========================
+   TOOLBAR
+========================= */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+
+  margin: 22px 0 14px;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  box-sizing: border-box;
+
+  padding: 0 14px;
+
+  border: 1px solid #ddd5c5;
+  border-radius: 2px;
+
+  background: #fffdf9;
+  color: #26332a;
+
+  font-family: var(--font-body);
+  font-size: 12px;
+
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: #aaa49a;
+}
+
+.searchInput:focus {
+  border-color: #a97c50;
+}
+
+.addButton {
+  flex-shrink: 0;
+
+  height: 38px;
+  padding: 0 18px;
+
+  border: none;
+  border-radius: 2px;
+
+  background: #c1633b;
+  color: white;
+
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.addButton:hover {
+  background: #ad5633;
+}
+
+/* =========================
+   TABLE CARD
+========================= */
+
+.tableWrapper {
+  width: 100%;
+  overflow-x: auto;
+
+  border: 1px solid #e0d8c9;
+  background: #fffdf9;
+
+  box-shadow: 0 4px 14px rgba(50, 45, 35, 0.04);
+
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  width: 100%;
+  min-width: 720px;
+
+  border-collapse: collapse;
+
+  color: #26332a;
+
+  font-family: var(--font-body);
+  font-size: 12px;
+}
+
+.table th {
+  height: 38px;
+
+  padding: 0 14px;
+
+  background: #ebe5d7;
+  color: #777268;
+
+  text-align: left;
+
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+
+  white-space: nowrap;
+}
+
+.table td {
+  height: 48px;
+
+  padding: 0 14px;
+
+  border-bottom: 1px solid #ebe5d9;
+
+  color: #3c403a;
+
+  white-space: nowrap;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr:hover {
+  background: #faf7ef;
+}
+
+.roomNumber {
+  color: #26332a;
+  font-weight: 700;
+}
+
+.tableMessage {
+  height: 100px !important;
+
+  text-align: center;
+
+  color: #8a877e !important;
+
+  white-space: normal !important;
+}
+
+/* =========================
+   ROOM STATUS
+========================= */
+
+.availableStatus,
+.reservedStatus,
+.occupiedStatus,
+.cleaningStatus,
+.outOfServiceStatus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 80px;
+  min-height: 23px;
+  padding: 3px 10px;
+
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+.availableStatus {
+  background: #d1dbc7;
+  color: #526447;
+}
+
+.reservedStatus {
+  background: #eee8d9;
+  color: #746d5d;
+}
+
+.occupiedStatus {
+  background: #e2eaf0;
+  color: #496579;
+}
+
+.cleaningStatus {
+  background: #f3ead8;
+  color: #806b42;
+}
+
+.outOfServiceStatus {
+  background: #f8e4dc;
+  color: #a84e34;
+}
+
+/* =========================
+   ACTION BUTTONS
+========================= */
+
+.roomActions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.viewButton,
+.editButton {
+  min-height: 27px;
+
+  padding: 4px 9px;
+
+  border-radius: 2px;
+
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.viewButton {
+  border: 1px solid #6f8f63;
+  background: #6f8f63;
+  color: white;
+}
+
+.viewButton:hover {
+  background: #5d7b53;
+  border-color: #5d7b53;
+}
+
+.editButton {
+  border: 1px solid #dfc4b5;
+  background: transparent;
+  color: #c1633b;
+}
+
+.editButton:hover {
+  background: #c1633b;
+  border-color: #c1633b;
+  color: white;
+}
+
+/* =========================
+   FILTERS
+========================= */
+
+.filterSelect {
+  height: 40px;
+  min-width: 145px;
+  padding: 0 12px;
+
+  border: 1px solid #d9d3c4;
+  border-radius: 2px;
+
+  background: #ffffff;
+  color: #334238;
+
+  font-family: var(--font-body);
+  font-size: 12px;
+
+  outline: none;
+}
+
+.filterSelect:focus {
+  border-color: #8a9b7d;
+}
+
+/* =========================
+   MODAL OVERLAY
+========================= */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  box-sizing: border-box;
+
+  background: rgba(38, 51, 42, 0.58);
+}
+
+/* =========================
+   MODAL
+========================= */
+
+.editModal {
+  width: 100%;
+  max-width: 500px;
+
+  max-height: calc(100vh - 48px);
+
+  display: flex;
+  flex-direction: column;
+
+  overflow: hidden;
+
+  background: #fffdf8;
+  border: 1px solid #ded8ca;
+
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+}
+
+/* =========================
+   MODAL HEADER
+========================= */
+
+.modalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+
+  flex-shrink: 0;
+
+  padding: 24px 26px 18px;
+
+  border-bottom: 1px solid #e1dccf;
+}
+
+.modalLabel {
+  margin: 0 0 5px;
+
+  color: #8a877e;
+
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.modalHeader h2 {
+  margin: 0;
+
+  color: #26332a;
+
+  font-family: var(--font-heading);
+  font-size: 25px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.closeButton {
+  flex-shrink: 0;
+
+  width: 34px;
+  height: 34px;
+
+  border: none;
+  background: transparent;
+
+  color: #77746c;
+
+  font-size: 25px;
+  line-height: 1;
+
+  cursor: pointer;
+}
+
+.closeButton:hover {
+  color: #c16343;
+}
+
+.closeButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================
+   FORM
+========================= */
+
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 17px;
+
+  padding: 24px 26px;
+
+  overflow-y: auto;
+}
+
+.formRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+
+  min-width: 0;
+}
+
+.formGroup label {
+  color: #4c5149;
+
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.formGroup input,
+.formGroup select {
+  width: 100%;
+  min-width: 0;
+
+  box-sizing: border-box;
+
+  padding: 10px 12px;
+
+  border: 1px solid #d8d3c7;
+  border-radius: 0;
+
+  background: #fffefa;
+  color: #26332a;
+
+  font-family: var(--font-body);
+  font-size: 13px;
+
+  outline: none;
+}
+
+.formGroup input:focus,
+.formGroup select:focus {
+  border-color: #7c8b6f;
+}
+
+/* =========================
+   PRICE WARNING
+========================= */
+
+.priceWarning {
+  margin: -4px 0 0;
+
+  color: #a56a32;
+
+  font-family: var(--font-body);
+  font-size: 12px;
+  line-height: 1.4;
+}
+
+/* =========================
+   FORM ERROR
+========================= */
+
+.formError {
+  margin: 0;
+
+  padding: 9px 11px;
+
+  border-left: 3px solid #c76543;
+
+  background: #f8e4dc;
+  color: #984d36;
+
+  font-family: var(--font-body);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+/* =========================
+   MODAL ACTIONS
+========================= */
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+
+  flex-shrink: 0;
+
+  padding: 18px 26px 24px;
+
+  border-top: 1px solid #e1dccf;
+
+  background: #faf7ef;
+}
+
+.cancelButton,
+.saveButton {
+  min-height: 36px;
+
+  padding: 0 18px;
+
+  border: none;
+
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.cancelButton {
+  background: #eeeae0;
+  color: #4f554d;
+}
+
+.cancelButton:hover {
+  background: #e4dfd3;
+}
+
+.saveButton {
+  background: #485d39;
+  color: white;
+}
+
+.saveButton:hover {
+  background: #3d5031;
+}
+
+.cancelButton:disabled,
+.saveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* =========================
+   LOADING
+========================= */
+
+.loading {
+  min-height: 250px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #8a877e;
+
+  font-family: var(--font-body);
+  font-size: 13px;
+}
+
+/* =========================
+   PAGINATION
+========================= */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-top: 14px;
+  padding: 12px 4px;
+}
+
+.paginationInfo {
+  color: #8a877e;
+  font-family: var(--font-body);
+  font-size: 11px;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.paginationButton,
+.pageButton {
+  height: 32px;
+  min-width: 32px;
+  padding: 0 10px;
+  border: 1px solid #d9d3c4;
+  border-radius: 2px;
+  background: #fffdf9;
+  color: #4f554d;
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.paginationButton:hover:not(:disabled),
+.pageButton:hover {
+  background: #eeeae1;
+  border-color: #bfb8a9;
+}
+
+.pageButton.activePage {
+  background: #485d39;
+  border-color: #485d39;
+  color: white;
+}
+
+.paginationButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+/* =========================
+   TABLET
+========================= */
+
+@media (max-width: 1000px) {
+  .main {
+    padding: 30px 28px;
+  }
+
+  .header {
+    gap: 20px;
+  }
+
+  .toolbar {
+    flex-wrap: wrap;
+  }
+
+  .searchInput {
+    flex: 1 1 100%;
+    order: 1;
+  }
+
+  .filterSelect {
+    flex: 1;
+    min-width: 0;
+    order: 2;
+  }
+
+  .addButton {
+    order: 2;
+  }
+}
+
+/* =========================
+   MOBILE
+========================= */
+
+@media (max-width: 700px) {
+  .main {
+    width: 100%;
+    padding: 24px 18px 35px;
+  }
+
+  /* Header becomes vertical */
+  .header {
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  .title {
+    font-size: 29px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+  }
+
+  .role {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .roleInfo {
+    text-align: left;
+  }
+
+  /* Toolbar becomes vertical */
+  .toolbar {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+
+    margin-top: 18px;
+  }
+
+  .searchInput {
+    grid-column: 1 / -1;
+
+    width: 100%;
+  }
+
+  .filterSelect {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .addButton {
+    width: 100%;
+  }
+
+  /* Table stays wide and scrolls horizontally */
+  .tableWrapper {
+    overflow-x: auto;
+  }
+
+  .table {
+    min-width: 700px;
+  }
+
+  /* Modal */
+  .modalOverlay {
+    align-items: flex-start;
+
+    padding: 14px;
+    padding-top: 30px;
+
+    overflow-y: auto;
+  }
+
+  .editModal {
+    max-height: calc(100vh - 60px);
+  }
+
+  .modalHeader {
+    padding: 20px;
+  }
+
+  .modalHeader h2 {
+    font-size: 22px;
+  }
+
+  .form {
+    padding: 20px;
+    gap: 15px;
+  }
+
+  .modalActions {
+    padding: 16px 20px 20px;
+  }
+}
+
+/* =========================
+   SMALL MOBILE
+========================= */
+
+@media (max-width: 480px) {
+  .main {
+    padding: 20px 12px 30px;
+  }
+
+  .title {
+    font-size: 26px;
+  }
+
+  .roleBadge {
+    min-width: auto;
+    padding: 0 11px;
+  }
+
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .searchInput {
+    grid-column: auto;
+  }
+
+  .filterSelect,
+  .addButton {
+    width: 100%;
+  }
+
+  .roomActions {
+    gap: 5px;
+  }
+
+  .viewButton,
+  .editButton {
+    padding: 5px 8px;
+  }
+
+  .modalOverlay {
+    padding: 10px;
+    padding-top: 20px;
+  }
+
+  .editModal {
+    max-height: calc(100vh - 40px);
+  }
+
+  .modalHeader {
+    padding: 18px;
+  }
+
+  .modalHeader h2 {
+    font-size: 20px;
+  }
+
+  .form {
+    padding: 18px;
+  }
+
+  /* Form fields become one column */
+  .formRow {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .modalActions {
+    flex-direction: column-reverse;
+    gap: 8px;
+
+    padding: 15px 18px 18px;
+  }
+
+  .cancelButton,
+  .saveButton {
+    width: 100%;
+  }
+}
+
+/* =========================
+   VERY SMALL PHONES
+========================= */
+
+@media (max-width: 360px) {
+  .main {
+    padding: 18px 10px 25px;
+  }
+
+  .title {
+    font-size: 24px;
+  }
+
+  .roleInfo {
+    font-size: 11px;
+  }
+
+  .roleBadge {
+    font-size: 10px;
+  }
+
+  .table {
+    min-width: 680px;
+  }
+}

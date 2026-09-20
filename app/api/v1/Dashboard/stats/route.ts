@@ -119,7 +119,7 @@ export async function GET() {
  const awaitingApproval = await prisma.housekeepingTask.count({
   where: {
     hotelId: authUser.hotelId,
-    status: "AWAITING_APPROVAL",
+    status: "IN_REVIEW",
   },
 });
 
@@ -131,7 +131,7 @@ export async function GET() {
 const housekeepingReview = await prisma.housekeepingTask.findMany({
   where: {
     hotelId: authUser.hotelId,
-    status: "AWAITING_APPROVAL",
+    status: "IN_REVIEW",
   },
   include: {
     room: true,

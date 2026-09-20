@@ -3,6 +3,8 @@ import { z } from 'zod';
 export const createRoomSchema = z.object({
   roomNumber: z.string().min(1).max(20),
   roomType: z.string().min(1).max(50),
+  floor: z.coerce.number().int().positive(),
+  capacity: z.coerce.number().int().positive(),
   basePrice: z.coerce.number().positive(),
 });
 
@@ -11,6 +13,8 @@ export const updateRoomSchema = z.object({
   roomNumber: z.string().min(1).max(20).optional(),
   roomType: z.string().min(1).max(50).optional(),
   basePrice: z.coerce.number().positive().optional(),
+  floor: z.coerce.number().int().optional(),
+  capacity: z.coerce.number().int().optional(),
   status: z
     .enum(['AVAILABLE', 'RESERVED', 'OCCUPIED', 'NEEDS_CLEANING', 'CLEANING', 'OUT_OF_SERVICE'])
     .optional(),

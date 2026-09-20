@@ -1,0 +1,648 @@
+:root {
+  --font-heading: "Fraunces", serif;
+  --font-body: "IBM Plex Sans", sans-serif;
+}
+
+.page {
+  min-height: 100vh;
+  background: #f7f4ec;
+  color: #26332a;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Main                                                                       */
+/* -------------------------------------------------------------------------- */
+
+.main {
+  width: calc(100% - 250px);
+  max-width: 1200px;
+  margin-left: 250px;
+  padding: 36px 42px 60px;
+  box-sizing: border-box;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Header                                                                     */
+/* -------------------------------------------------------------------------- */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 30px;
+
+  padding-bottom: 22px;
+  margin-bottom: 26px;
+
+  border-bottom: 1px solid #d9d3c4;
+}
+
+.headerLeft {
+  min-width: 0;
+}
+
+.backButton {
+  border: none;
+  background: transparent;
+
+  padding: 0;
+  margin-bottom: 20px;
+
+  color: #6f8f63;
+
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.backButton:hover {
+  text-decoration: underline;
+}
+
+.label {
+  margin: 0 0 6px;
+
+  color: #a97c50;
+
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+
+.title {
+  margin: 0;
+
+  color: #26332a;
+
+  font-family: var(--font-heading);
+  font-size: 38px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+
+  color: #8a877e;
+
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* -------------------------------------------------------------------------- */
+/* User                                                                       */
+/* -------------------------------------------------------------------------- */
+
+.role {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  flex-shrink: 0;
+}
+
+.roleInfo {
+  display: flex;
+  flex-direction: column;
+
+  text-align: right;
+
+  font-family: var(--font-body);
+  font-size: 12px;
+}
+
+.roleInfo strong {
+  color: #292821;
+  font-weight: 600;
+}
+
+.roleInfo span {
+  margin-top: 3px;
+  color: #99958a;
+}
+
+.roleBadge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 70px;
+  min-height: 36px;
+  padding: 0 14px;
+
+  box-sizing: border-box;
+
+  background: #c76543;
+  color: white;
+
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Status                                                                     */
+/* -------------------------------------------------------------------------- */
+
+.statusSection {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+
+  padding: 24px 28px;
+  margin-bottom: 20px;
+
+  background: white;
+  border: 1px solid #e1ddd2;
+
+  box-sizing: border-box;
+}
+
+.cardLabel {
+  margin: 0 0 6px;
+
+  color: #9b978c;
+
+  font-family: var(--font-body);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.3px;
+}
+
+.statusTitle {
+  margin: 0;
+
+  color: #26332a;
+
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Status badges                                                              */
+/* -------------------------------------------------------------------------- */
+
+.availableStatus,
+.reservedStatus,
+.occupiedStatus,
+.cleaningStatus,
+.outOfServiceStatus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 80px;
+  min-height: 30px;
+
+  padding: 6px 13px;
+
+  box-sizing: border-box;
+
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+
+  white-space: nowrap;
+}
+
+.availableStatus {
+  background: #e4eee1;
+  color: #496342;
+}
+
+.reservedStatus {
+  background: #eee8d9;
+  color: #806b39;
+}
+
+.occupiedStatus {
+  background: #e8e3ed;
+  color: #655475;
+}
+
+.cleaningStatus {
+  background: #f2e4d8;
+  color: #9a613c;
+}
+
+.outOfServiceStatus {
+  background: #eee0df;
+  color: #934c47;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Details Card                                                               */
+/* -------------------------------------------------------------------------- */
+
+.detailsCard {
+  width: 100%;
+
+  background: white;
+  border: 1px solid #e1ddd2;
+
+  box-sizing: border-box;
+}
+
+.cardHeader {
+  padding: 24px 28px;
+
+  border-bottom: 1px solid #e7e2d8;
+}
+
+.cardHeader h2 {
+  margin: 0;
+
+  color: #26332a;
+
+  font-family: var(--font-heading);
+  font-size: 23px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Details Grid                                                               */
+/* -------------------------------------------------------------------------- */
+
+.detailsGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.detailItem {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+
+  min-width: 0;
+
+  padding: 22px 28px;
+
+  border-bottom: 1px solid #eeeae1;
+
+  box-sizing: border-box;
+}
+
+.detailItem:nth-child(odd) {
+  border-right: 1px solid #eeeae1;
+}
+
+.detailLabel {
+  color: #99958a;
+
+  font-family: var(--font-body);
+  font-size: 12px;
+}
+
+.detailItem strong {
+  color: #26332a;
+
+  font-family: var(--font-body);
+  font-size: 15px;
+  font-weight: 600;
+
+  overflow-wrap: anywhere;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Actions                                                                    */
+/* -------------------------------------------------------------------------- */
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+
+  margin-top: 22px;
+}
+
+.backAction {
+  min-height: 40px;
+
+  border: 1px solid #d0c9ba;
+  background: transparent;
+
+  color: #4e5d50;
+
+  padding: 0 18px;
+
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+.backAction:hover {
+  background: #eeeae1;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Loading                                                                    */
+/* -------------------------------------------------------------------------- */
+
+.loading {
+  min-height: 250px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 40px 20px;
+
+  box-sizing: border-box;
+
+  text-align: center;
+
+  color: #8a877e;
+
+  font-family: var(--font-body);
+  font-size: 14px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Error                                                                      */
+/* -------------------------------------------------------------------------- */
+
+.errorCard {
+  margin-top: 40px;
+  padding: 30px;
+
+  background: white;
+  border: 1px solid #e1ddd2;
+
+  box-sizing: border-box;
+}
+
+.errorCard h2 {
+  margin: 0 0 8px;
+
+  color: #26332a;
+
+  font-family: var(--font-heading);
+  font-size: 24px;
+  font-weight: 600;
+}
+
+.errorCard p {
+  margin: 0 0 20px;
+
+  color: #8a877e;
+
+  font-family: var(--font-body);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Tablet                                                                     */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 1000px) {
+  .main {
+    width: calc(100% - 220px);
+    margin-left: 220px;
+    padding: 30px 28px 50px;
+  }
+
+  .header {
+    gap: 20px;
+  }
+
+  .title {
+    font-size: 34px;
+  }
+
+  .statusSection {
+    padding: 22px 24px;
+  }
+
+  .cardHeader {
+    padding: 22px 24px;
+  }
+
+  .detailItem {
+    padding: 20px 24px;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Mobile                                                                     */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 768px) {
+  /*
+   * Assumes the navbar collapses/changes its own layout on mobile.
+   * The content no longer reserves desktop sidebar space.
+   */
+
+  .main {
+    width: 100%;
+    margin-left: 0;
+    padding: 25px 20px 40px;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 20px;
+
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+  }
+
+  .title {
+    font-size: 32px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+  }
+
+  .role {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .roleInfo {
+    text-align: left;
+  }
+
+  .statusSection {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 14px;
+
+    padding: 20px;
+  }
+
+  .statusTitle {
+    font-size: 22px;
+  }
+
+  .detailsGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .detailItem:nth-child(odd) {
+    border-right: none;
+  }
+
+  .detailItem {
+    padding: 18px 20px;
+  }
+
+  .cardHeader {
+    padding: 20px;
+  }
+
+  .actions {
+    justify-content: stretch;
+  }
+
+  .backAction {
+    width: 100%;
+  }
+
+  .errorCard {
+    margin-top: 25px;
+    padding: 22px;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Small Mobile                                                              */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 480px) {
+  .main {
+    padding: 20px 14px 30px;
+  }
+
+  .title {
+    font-size: 28px;
+  }
+
+  .label {
+    font-size: 10px;
+  }
+
+  .role {
+    gap: 9px;
+  }
+
+  .roleInfo {
+    font-size: 11px;
+  }
+
+  .roleBadge {
+    min-width: auto;
+    min-height: 34px;
+
+    padding: 0 11px;
+
+    font-size: 10px;
+  }
+
+  .statusSection {
+    padding: 18px;
+  }
+
+  .statusTitle {
+    font-size: 21px;
+  }
+
+  .availableStatus,
+  .reservedStatus,
+  .occupiedStatus,
+  .cleaningStatus,
+  .outOfServiceStatus {
+    min-width: 0;
+
+    padding: 6px 11px;
+
+    font-size: 11px;
+  }
+
+  .cardHeader {
+    padding: 18px;
+  }
+
+  .cardHeader h2 {
+    font-size: 21px;
+  }
+
+  .detailItem {
+    padding: 17px 18px;
+  }
+
+  .detailItem strong {
+    font-size: 14px;
+  }
+
+  .backAction {
+    min-height: 42px;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Very Small Phones                                                         */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 360px) {
+  .main {
+    padding: 18px 10px 25px;
+  }
+
+  .title {
+    font-size: 25px;
+  }
+
+  .subtitle {
+    font-size: 12px;
+  }
+
+  .roleInfo {
+    font-size: 10px;
+  }
+
+  .roleBadge {
+    font-size: 9px;
+    padding: 0 9px;
+  }
+
+  .statusSection {
+    padding: 16px;
+  }
+
+  .statusTitle {
+    font-size: 19px;
+  }
+
+  .cardHeader {
+    padding: 16px;
+  }
+
+  .detailItem {
+    padding: 15px 16px;
+  }
+
+  .detailLabel {
+    font-size: 11px;
+  }
+
+  .detailItem strong {
+    font-size: 13px;
+  }
+
+  .errorCard {
+    padding: 18px;
+  }
+}
