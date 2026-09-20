@@ -21,7 +21,9 @@ type StaffForm = {
   role: Role;
 };
 
-const roleOptions = Object.values(Role);
+const roleOptions = Object.values(Role).filter(
+  (role) => role !== Role.ADMIN,
+);
 const emptyForm: StaffForm = {
   fullName: "",
   email: "",
@@ -48,6 +50,7 @@ export default function StaffPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [mode, setMode] = useState<"create" | "edit" | null>(null);
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const [form, setForm] = useState<StaffForm>(emptyForm);
   const {user} = useAuth();
   async function loadStaff() {
@@ -116,6 +119,19 @@ export default function StaffPage() {
         )
       : staff;
   }, [query, staff]);
+
+  const pageSize = 10;
+  const totalPages = Math.max(1, Math.ceil(filteredStaff.length / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const paginatedStaff = useMemo(() => {
+    if (filteredStaff.length <= pageSize) {
+      return filteredStaff;
+    }
+
+    const startIndex = (safeCurrentPage - 1) * pageSize;
+    return filteredStaff.slice(startIndex, startIndex + pageSize);
+  }, [filteredStaff, pageSize, safeCurrentPage]);
 
   function closeDialog() {
     if (!isSaving) {
@@ -266,7 +282,10 @@ export default function StaffPage() {
             type="search"
             placeholder="Search staff by name, email or Role"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setCurrentPage(1);
+            }}
           />
         </label>
         <button
@@ -302,7 +321,7 @@ export default function StaffPage() {
               </tr>
             </thead>
             <tbody>
-              {filteredStaff.map((member) => (
+              {paginatedStaff.map((member) => (
                 <tr key={member.id}>
                   <td>
                     <div className={styles.member}>
@@ -346,6 +365,30 @@ export default function StaffPage() {
               )}
             </tbody>
           </table>
+
+          {filteredStaff.length > pageSize && (
+            <div className={styles.pagination} aria-label="Staff pagination">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                disabled={safeCurrentPage === 1}
+              >
+                Previous
+              </button>
+              <span>
+                Page {safeCurrentPage} of {totalPages}
+              </span>
+              <button
+                type="button"
+                onClick={() =>
+                  setCurrentPage((page) => Math.min(totalPages, page + 1))
+                }
+                disabled={safeCurrentPage === totalPages}
+              >
+                Next
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -389,6 +432,7 @@ export default function StaffPage() {
                 <input
                   required
                   value={form.fullName}
+                  maxLength={30}
                   onChange={(event) =>
                     updateForm("fullName", event.target.value)
                   }
@@ -399,6 +443,10 @@ export default function StaffPage() {
                 <input
                   required
                   type="email"
+                  autoComplete="off"
+                  data-lpignore="true"         
+                  data-1pignore="true"
+                  maxLength={40}
                   value={form.email}
                   onChange={(event) => updateForm("email", event.target.value)}
                 />
@@ -408,8 +456,12 @@ export default function StaffPage() {
                 <input
                   required={mode === "create"}
                   minLength={8}
+                  maxLength={20}
                   type="password"
                   value={form.password}
+                  autoComplete="off"
+                  data-lpignore="true"         
+                  data-1pignore="true"
                   onChange={(event) =>
                     updateForm("password", event.target.value)
                   }

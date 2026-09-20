@@ -111,7 +111,7 @@
 
 .tableWrap {
   width: 100%;
-  height: min(560px, calc(100dvh - 190px));
+  height:fit-content;
   min-height: 240px;
   overflow-y: scroll;
   border: 1px solid #f5f1e7;
@@ -240,6 +240,38 @@
 
 .empty {
   font-size: 14px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px 18px;
+  border-top: 1px solid #eee7da;
+  background: #fffdfa;
+  color: #574e45;
+  font-size: 14px;
+}
+
+.pagination button {
+  border: 1px solid #d9d1c2;
+  border-radius: 2px;
+  background: transparent;
+  color: #3d362f;
+  cursor: pointer;
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+.pagination button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+.pagination span {
+  flex: 1;
+  text-align: center;
 }
 
 .message {

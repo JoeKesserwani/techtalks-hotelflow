@@ -47,6 +47,20 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
           where: { id: task.roomId },
           data: { status: 'NEEDS_CLEANING' },
         });
+      } else {
+        const activeStay = await tx.reservation.findFirst({
+          where: {
+            roomId: task.roomId,
+            status: 'CHECKED_IN',
+            checkInDate: { lte: new Date() },
+            checkOutDate: { gte: new Date() },
+          },
+        });
+
+        await tx.room.update({
+          where: { id: task.roomId },
+          data: { status: activeStay ? 'OCCUPIED' : 'AVAILABLE' },
+        });
       }
 
       await writeAuditLog(tx, {
