@@ -164,3 +164,40 @@ model AuditLog {
   @@index([userId], map: "audit_logs_user_id_fkey")
   @@map("audit_logs")
 }
+
+enum Role {
+  ADMIN
+  MANAGER
+  RECEPTIONIST
+  HOUSEKEEPING
+}
+
+enum RoomStatus {
+  AVAILABLE
+  RESERVED
+  OCCUPIED
+  NEEDS_CLEANING
+  CLEANING
+  OUT_OF_SERVICE
+}
+
+enum ReservationStatus {
+  BOOKED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  UNPAID
+  PARTIAL
+  PAID
+}
+
+enum housekeeping_tasks_status {
+  PENDING
+  IN_PROGRESS
+  IN_REVIEW
+  DONE
+}
