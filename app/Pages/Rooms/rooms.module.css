@@ -2,26 +2,40 @@
   --font-heading: "Fraunces", serif;
   --font-body: "IBM Plex Sans", sans-serif;
 }
+<<<<<<< Updated upstream
 
 .page {
   min-height: 100vh;
   display: flex;
   background: #f7f4ec;
+=======
+.page {
+  min-height: 100vh;
+  display: flex;
+  background: #f6f2e7;
+  color: #26332a;
+>>>>>>> Stashed changes
 }
 
 .main {
   flex: 1;
   min-width: 0;
+<<<<<<< Updated upstream
   padding: 38px 42px;
   box-sizing: border-box;
 }
 
+=======
+  padding: 32px 40px;
+}
+>>>>>>> Stashed changes
 /* =========================
    HEADER
 ========================= */
 
 .header {
   display: flex;
+<<<<<<< Updated upstream
   justify-content: space-between;
   align-items: flex-start;
   gap: 24px;
@@ -632,11 +646,59 @@
 
 .loading {
   min-height: 250px;
+=======
+  align-items: flex-start;
+  justify-content: space-between;
+
+  padding-bottom: 12px;
+  border-bottom: 2px solid #dcd3be;
+}
+
+.headerLeft h1 {
+  margin: 0;
+
+  font-family: "Fraunces", serif;
+  font-size: 28px;
+  font-weight: 500;
+
+  color: #292722;
+}
+
+.headerLeft p {
+  margin: 4px 0 0;
+
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 12px;
+
+  color: #aaa6a6;
+}
+
+.headerRight {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+
+  gap: 3px;
+}
+
+.adminName {
+  font-family: "Fraunces", serif;
+  font-size: 16px;
+  font-weight: 600;
+
+  color: #292722;
+}
+
+.adminRole {
+  min-width: 78px;
+  height: 22px;
+>>>>>>> Stashed changes
 
   display: flex;
   align-items: center;
   justify-content: center;
 
+<<<<<<< Updated upstream
   color: #8a877e;
 
   font-family: var(--font-body);
@@ -936,4 +998,12 @@
   .table {
     min-width: 680px;
   }
+=======
+  background: #c1633b;
+  color: #ffffff;
+
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+>>>>>>> Stashed changes
 }

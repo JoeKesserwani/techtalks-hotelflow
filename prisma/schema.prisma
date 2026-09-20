@@ -57,6 +57,7 @@ model Session {
 }
 
 model Room {
+<<<<<<< Updated upstream
   id                 String             @id @default(uuid())
   hotelId            String             @map("hotel_id")
   hotel              Hotel              @relation(fields: [hotelId], references: [id])
@@ -71,6 +72,20 @@ model Room {
 
   reservations       Reservation[]
   housekeepingTasks  HousekeepingTask[]
+=======
+  id                String             @id @default(uuid())
+  hotelId           String             @map("hotel_id")
+  roomNumber        String             @map("room_number")
+  roomType          String             @map("room_type")
+  capacity          Int
+  basePrice         Decimal            @map("base_price") @db.Decimal(10, 2)
+  status            RoomStatus         @default(AVAILABLE)
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  housekeepingTasks HousekeepingTask[]
+  reservations      Reservation[]
+  hotel             Hotel              @relation(fields: [hotelId], references: [id])
+>>>>>>> Stashed changes
 
   @@unique([hotelId, roomNumber])
   @@map("rooms")

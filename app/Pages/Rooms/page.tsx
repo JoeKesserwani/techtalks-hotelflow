@@ -1,4 +1,5 @@
 "use client";
+<<<<<<< Updated upstream
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -1104,3 +1105,41 @@ const Page = () => {
 };
 
 export default Page;
+=======
+
+import React from "react";
+import Sidebar from "@/components/Navbars/navbar";
+import styles from "./rooms.module.css";
+import { useAuth } from "@/components/Auth/AuthProvider";
+//import { prisma } from '@/lib/db';
+
+const Page = () => {
+  const { user } = useAuth();
+
+  return (
+    <div className={styles.page}>
+      <Sidebar />
+
+      <main className={styles.main}>
+        <header className={styles.header}>
+          <div className={styles.headerLeft}>
+            <h1>Room Setup</h1>
+            <p>24 rooms across 3 floors</p>
+          </div>
+
+          <div className={styles.headerRight}>
+            <span className={styles.adminName}>
+              {user?.fullName}
+            </span>
+
+            <span className={styles.adminRole}>
+              {user?.role}
+            </span>
+          </div>
+        </header>
+      </main>
+    </div>
+  );
+};
+export default Page;
+>>>>>>> Stashed changes
