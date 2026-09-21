@@ -21,10 +21,9 @@ model Hotel {
   phone             String?
   auditLogs         AuditLog[]
   guests            Guest[]
-  housekeepingTasks HousekeepingTask[]
   reservations      Reservation[]
-  rooms             Room[]
-  users             User[]
+  housekeepingTasks HousekeepingTask[]
+  auditLogs         AuditLog[]
 
   @@map("hotels")
 }
@@ -45,7 +44,6 @@ model User {
   sessions            Session[]
   hotel               Hotel              @relation(fields: [hotelId], references: [id])
 
-  @@index([hotelId], map: "users_hotel_id_fkey")
   @@map("users")
 }
 
@@ -57,8 +55,16 @@ model Session {
   createdAt        DateTime @default(now()) @map("created_at")
   user             User     @relation(fields: [userId], references: [id])
 
-  @@index([userId], map: "sessions_user_id_fkey")
   @@map("sessions")
+}
+
+enum RoomStatus {
+  AVAILABLE
+  RESERVED
+  OCCUPIED
+  NEEDS_CLEANING
+  CLEANING
+  OUT_OF_SERVICE
 }
 
 model Room {
@@ -74,7 +80,7 @@ model Room {
   capacity          Int                @default(1)
   housekeepingTasks HousekeepingTask[]
   reservations      Reservation[]
-  hotel             Hotel              @relation(fields: [hotelId], references: [id])
+  housekeepingTasks HousekeepingTask[]
 
   @@unique([hotelId, roomNumber])
   @@map("rooms")
@@ -93,8 +99,21 @@ model Guest {
   hotel          Hotel         @relation(fields: [hotelId], references: [id])
   reservations   Reservation[]
 
-  @@index([hotelId], map: "guests_hotel_id_fkey")
   @@map("guests")
+}
+
+enum ReservationStatus {
+  BOOKED
+  CHECKED_IN
+  CHECKED_OUT
+  CANCELLED
+  NO_SHOW
+}
+
+enum PaymentStatus {
+  UNPAID
+  PARTIAL
+  PAID
 }
 
 model Reservation {
@@ -117,9 +136,6 @@ model Reservation {
   room            Room              @relation(fields: [roomId], references: [id])
 
   @@index([roomId, checkInDate, checkOutDate])
-  @@index([createdByUserId], map: "reservations_created_by_user_id_fkey")
-  @@index([guestId], map: "reservations_guest_id_fkey")
-  @@index([hotelId], map: "reservations_hotel_id_fkey")
   @@map("reservations")
 }
 
@@ -157,8 +173,6 @@ model AuditLog {
   hotel        Hotel    @relation(fields: [hotelId], references: [id])
   user         User?    @relation(fields: [userId], references: [id])
 
-  @@index([hotelId], map: "audit_logs_hotel_id_fkey")
-  @@index([userId], map: "audit_logs_user_id_fkey")
   @@map("audit_logs")
 }
 
