@@ -68,6 +68,7 @@ const AdminDash = () => {
         const response = await fetch("/api/v1/Dashboard/stats");
 
         if (!response.ok) {
+          
           throw new Error("Failed to fetch dashboard stats");
         }
 
