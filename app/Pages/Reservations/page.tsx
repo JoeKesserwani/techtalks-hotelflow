@@ -15,17 +15,7 @@ type Room = {
   roomNumber: string;
   roomType: string;
   basePrice: string | number;
-};
-
-type Hotel = {
-  id: string;
-  name: string;
-};
-
-type User = {
-  id: string;
-  fullName: string;
-  role: string;
+  status: string;
 };
 
 type Reservation = {
@@ -44,404 +34,1149 @@ type Reservation = {
   room: Room;
 };
 
-const Page = () => {
-  const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [guests, setGuests] = useState<Guest[]>([]);
-  const [rooms, setRooms] = useState<Room[]>([]);
-  const [hotels, setHotels] = useState<Hotel[]>([]);
-  const [users, setUsers] = useState<User[]>([]);
+type FormData = {
+  guestId: string;
+  roomId: string;
+  checkInDate: string;
+  checkOutDate: string;
+  pricePerNight: string;
+  totalPrice: string;
+  status: string;
+  paymentStatus: string;
+};
 
-  const [search, setSearch] = useState("");
-  const [timeFilter, setTimeFilter] = useState("month");
-  const [statusFilter, setStatusFilter] = useState("all");
+/*
+ * TODAY
+ */
+const getTodayString = () => {
+  const today = new Date();
 
-  const [showModal, setShowModal] = useState(false);
-  const [editingReservation, setEditingReservation] =
-    useState<Reservation | null>(null);
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
 
-  const [error, setError] = useState("");
+  return `${year}-${month}-${day}`;
+};
 
-  const [form, setForm] = useState({
-    hotelId: "",
-    guestId: "",
-    roomId: "",
-    createdByUserId: "",
-    checkInDate: "",
-    checkOutDate: "",
-    pricePerNight: "",
-    totalPrice: "",
-    status: "BOOKED",
-    paymentStatus: "UNPAID",
-  });
+/*
+ * ROOM STATUS LABEL
+ */
+const getRoomStatusLabel = (status: string) => {
+  switch (status) {
+    case "AVAILABLE":
+      return "Available";
 
-  useEffect(() => {
-    loadData();
-  }, []);
+    case "RESERVED":
+      return "Reserved";
 
-  async function loadData() {
-    try {
-      const [
-        reservationsResponse,
-        guestsResponse,
-        roomsResponse,
-        hotelsResponse,
-        usersResponse,
-      ] = await Promise.all([
-        fetch("/api/reservations"),
-        fetch("/api/guests"),
-        fetch("/api/rooms"),
-        fetch("/api/hotels"),
-        fetch("/api/users"),
-      ]);
+    case "OCCUPIED":
+      return "Occupied";
 
-      if (
-        !reservationsResponse.ok ||
-        !guestsResponse.ok ||
-        !roomsResponse.ok ||
-        !hotelsResponse.ok ||
-        !usersResponse.ok
-      ) {
-        throw new Error("Failed to load data");
-      }
+    case "NEEDS_CLEANING":
+      return "Needs cleaning";
 
-      const reservationsData = await reservationsResponse.json();
-      const guestsData = await guestsResponse.json();
-      const roomsData = await roomsResponse.json();
-      const hotelsData = await hotelsResponse.json();
-      const usersData = await usersResponse.json();
+    case "CLEANING":
+      return "Cleaning";
 
-      setReservations(reservationsData);
-      setGuests(guestsData);
-      setRooms(roomsData);
-      setHotels(hotelsData);
-      setUsers(usersData);
-    } catch (err) {
-      console.error(err);
-      setError("Failed to load reservation data.");
-    }
+    case "OUT_OF_SERVICE":
+      return "Out of service";
+
+    case "MAINTENANCE":
+      return "Maintenance";
+
+    default:
+      return status;
+  }
+};
+
+/*
+ * ROOMS THAT CANNOT BE SELECTED
+ */
+const isRoomCurrentlyUnavailable = (room: Room) => {
+  return (
+    room.status === "OCCUPIED" ||
+    room.status === "CLEANING" ||
+    room.status === "NEEDS_CLEANING" ||
+    room.status === "OUT_OF_SERVICE" ||
+    room.status === "MAINTENANCE"
+  );
+};
+
+/*
+ * CALCULATE NIGHTS
+ */
+const calculateNights = (
+  checkInDate: string,
+  checkOutDate: string
+) => {
+  if (!checkInDate || !checkOutDate) {
+    return 0;
   }
 
-  function openNewReservation() {
-    setEditingReservation(null);
-    setError("");
+  const checkIn = new Date(`${checkInDate}T00:00:00`);
+  const checkOut = new Date(`${checkOutDate}T00:00:00`);
 
-    setForm({
-      hotelId: hotels[0]?.id || "",
-      guestId: guests[0]?.id || "",
-      roomId: rooms[0]?.id || "",
-      createdByUserId:
-        users.find((user) => user.role === "RECEPTIONIST")?.id ||
-        users[0]?.id ||
-        "",
+  const difference =
+    checkOut.getTime() - checkIn.getTime();
+
+  const nights = Math.ceil(
+    difference / (1000 * 60 * 60 * 24)
+  );
+
+  return nights > 0 ? nights : 0;
+};
+
+/*
+ * FORMAT DATE
+ */
+const formatDate = (dateString: string) => {
+  if (!dateString) {
+    return "-";
+  }
+
+  return new Date(dateString).toLocaleDateString();
+};
+
+/*
+ * FORMAT PRICE
+ */
+const formatPrice = (value: string | number) => {
+  const number = Number(value);
+
+  if (Number.isNaN(number)) {
+    return "0.00";
+  }
+
+  return number.toFixed(2);
+};
+
+/*
+ * RESERVATION STATUS LABEL
+ */
+const getStatusLabel = (status: string) => {
+  switch (status) {
+    case "BOOKED":
+      return "Upcoming";
+
+    case "CHECKED_IN":
+      return "In stay";
+
+    case "CHECKED_OUT":
+      return "Checked-out";
+
+    case "CANCELLED":
+      return "Cancelled";
+
+    case "NO_SHOW":
+      return "No-show";
+
+    default:
+      return status;
+  }
+};
+
+/*
+ * RESERVATION STATUS CSS
+ */
+const getStatusClass = (status: string) => {
+  switch (status) {
+    case "BOOKED":
+      return styles.upcoming;
+
+    case "CHECKED_IN":
+      return styles.inStay;
+
+    case "CHECKED_OUT":
+      return styles.checkedOut;
+
+    case "CANCELLED":
+    case "NO_SHOW":
+      return styles.cancelled;
+
+    default:
+      return "";
+  }
+};
+
+/*
+ * SAFELY READ API RESPONSE
+ */
+const readApiResponse = async (response: Response) => {
+  const text = await response.text();
+
+  if (!text) {
+    return {};
+  }
+
+  try {
+    return JSON.parse(text);
+  } catch {
+    console.error(
+      "API returned a non-JSON response:",
+      text
+    );
+
+    throw new Error(
+      `Server returned ${response.status} instead of JSON.`
+    );
+  }
+};
+
+export default function ReservationsPage() {
+  /*
+   * DATA
+   */
+  const [reservations, setReservations] =
+    useState<Reservation[]>([]);
+
+  const [guests, setGuests] =
+    useState<Guest[]>([]);
+
+  const [rooms, setRooms] =
+    useState<Room[]>([]);
+
+  /*
+   * UI STATE
+   */
+  const [loading, setLoading] =
+    useState(true);
+
+  const [saving, setSaving] =
+    useState(false);
+
+  const [error, setError] =
+    useState("");
+
+  const [search, setSearch] =
+    useState("");
+
+  const [filter, setFilter] =
+    useState("all");
+
+  const [showModal, setShowModal] =
+    useState(false);
+
+  const [
+    editingReservation,
+    setEditingReservation,
+  ] = useState<Reservation | null>(null);
+
+  /*
+   * FORM
+   */
+  const [form, setForm] =
+    useState<FormData>({
+      guestId: "",
+      roomId: "",
       checkInDate: "",
       checkOutDate: "",
-      pricePerNight: rooms[0]?.basePrice?.toString() || "",
+      pricePerNight: "",
       totalPrice: "",
       status: "BOOKED",
       paymentStatus: "UNPAID",
     });
 
-    setShowModal(true);
-  }
+  const today = getTodayString();
 
-  function openEditReservation(reservation: Reservation) {
-    setEditingReservation(reservation);
-    setError("");
-
-    setForm({
-      hotelId: reservation.hotelId,
-      guestId: reservation.guestId,
-      roomId: reservation.roomId,
-      createdByUserId: reservation.createdByUserId,
-      checkInDate: reservation.checkInDate.slice(0, 10),
-      checkOutDate: reservation.checkOutDate.slice(0, 10),
-      pricePerNight: String(reservation.pricePerNight),
-      totalPrice: String(reservation.totalPrice),
-      status: reservation.status,
-      paymentStatus: reservation.paymentStatus,
-    });
-
-    setShowModal(true);
-  }
-
-  function closeModal() {
-    setShowModal(false);
-    setEditingReservation(null);
-    setError("");
-  }
-
-  function handleRoomChange(roomId: string) {
-    const selectedRoom = rooms.find((room) => room.id === roomId);
-
-    const price = selectedRoom ? Number(selectedRoom.basePrice) : 0;
-
-    setForm((previous) => ({
-      ...previous,
-      roomId,
-      pricePerNight: price.toString(),
-    }));
-  }
-
-  function calculateTotal(
-    checkInDate: string,
-    checkOutDate: string,
-    pricePerNight: string,
-  ) {
-    if (!checkInDate || !checkOutDate || !pricePerNight) {
-      return "";
-    }
-
-    const checkIn = new Date(`${checkInDate}T00:00:00`);
-    const checkOut = new Date(`${checkOutDate}T00:00:00`);
-
-    const difference = checkOut.getTime() - checkIn.getTime();
-
-    const nights = difference / (1000 * 60 * 60 * 24);
-
-    if (nights <= 0) {
-      return "";
-    }
-
-    return (nights * Number(pricePerNight)).toFixed(2);
-  }
-
-  function handleDateChange(
-    field: "checkInDate" | "checkOutDate",
-    value: string,
-  ) {
-    const updatedForm = {
-      ...form,
-      [field]: value,
-    };
-
-    const total = calculateTotal(
-      updatedForm.checkInDate,
-      updatedForm.checkOutDate,
-      updatedForm.pricePerNight,
-    );
-
-    setForm({
-      ...updatedForm,
-      totalPrice: total,
-    });
-  }
-
-  async function saveReservation(event: React.FormEvent) {
-    event.preventDefault();
-    setError("");
-
-    if (!form.hotelId || !form.guestId || !form.roomId) {
-      setError("Please select a hotel, guest, and room.");
-      return;
-    }
-
-    if (!form.checkInDate || !form.checkOutDate) {
-      setError("Please select check-in and check-out dates.");
-      return;
-    }
-
-    if (!form.pricePerNight || !form.totalPrice) {
-      setError("Price information is required.");
-      return;
-    }
-
-    if (!form.createdByUserId) {
-      setError("No user is available to create this reservation.");
-      return;
-    }
-
+  /*
+   * LOAD DATABASE DATA
+   */
+  const loadData = async () => {
     try {
-      const url = "/api/reservations";
+      setLoading(true);
+      setError("");
 
-      const method = editingReservation ? "PATCH" : "POST";
+      const [
+        reservationsResponse,
+        guestsResponse,
+        roomsResponse,
+      ] = await Promise.all([
+        fetch("/api/v1/reservations", {
+          credentials: "include",
+        }),
 
-      const body = editingReservation
-        ? {
-            id: editingReservation.id,
-            checkInDate: form.checkInDate,
-            checkOutDate: form.checkOutDate,
-            status: form.status,
-            pricePerNight: Number(form.pricePerNight),
-            totalPrice: Number(form.totalPrice),
-            paymentStatus: form.paymentStatus,
-          }
-        : {
-            hotelId: form.hotelId,
-            roomId: form.roomId,
-            guestId: form.guestId,
-            createdByUserId: form.createdByUserId,
-            checkInDate: form.checkInDate,
-            checkOutDate: form.checkOutDate,
-            status: form.status,
-            pricePerNight: Number(form.pricePerNight),
-            totalPrice: Number(form.totalPrice),
-            paymentStatus: form.paymentStatus,
-          };
+        fetch("/api/guests", {
+          credentials: "include",
+        }),
 
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(body),
-      });
+        fetch("/api/rooms", {
+          credentials: "include",
+        }),
+      ]);
 
-      const data = await response.json();
+      const reservationsData =
+        await readApiResponse(
+          reservationsResponse
+        );
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to save reservation");
+      const guestsData =
+        await readApiResponse(
+          guestsResponse
+        );
+
+      const roomsData =
+        await readApiResponse(
+          roomsResponse
+        );
+
+      if (!reservationsResponse.ok) {
+        throw new Error(
+          reservationsData?.error ||
+            reservationsData?.message ||
+            "Failed to load reservations"
+        );
       }
 
-      closeModal();
-      await loadData();
+      if (!guestsResponse.ok) {
+        throw new Error(
+          guestsData?.error ||
+            guestsData?.message ||
+            "Failed to load guests"
+        );
+      }
+
+      if (!roomsResponse.ok) {
+        throw new Error(
+          roomsData?.error ||
+            roomsData?.message ||
+            "Failed to load rooms"
+        );
+      }
+
+      setReservations(
+        Array.isArray(reservationsData)
+          ? reservationsData
+          : reservationsData?.data ||
+              reservationsData?.reservations ||
+              []
+      );
+
+      setGuests(
+        Array.isArray(guestsData)
+          ? guestsData
+          : guestsData?.data ||
+              guestsData?.guests ||
+              []
+      );
+
+      setRooms(
+        Array.isArray(roomsData)
+          ? roomsData
+          : roomsData?.data ||
+              roomsData?.rooms ||
+              []
+      );
     } catch (err) {
       console.error(err);
-      setError(
-        err instanceof Error ? err.message : "Failed to save reservation.",
-      );
-    }
-  }
 
-  async function deleteReservation(id: string) {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this reservation?",
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to load data"
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  /*
+   * LOAD DATA WHEN PAGE OPENS
+   */
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  /*
+   * SEARCH + FILTER
+   */
+  const filteredReservations = useMemo(() => {
+    const searchValue =
+      search.trim().toLowerCase();
+
+    return reservations.filter(
+      (reservation) => {
+        const guestName =
+          reservation.guest?.fullName?.toLowerCase() ||
+          "";
+
+        const roomNumber =
+          reservation.room?.roomNumber?.toLowerCase() ||
+          "";
+
+        const reservationId =
+          reservation.id.toLowerCase();
+
+        const matchesSearch =
+          !searchValue ||
+          guestName.includes(searchValue) ||
+          roomNumber.includes(searchValue) ||
+          reservationId.includes(searchValue);
+
+        if (!matchesSearch) {
+          return false;
+        }
+
+        if (filter === "all") {
+          return true;
+        }
+
+        if (filter === "this_month") {
+          const reservationDate =
+            new Date(reservation.checkInDate);
+
+          const currentDate = new Date();
+
+          return (
+            reservationDate.getMonth() ===
+              currentDate.getMonth() &&
+            reservationDate.getFullYear() ===
+              currentDate.getFullYear()
+          );
+        }
+
+        if (filter === "upcoming") {
+          return reservation.status === "BOOKED";
+        }
+
+        if (filter === "in_stay") {
+          return reservation.status === "CHECKED_IN";
+        }
+
+        if (filter === "checked_out") {
+          return reservation.status === "CHECKED_OUT";
+        }
+
+        if (filter === "cancelled") {
+          return (
+            reservation.status === "CANCELLED" ||
+            reservation.status === "NO_SHOW"
+          );
+        }
+
+        return true;
+      }
     );
+  }, [reservations, search, filter]);
+
+  /*
+   * RESET FORM
+   */
+  const resetForm = () => {
+    setForm({
+      guestId: "",
+      roomId: "",
+      checkInDate: today,
+      checkOutDate: "",
+      pricePerNight: "",
+      totalPrice: "",
+      status: "BOOKED",
+      paymentStatus: "UNPAID",
+    });
+  };
+
+  /*
+   * NEW RESERVATION
+   */
+  const openNewReservation = () => {
+    setEditingReservation(null);
+
+    const firstUsableRoom =
+      rooms.find(
+        (room) =>
+          !isRoomCurrentlyUnavailable(room)
+      );
+
+    setForm({
+      guestId: guests[0]?.id || "",
+      roomId: firstUsableRoom?.id || "",
+      checkInDate: today,
+      checkOutDate: "",
+      pricePerNight: firstUsableRoom
+        ? String(firstUsableRoom.basePrice)
+        : "",
+      totalPrice: "",
+      status: "BOOKED",
+      paymentStatus: "UNPAID",
+    });
+
+    setError("");
+    setShowModal(true);
+  };
+
+  /*
+   * EDIT RESERVATION
+   *
+   * IMPORTANT:
+   * Edit is available for ALL reservation statuses.
+   */
+  const openEditReservation = (
+    reservation: Reservation
+  ) => {
+    setEditingReservation(reservation);
+
+    setForm({
+      guestId: reservation.guestId,
+      roomId: reservation.roomId,
+
+      checkInDate:
+        reservation.checkInDate.split("T")[0],
+
+      checkOutDate:
+        reservation.checkOutDate.split("T")[0],
+
+      pricePerNight: String(
+        reservation.room?.basePrice ??
+          reservation.pricePerNight
+      ),
+
+      totalPrice: String(
+        reservation.totalPrice
+      ),
+
+      /*
+       * Keep the actual reservation status.
+       * The backend will also preserve it.
+       */
+      status: reservation.status,
+
+      paymentStatus:
+        reservation.paymentStatus === "PAID"
+          ? "PAID"
+          : reservation.paymentStatus === "PARTIAL"
+            ? "PARTIAL"
+            : "UNPAID",
+    });
+
+    setError("");
+    setShowModal(true);
+  };
+
+  /*
+   * CLOSE MODAL
+   */
+  const closeModal = () => {
+    if (saving) {
+      return;
+    }
+
+    setShowModal(false);
+    setEditingReservation(null);
+    resetForm();
+    setError("");
+  };
+
+  /*
+   * GUEST CHANGE
+   */
+  const handleGuestChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    setForm((current) => ({
+      ...current,
+      guestId: event.target.value,
+    }));
+  };
+
+  /*
+   * ROOM CHANGE
+   */
+  const handleRoomChange = (
+    event: React.ChangeEvent<HTMLSelectElement>
+  ) => {
+    const roomId = event.target.value;
+
+    const selectedRoom =
+      rooms.find(
+        (room) => room.id === roomId
+      );
+
+    if (!selectedRoom) {
+      setForm((current) => ({
+        ...current,
+        roomId,
+        pricePerNight: "",
+        totalPrice: "",
+      }));
+
+      return;
+    }
+
+    if (
+      isRoomCurrentlyUnavailable(
+        selectedRoom
+      )
+    ) {
+      setError(
+        "This room is currently unavailable."
+      );
+
+      return;
+    }
+
+    setError("");
+
+    const nights = calculateNights(
+      form.checkInDate,
+      form.checkOutDate
+    );
+
+    const pricePerNight =
+      Number(selectedRoom.basePrice);
+
+    const totalPrice =
+      nights > 0
+        ? pricePerNight * nights
+        : 0;
+
+    setForm((current) => ({
+      ...current,
+      roomId,
+      pricePerNight: String(
+        pricePerNight
+      ),
+      totalPrice: String(totalPrice),
+    }));
+  };
+
+  /*
+   * CHECK-IN DATE CHANGE
+   */
+  const handleCheckInChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const checkInDate =
+      event.target.value;
+
+    if (checkInDate < today) {
+      setError(
+        "Check-in date cannot be before today."
+      );
+
+      return;
+    }
+
+    if (
+      form.checkOutDate &&
+      form.checkOutDate <= checkInDate
+    ) {
+      setError(
+        "Check-out date must be after check-in date."
+      );
+    } else {
+      setError("");
+    }
+
+    const nights = calculateNights(
+      checkInDate,
+      form.checkOutDate
+    );
+
+    const selectedRoom =
+      rooms.find(
+        (room) =>
+          room.id === form.roomId
+      );
+
+    const pricePerNight =
+      selectedRoom
+        ? Number(selectedRoom.basePrice)
+        : 0;
+
+    setForm((current) => ({
+      ...current,
+      checkInDate,
+      totalPrice: String(
+        nights > 0
+          ? pricePerNight * nights
+          : 0
+      ),
+    }));
+  };
+
+  /*
+   * CHECK-OUT DATE CHANGE
+   */
+  const handleCheckOutChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const checkOutDate =
+      event.target.value;
+
+    if (
+      form.checkInDate &&
+      checkOutDate <= form.checkInDate
+    ) {
+      setError(
+        "Check-out date must be after check-in date."
+      );
+    } else {
+      setError("");
+    }
+
+    const nights = calculateNights(
+      form.checkInDate,
+      checkOutDate
+    );
+
+    const selectedRoom =
+      rooms.find(
+        (room) =>
+          room.id === form.roomId
+      );
+
+    const pricePerNight =
+      selectedRoom
+        ? Number(selectedRoom.basePrice)
+        : 0;
+
+    setForm((current) => ({
+      ...current,
+      checkOutDate,
+      totalPrice: String(
+        nights > 0
+          ? pricePerNight * nights
+          : 0
+      ),
+    }));
+  };
+
+  /*
+   * CHECK IN
+   */
+  const handleCheckIn = async (
+    reservationId: string
+  ) => {
+    const confirmed =
+      window.confirm(
+        "Are you sure you want to check in this guest?"
+      );
 
     if (!confirmed) {
       return;
     }
 
     try {
-      const response = await fetch("/api/reservations", {
-        method: "DELETE",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ id }),
-      });
+      setError("");
 
-      const data = await response.json();
+      const response =
+        await fetch(
+          `/api/v1/reservations/${reservationId}/check-in`,
+          {
+            method: "POST",
+            credentials: "include",
+          }
+        );
+
+      const data =
+        await readApiResponse(response);
 
       if (!response.ok) {
-        throw new Error(data.error || "Failed to delete reservation");
+        throw new Error(
+          data?.error ||
+            data?.message ||
+            "Failed to check in reservation"
+        );
       }
 
       await loadData();
     } catch (err) {
       console.error(err);
+
       setError(
-        err instanceof Error ? err.message : "Failed to delete reservation.",
+        err instanceof Error
+          ? err.message
+          : "Failed to check in reservation"
       );
     }
-  }
+  };
 
-  const filteredReservations = useMemo(() => {
-    const now = new Date();
+  /*
+   * CHECK OUT
+   */
+  const handleCheckOut = async (
+    reservationId: string
+  ) => {
+    const confirmed =
+      window.confirm(
+        "Are you sure you want to check out this guest?"
+      );
 
-    return reservations.filter((reservation) => {
-      const guestName = reservation.guest?.fullName?.toLowerCase() || "";
-
-      const phone = reservation.guest?.phone?.toLowerCase() || "";
-
-      const roomNumber = reservation.room?.roomNumber?.toLowerCase() || "";
-
-      const reservationId = reservation.id.toLowerCase();
-
-      const searchValue = search.toLowerCase();
-
-      const matchesSearch =
-        guestName.includes(searchValue) ||
-        phone.includes(searchValue) ||
-        roomNumber.includes(searchValue) ||
-        reservationId.includes(searchValue);
-
-      if (!matchesSearch) {
-        return false;
-      }
-
-      const reservationDate = new Date(reservation.checkInDate);
-
-      let matchesTime = true;
-
-      if (timeFilter === "month") {
-        matchesTime =
-          reservationDate.getMonth() === now.getMonth() &&
-          reservationDate.getFullYear() === now.getFullYear();
-      }
-
-      if (timeFilter === "week") {
-        const sevenDaysAgo = new Date();
-        sevenDaysAgo.setDate(now.getDate() - 7);
-
-        matchesTime = reservationDate >= sevenDaysAgo;
-      }
-
-      if (statusFilter !== "all") {
-        matchesTime =
-          matchesTime && reservation.status.toLowerCase() === statusFilter;
-      }
-
-      return matchesTime;
-    });
-  }, [reservations, search, timeFilter, statusFilter]);
-
-  function formatDate(date: string) {
-    return new Date(date).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    });
-  }
-
-  function getStatusLabel(status: string) {
-    switch (status) {
-      case "BOOKED":
-        return "Upcoming";
-      case "CHECKED_IN":
-        return "In stay";
-      case "CHECKED_OUT":
-        return "Checked-out";
-      case "CANCELLED":
-        return "Cancelled";
-      case "NO_SHOW":
-        return "No-show";
-      default:
-        return status;
+    if (!confirmed) {
+      return;
     }
-  }
 
-  function getStatusClass(status: string) {
-    switch (status) {
-      case "BOOKED":
-        return styles.upcoming;
-      case "CHECKED_IN":
-        return styles.inStay;
-      case "CHECKED_OUT":
-        return styles.checkedOut;
-      case "CANCELLED":
-        return styles.cancelled;
-      default:
-        return styles.inStay;
+    try {
+      setError("");
+
+      const response =
+        await fetch(
+          `/api/v1/reservations/${reservationId}/check-out`,
+          {
+            method: "POST",
+            credentials: "include",
+          }
+        );
+
+      const data =
+        await readApiResponse(response);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.error ||
+            data?.message ||
+            "Failed to check out reservation"
+        );
+      }
+
+      await loadData();
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to check out reservation"
+      );
     }
-  }
+  };
 
+  /*
+   * DELETE
+   *
+   * Available for ALL statuses.
+   */
+  const handleDelete = async (
+    reservationId: string
+  ) => {
+    const confirmed =
+      window.confirm(
+        "Are you sure you want to delete this reservation?"
+      );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      setError("");
+
+      const response =
+        await fetch(
+          `/api/v1/reservations/${reservationId}`,
+          {
+            method: "DELETE",
+            credentials: "include",
+          }
+        );
+
+      const data =
+        await readApiResponse(response);
+
+      if (!response.ok) {
+        throw new Error(
+          data?.error ||
+            data?.message ||
+            "Failed to delete reservation"
+        );
+      }
+
+      await loadData();
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to delete reservation"
+      );
+    }
+  };
+
+  /*
+   * SAVE RESERVATION
+   */
+  const saveReservation = async (
+    event: React.FormEvent
+  ) => {
+    event.preventDefault();
+
+    setError("");
+
+    /*
+     * VALIDATION
+     */
+    if (!form.guestId) {
+      setError("Please select a guest.");
+      return;
+    }
+
+    if (!form.roomId) {
+      setError("Please select a room.");
+      return;
+    }
+
+    if (!form.checkInDate) {
+      setError(
+        "Please select a check-in date."
+      );
+      return;
+    }
+
+    if (!form.checkOutDate) {
+      setError(
+        "Please select a check-out date."
+      );
+      return;
+    }
+
+    /*
+     * For NEW reservations, check-in
+     * cannot be before today.
+     */
+    if (
+      !editingReservation &&
+      form.checkInDate < today
+    ) {
+      setError(
+        "Check-in date cannot be before today."
+      );
+      return;
+    }
+
+    if (
+      form.checkOutDate <=
+      form.checkInDate
+    ) {
+      setError(
+        "Check-out date must be after check-in date."
+      );
+      return;
+    }
+
+    const selectedRoom =
+      rooms.find(
+        (room) =>
+          room.id === form.roomId
+      );
+
+    if (!selectedRoom) {
+      setError(
+        "Selected room was not found."
+      );
+      return;
+    }
+
+    /*
+     * For a NEW reservation, the room must
+     * currently be available.
+     *
+     * During editing, we allow the current
+     * room even if its status changed because
+     * the reservation may already be checked in.
+     */
+    if (
+      !editingReservation &&
+      isRoomCurrentlyUnavailable(selectedRoom)
+    ) {
+      setError(
+        "This room is currently unavailable."
+      );
+      return;
+    }
+
+    const nights = calculateNights(
+      form.checkInDate,
+      form.checkOutDate
+    );
+
+    if (nights <= 0) {
+      setError(
+        "Reservation must be at least one night."
+      );
+      return;
+    }
+
+    try {
+      setSaving(true);
+
+      /*
+       * EDIT EXISTING RESERVATION
+       */
+      if (editingReservation) {
+        const response =
+          await fetch(
+            `/api/v1/reservations/${editingReservation.id}`,
+            {
+              method: "PATCH",
+              credentials: "include",
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body: JSON.stringify({
+                checkInDate:
+                  form.checkInDate,
+
+                checkOutDate:
+                  form.checkOutDate,
+
+                paymentStatus:
+                  form.paymentStatus,
+              }),
+            }
+          );
+
+        const data =
+          await readApiResponse(response);
+
+        if (!response.ok) {
+          throw new Error(
+            data?.error ||
+              data?.message ||
+              "Failed to update reservation"
+          );
+        }
+      }
+
+      /*
+       * CREATE NEW RESERVATION
+       *
+       * createdByUserId is NOT sent.
+       * Backend gets it from authentication.
+       *
+       * pricePerNight and totalPrice are
+       * NOT sent.
+       * Backend gets price from the room.
+       */
+      else {
+        const response =
+          await fetch(
+            "/api/v1/reservations",
+            {
+              method: "POST",
+              credentials: "include",
+              headers: {
+                "Content-Type":
+                  "application/json",
+              },
+
+              body: JSON.stringify({
+                guestId:
+                  form.guestId,
+
+                roomId:
+                  form.roomId,
+
+                checkInDate:
+                  form.checkInDate,
+
+                checkOutDate:
+                  form.checkOutDate,
+
+                paymentStatus:
+                  form.paymentStatus,
+              }),
+            }
+          );
+
+        const data =
+          await readApiResponse(response);
+
+        if (!response.ok) {
+          throw new Error(
+            data?.error ||
+              data?.message ||
+              "Failed to create reservation"
+          );
+        }
+      }
+
+      /*
+       * REFRESH DATABASE DATA
+       */
+      await loadData();
+
+      setShowModal(false);
+      setEditingReservation(null);
+      resetForm();
+    } catch (err) {
+      console.error(err);
+
+      setError(
+        err instanceof Error
+          ? err.message
+          : "Failed to save reservation"
+      );
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  /*
+   * SELECTED ROOM
+   */
+  const selectedRoom =
+    rooms.find(
+      (room) =>
+        room.id === form.roomId
+    );
+
+  /*
+   * PRICE COMES FROM ROOM
+   */
+  const displayedPricePerNight =
+    selectedRoom
+      ? Number(selectedRoom.basePrice)
+      : Number(
+          form.pricePerNight || 0
+        );
+
+  /*
+   * NIGHTS
+   */
+  const displayedNights =
+    calculateNights(
+      form.checkInDate,
+      form.checkOutDate
+    );
+
+  /*
+   * TOTAL
+   */
+  const displayedTotal =
+    displayedNights > 0
+      ? displayedPricePerNight *
+        displayedNights
+      : 0;
+
+  /*
+   * PAGE
+   */
   return (
     <div className={styles.page}>
       <main className={styles.content}>
-        <div className={styles.header}>
+        <header className={styles.header}>
           <div className={styles.title}>
             <h1>Reservations</h1>
 
-            <p>{filteredReservations.length} reservations</p>
+            <p>
+              {reservations.length} reservations this month
+            </p>
           </div>
 
           <div className={styles.userInfo}>
-            <strong>Receptionist&apos;s name</strong>
+            <span>Receptionist</span>
 
-            <span className={styles.userRole}>Receptionist</span>
+            <span
+              className={styles.userRole}
+            >
+              Receptionist
+            </span>
           </div>
-        </div>
+        </header>
 
-        {error && <div className={styles.error}>{error}</div>}
+        {/* TOOLBAR */}
 
         <div className={styles.toolbar}>
           <input
@@ -449,320 +1184,641 @@ const Page = () => {
             type="text"
             placeholder="Search by guest's name, ID, room number"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) =>
+              setSearch(event.target.value)
+            }
           />
 
           <select
             className={styles.filter}
-            value={timeFilter}
-            onChange={(event) => setTimeFilter(event.target.value)}
+            value={filter}
+            onChange={(event) =>
+              setFilter(
+                event.target.value
+              )
+            }
           >
-            <option value="month">This month</option>
-            <option value="week">Last 7 days</option>
-            <option value="all">All time</option>
+            <option value="all">
+              All
+            </option>
+
+            <option value="this_month">
+              This month
+            </option>
+
+            <option value="upcoming">
+              Upcoming
+            </option>
+
+            <option value="in_stay">
+              In stay
+            </option>
+
+            <option value="checked_out">
+              Checked-out
+            </option>
+
+            <option value="cancelled">
+              Cancelled
+            </option>
           </select>
 
-          <select
-            className={styles.filter}
-            value={statusFilter}
-            onChange={(event) => setStatusFilter(event.target.value)}
+          <button
+            className={styles.newButton}
+            onClick={
+              openNewReservation
+            }
           >
-            <option value="all">All statuses</option>
-            <option value="booked">Upcoming</option>
-            <option value="checked_in">In stay</option>
-            <option value="checked_out">Checked-out</option>
-            <option value="cancelled">Cancelled</option>
-          </select>
-
-          <button className={styles.newButton} onClick={openNewReservation}>
             + New reservation
           </button>
         </div>
 
-        <div className={styles.tableContainer}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th>Guest</th>
-                <th>Room</th>
-                <th>Check-in</th>
-                <th>Check-out</th>
-                <th>Status</th>
-                <th></th>
-              </tr>
-            </thead>
+        {/* ERROR */}
 
-            <tbody>
-              {filteredReservations.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className={styles.empty}>
-                    No reservations found.
-                  </td>
-                </tr>
-              ) : (
-                filteredReservations.map((reservation) => (
-                  <tr key={reservation.id}>
-                    <td>
-                      <div className={styles.guest}>
-                        <strong>
-                          {reservation.guest?.fullName || "Unknown guest"}
-                        </strong>
-
-                        <small>{reservation.guest?.phone || "No phone"}</small>
-                      </div>
-                    </td>
-
-                    <td>{reservation.room?.roomNumber || "-"}</td>
-
-                    <td>{formatDate(reservation.checkInDate)}</td>
-
-                    <td>{formatDate(reservation.checkOutDate)}</td>
-
-                    <td>
-                      <span
-                        className={`${styles.status} ${getStatusClass(
-                          reservation.status,
-                        )}`}
-                      >
-                        {getStatusLabel(reservation.status)}
-                      </span>
-                    </td>
-
-                    <td>
-                      <button
-                        className={styles.editButton}
-                        onClick={() => openEditReservation(reservation)}
-                      >
-                        Edit
-                      </button>
-
-                      <button
-                        className={styles.deleteButton}
-                        onClick={() => deleteReservation(reservation.id)}
-                      >
-                        Delete
-                      </button>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-      </main>
-
-      {showModal && (
-        <div className={styles.overlay}>
-          <div className={styles.modal}>
-            <div className={styles.modalHeader}>
-              <h2>
-                {editingReservation ? "Edit reservation" : "New reservation"}
-              </h2>
-
-              <button className={styles.closeButton} onClick={closeModal}>
-                ×
-              </button>
-            </div>
-
-            <form onSubmit={saveReservation}>
-              <div className={styles.formGrid}>
-                <label>
-                  Hotel
-                  <select
-                    value={form.hotelId}
-                    onChange={(event) =>
-                      setForm({
-                        ...form,
-                        hotelId: event.target.value,
-                      })
-                    }
-                    disabled={!!editingReservation}
-                  >
-                    <option value="">Select hotel</option>
-
-                    {hotels.map((hotel) => (
-                      <option key={hotel.id} value={hotel.id}>
-                        {hotel.name}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label>
-                  Guest
-                  <select
-                    value={form.guestId}
-                    onChange={(event) =>
-                      setForm({
-                        ...form,
-                        guestId: event.target.value,
-                      })
-                    }
-                    disabled={!!editingReservation}
-                  >
-                    <option value="">Select guest</option>
-
-                    {guests.map((guest) => (
-                      <option key={guest.id} value={guest.id}>
-                        {guest.fullName}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label>
-                  Room
-                  <select
-                    value={form.roomId}
-                    onChange={(event) => handleRoomChange(event.target.value)}
-                    disabled={!!editingReservation}
-                  >
-                    <option value="">Select room</option>
-
-                    {rooms.map((room) => (
-                      <option key={room.id} value={room.id}>
-                        Room {room.roomNumber} — {room.roomType}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label>
-                  Created by
-                  <select
-                    value={form.createdByUserId}
-                    onChange={(event) =>
-                      setForm({
-                        ...form,
-                        createdByUserId: event.target.value,
-                      })
-                    }
-                    disabled={!!editingReservation}
-                  >
-                    <option value="">Select user</option>
-
-                    {users.map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {user.fullName} — {user.role}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label>
-                  Check-in
-                  <input
-                    type="date"
-                    value={form.checkInDate}
-                    onChange={(event) =>
-                      handleDateChange("checkInDate", event.target.value)
-                    }
-                  />
-                </label>
-
-                <label>
-                  Check-out
-                  <input
-                    type="date"
-                    value={form.checkOutDate}
-                    onChange={(event) =>
-                      handleDateChange("checkOutDate", event.target.value)
-                    }
-                  />
-                </label>
-
-                <label>
-                  Price per night
-                  <input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={form.pricePerNight}
-                    onChange={(event) => {
-                      const price = event.target.value;
-
-                      const total = calculateTotal(
-                        form.checkInDate,
-                        form.checkOutDate,
-                        price,
-                      );
-
-                      setForm({
-                        ...form,
-                        pricePerNight: price,
-                        totalPrice: total,
-                      });
-                    }}
-                  />
-                </label>
-
-                <label>
-                  Total price
-                  <input type="number" value={form.totalPrice} readOnly />
-                </label>
-
-                <label>
-                  Status
-                  <select
-                    value={form.status}
-                    onChange={(event) =>
-                      setForm({
-                        ...form,
-                        status: event.target.value,
-                      })
-                    }
-                  >
-                    <option value="BOOKED">Upcoming</option>
-
-                    <option value="CHECKED_IN">In stay</option>
-
-                    <option value="CHECKED_OUT">Checked-out</option>
-
-                    <option value="CANCELLED">Cancelled</option>
-
-                    <option value="NO_SHOW">No-show</option>
-                  </select>
-                </label>
-
-                <label>
-                  Payment
-                  <select
-                    value={form.paymentStatus}
-                    onChange={(event) =>
-                      setForm({
-                        ...form,
-                        paymentStatus: event.target.value,
-                      })
-                    }
-                  >
-                    <option value="UNPAID">Unpaid</option>
-
-                    <option value="PARTIAL">Partial</option>
-
-                    <option value="PAID">Paid</option>
-                  </select>
-                </label>
-              </div>
-
-              <div className={styles.modalActions}>
-                <button
-                  type="button"
-                  className={styles.cancelButton}
-                  onClick={closeModal}
-                >
-                  Cancel
-                </button>
-
-                <button type="submit" className={styles.saveButton}>
-                  {editingReservation ? "Save changes" : "Create reservation"}
-                </button>
-              </div>
-            </form>
+        {error && !showModal && (
+          <div className={styles.error}>
+            {error}
           </div>
-        </div>
-      )}
+        )}
+
+        {/* LOADING */}
+
+        {loading ? (
+          <div className={styles.empty}>
+            Loading reservations...
+          </div>
+        ) : filteredReservations.length ===
+          0 ? (
+          <div className={styles.empty}>
+            No reservations found.
+          </div>
+        ) : (
+          /* TABLE */
+
+          <div
+            className={
+              styles.tableContainer
+            }
+          >
+            <table
+              className={styles.table}
+            >
+              <thead>
+                <tr>
+                  <th>Guest</th>
+                  <th>Room</th>
+                  <th>Check-in</th>
+                  <th>Check-out</th>
+                  <th>Status</th>
+                  <th>Payment</th>
+                  <th>Total</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredReservations.map(
+                  (reservation) => (
+                    <tr
+                      key={
+                        reservation.id
+                      }
+                    >
+                      {/* GUEST */}
+
+                      <td>
+                        <div
+                          className={
+                            styles.guest
+                          }
+                        >
+                          <strong>
+                            {reservation
+                              .guest
+                              ?.fullName ||
+                              "Unknown guest"}
+                          </strong>
+
+                          {reservation
+                            .guest
+                            ?.phone && (
+                            <small>
+                              {
+                                reservation
+                                  .guest
+                                  .phone
+                              }
+                            </small>
+                          )}
+                        </div>
+                      </td>
+
+                      {/* ROOM */}
+
+                      <td>
+                        Room{" "}
+                        {reservation
+                          .room
+                          ?.roomNumber ||
+                          "-"}
+                      </td>
+
+                      {/* CHECK-IN */}
+
+                      <td>
+                        {formatDate(
+                          reservation.checkInDate
+                        )}
+                      </td>
+
+                      {/* CHECK-OUT */}
+
+                      <td>
+                        {formatDate(
+                          reservation.checkOutDate
+                        )}
+                      </td>
+
+                      {/* STATUS */}
+
+                      <td>
+                        <span
+                          className={`${styles.status} ${getStatusClass(
+                            reservation.status
+                          )}`}
+                        >
+                          {getStatusLabel(
+                            reservation.status
+                          )}
+                        </span>
+                      </td>
+
+                      {/* PAYMENT */}
+
+                      <td>
+                        {
+                          reservation.paymentStatus
+                        }
+                      </td>
+
+                      {/* TOTAL */}
+
+                      <td>
+                        $
+                        {formatPrice(
+                          reservation.totalPrice
+                        )}
+                      </td>
+
+                      {/* ACTIONS */}
+
+                      <td>
+                        <div
+                          style={{
+                            display:
+                              "flex",
+                            gap: "8px",
+                            alignItems:
+                              "center",
+                            flexWrap:
+                              "wrap",
+                          }}
+                        >
+                          {/* UPCOMING */}
+
+                          {reservation.status ===
+                            "BOOKED" && (
+                            <button
+                              className={
+                                styles.editButton
+                              }
+                              onClick={() =>
+                                handleCheckIn(
+                                  reservation.id
+                                )
+                              }
+                            >
+                              Check in
+                            </button>
+                          )}
+
+                          {/* IN STAY */}
+
+                          {reservation.status ===
+                            "CHECKED_IN" && (
+                            <button
+                              className={
+                                styles.editButton
+                              }
+                              onClick={() =>
+                                handleCheckOut(
+                                  reservation.id
+                                )
+                              }
+                            >
+                              Check out
+                            </button>
+                          )}
+
+                          {/*
+                           * IMPORTANT:
+                           * Edit is OUTSIDE the
+                           * status conditions.
+                           *
+                           * Therefore it appears
+                           * for EVERY status.
+                           */}
+
+                          <button
+                            className={
+                              styles.editButton
+                            }
+                            onClick={() =>
+                              openEditReservation(
+                                reservation
+                              )
+                            }
+                          >
+                            Edit
+                          </button>
+
+                          {/*
+                           * IMPORTANT:
+                           * Delete is OUTSIDE the
+                           * status conditions.
+                           *
+                           * Therefore it appears
+                           * for EVERY status.
+                           */}
+
+                          <button
+                            className={
+                              styles.editButton
+                            }
+                            onClick={() =>
+                              handleDelete(
+                                reservation.id
+                              )
+                            }
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  )
+                )}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* MODAL */}
+
+        {showModal && (
+          <div
+            className={
+              styles.overlay
+            }
+          >
+            <div
+              className={
+                styles.modal
+              }
+            >
+              {/* MODAL HEADER */}
+
+              <div
+                className={
+                  styles.modalHeader
+                }
+              >
+                <h2>
+                  {editingReservation
+                    ? "Edit reservation"
+                    : "New reservation"}
+                </h2>
+
+                <button
+                  className={
+                    styles.closeButton
+                  }
+                  onClick={
+                    closeModal
+                  }
+                  disabled={saving}
+                >
+                  ×
+                </button>
+              </div>
+
+              {/* MODAL ERROR */}
+
+              {error && (
+                <div
+                  className={
+                    styles.error
+                  }
+                >
+                  {error}
+                </div>
+              )}
+
+              {/* FORM */}
+
+              <form
+                onSubmit={
+                  saveReservation
+                }
+              >
+                <div
+                  className={
+                    styles.formGrid
+                  }
+                >
+                  {/* GUEST */}
+
+                  <label>
+                    Guest
+
+                    <select
+                      value={
+                        form.guestId
+                      }
+                      onChange={
+                        handleGuestChange
+                      }
+                      required
+                    >
+                      <option value="">
+                        Select guest
+                      </option>
+
+                      {guests.map(
+                        (guest) => (
+                          <option
+                            key={
+                              guest.id
+                            }
+                            value={
+                              guest.id
+                            }
+                          >
+                            {
+                              guest.fullName
+                            }
+                          </option>
+                        )
+                      )}
+                    </select>
+                  </label>
+
+                  {/* ROOM */}
+
+                  <label>
+                    Room
+
+                    <select
+                      value={
+                        form.roomId
+                      }
+                      onChange={
+                        handleRoomChange
+                      }
+                      disabled={
+                        !!editingReservation
+                      }
+                      required
+                    >
+                      <option value="">
+                        Select room
+                      </option>
+
+                      {rooms.map(
+                        (room) => {
+                          const unavailable =
+                            isRoomCurrentlyUnavailable(
+                              room
+                            );
+
+                          return (
+                            <option
+                              key={
+                                room.id
+                              }
+                              value={
+                                room.id
+                              }
+                              disabled={
+                                unavailable &&
+                                !(
+                                  editingReservation &&
+                                  editingReservation.roomId ===
+                                    room.id
+                                )
+                              }
+                            >
+                              Room{" "}
+                              {
+                                room.roomNumber
+                              }{" "}
+                              -{" "}
+                              {
+                                room.roomType
+                              }{" "}
+                              -{" "}
+                              {getRoomStatusLabel(
+                                room.status
+                              )}
+                            </option>
+                          );
+                        }
+                      )}
+                    </select>
+                  </label>
+
+                  {/* CHECK-IN */}
+
+                  <label>
+                    Check-in
+
+                    <input
+                      type="date"
+                      value={
+                        form.checkInDate
+                      }
+                      min={
+                        editingReservation &&
+                        editingReservation.status !==
+                          "BOOKED"
+                          ? undefined
+                          : today
+                      }
+                      onChange={
+                        handleCheckInChange
+                      }
+                      required
+                    />
+                  </label>
+
+                  {/* CHECK-OUT */}
+
+                  <label>
+                    Check-out
+
+                    <input
+                      type="date"
+                      value={
+                        form.checkOutDate
+                      }
+                      min={
+                        form.checkInDate
+                          ? form.checkInDate
+                          : today
+                      }
+                      onChange={
+                        handleCheckOutChange
+                      }
+                      required
+                    />
+                  </label>
+
+                  {/* PRICE */}
+
+                  <label>
+                    Price per night
+
+                    <input
+                      type="number"
+                      value={
+                        displayedPricePerNight
+                      }
+                      readOnly
+                    />
+                  </label>
+
+                  {/* TOTAL */}
+
+                  <label>
+                    Total price
+
+                    <input
+                      type="number"
+                      value={
+                        displayedTotal
+                      }
+                      readOnly
+                    />
+                  </label>
+
+                  {/* STATUS */}
+
+                  <label>
+                    Status
+
+                    <select
+                      value={
+                        form.status
+                      }
+                      disabled
+                    >
+                      <option value="BOOKED">
+                        Upcoming
+                      </option>
+
+                      <option value="CHECKED_IN">
+                        In stay
+                      </option>
+
+                      <option value="CHECKED_OUT">
+                        Checked-out
+                      </option>
+
+                      <option value="CANCELLED">
+                        Cancelled
+                      </option>
+
+                      <option value="NO_SHOW">
+                        No-show
+                      </option>
+                    </select>
+                  </label>
+
+                  {/* PAYMENT */}
+
+                  <label>
+                    Payment status
+
+                    <select
+                      value={
+                        form.paymentStatus
+                      }
+                      onChange={(event) =>
+                        setForm(
+                          (current) => ({
+                            ...current,
+                            paymentStatus:
+                              event
+                                .target
+                                .value,
+                          })
+                        )
+                      }
+                    >
+                      <option value="UNPAID">
+                        Unpaid
+                      </option>
+
+                      <option value="PAID">
+                        Paid
+                      </option>
+
+                      <option value="PARTIAL">
+                        Partial
+                      </option>
+                    </select>
+                  </label>
+                </div>
+
+                {/* BUTTONS */}
+
+                <div
+                  className={
+                    styles.modalActions
+                  }
+                >
+                  <button
+                    type="button"
+                    className={
+                      styles.cancelButton
+                    }
+                    onClick={
+                      closeModal
+                    }
+                    disabled={saving}
+                  >
+                    Cancel
+                  </button>
+
+                  <button
+                    type="submit"
+                    className={
+                      styles.saveButton
+                    }
+                    disabled={saving}
+                  >
+                    {saving
+                      ? "Saving..."
+                      : editingReservation
+                        ? "Save changes"
+                        : "Create reservation"}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+      </main>
     </div>
   );
-};
-
-export default Page;
+}
