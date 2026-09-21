@@ -15,7 +15,7 @@ function getStartOfToday() {
 export async function GET() {
   try {
     const user = await requireAuth({
-      roles: ["MANAGER", "RECEPTIONIST"],
+      roles: ["ADMIN","MANAGER", "RECEPTIONIST"],
     });
 
     if (!user) {
@@ -46,7 +46,7 @@ export async function POST(req: Request) {
     // Get the logged-in receptionist/manager.
     // This means the frontend does NOT provide createdByUserId.
     const user = await requireAuth({
-      roles: ["MANAGER", "RECEPTIONIST"],
+      roles: ["ADMIN","MANAGER", "RECEPTIONIST"],
     });
 
     if (!user) {
