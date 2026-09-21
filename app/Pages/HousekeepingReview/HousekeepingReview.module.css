@@ -429,6 +429,12 @@ body {
   border-color: #687a5b;
 }
 
+.reviewError {
+  margin: 8px 0 0;
+  color: #a23e25;
+  font-size: 13px;
+}
+
 .modalActions {
   display: flex;
   justify-content: flex-end;
