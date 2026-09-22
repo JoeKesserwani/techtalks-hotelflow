@@ -25,7 +25,7 @@ type StatusTone = "active" | "instay" | "cancelled" | "upcoming";
 
 type StatusFilter = "all" | "upcoming" | "instay" | "completed" | "cancelled";
 
-const GUESTS_PER_PAGE = 10;
+const GUESTS_PER_PAGE = 5;
 
 const AVATAR_COLORS = ["#4c5a3e", "#a15a3d", "#8a8f5c", "#c1573c"];
 
