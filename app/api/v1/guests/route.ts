@@ -38,7 +38,8 @@ export async function POST(req: Request) {
 
     const body = await req.json();
     const parsed = createGuestSchema.safeParse(body);
-    if (!parsed.success) throw new ApiError("Invalid request body", 400);
+    if (!parsed.success)
+      throw new ApiError("Invalid request body, check the formats", 400);
 
     const guest = await prisma.$transaction(async (tx) => {
       const created = await tx.guest.create({
