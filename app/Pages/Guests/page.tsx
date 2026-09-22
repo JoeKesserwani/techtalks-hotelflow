@@ -23,9 +23,19 @@ type Guest = {
 
 type StatusTone = "active" | "instay" | "cancelled" | "upcoming";
 
+type StatusFilter = "all" | "upcoming" | "instay" | "completed" | "cancelled";
+
 const GUESTS_PER_PAGE = 10;
 
 const AVATAR_COLORS = ["#4c5a3e", "#a15a3d", "#8a8f5c", "#c1573c"];
+
+const FILTER_OPTIONS: { value: StatusFilter; label: string }[] = [
+  { value: "all", label: "All statuses" },
+  { value: "upcoming", label: "Upcoming" },
+  { value: "instay", label: "In stay" },
+  { value: "completed", label: "Completed" },
+  { value: "cancelled", label: "Cancelled" },
+];
 
 function initials(name: string) {
   return name
@@ -36,10 +46,11 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-// Derives the display label + color from the guest's latest reservation.
+// Derives the display label + color + a stable filter key from the guest's latest reservation.
 function deriveStay(guest: Guest): {
   label: string;
   tone: StatusTone;
+  statusKey: Exclude<StatusFilter, "all">;
 } {
   const latest = guest.reservations[0];
 
@@ -47,6 +58,7 @@ function deriveStay(guest: Guest): {
     return {
       label: "No reservations yet",
       tone: "active",
+      statusKey: "completed",
     };
   }
 
@@ -55,12 +67,14 @@ function deriveStay(guest: Guest): {
       return {
         label: `Room ${latest.room.roomNumber} · In stay`,
         tone: "instay",
+        statusKey: "instay",
       };
 
     case "BOOKED":
       return {
         label: `Room ${latest.room.roomNumber} · Upcoming`,
         tone: "upcoming",
+        statusKey: "upcoming",
       };
 
     case "CANCELLED":
@@ -68,6 +82,7 @@ function deriveStay(guest: Guest): {
       return {
         label: `Room ${latest.room.roomNumber} · Cancelled`,
         tone: "cancelled",
+        statusKey: "cancelled",
       };
 
     case "CHECKED_OUT":
@@ -75,6 +90,7 @@ function deriveStay(guest: Guest): {
       return {
         label: `Room ${latest.room.roomNumber} · Completed`,
         tone: "active",
+        statusKey: "completed",
       };
   }
 }
@@ -146,9 +162,8 @@ export default function GuestsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [statusFilter, setStatusFilter] = useState<
-    "ALL" | "BOOKED" | "CHECKED_IN" | "CHECKED_OUT" | "CANCELLED" | "NO_SHOW"
-  >("ALL");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("all");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -178,9 +193,9 @@ export default function GuestsPage() {
   }, []);
 
   /**
-   * Search guests.
+   * Search + status filter guests.
    *
-   * This also searches:
+   * Search covers:
    * - Guest name
    * - Guest ID
    * - Phone
@@ -188,35 +203,40 @@ export default function GuestsPage() {
    * - Room number
    */
   const filteredGuests = useMemo(() => {
-    const searchValue = search.trim().toLowerCase();
+    const query = search.trim().toLowerCase();
 
     return guests.filter((guest) => {
-      const reservation = guest.reservations?.[0];
+      const roomNumber = guest.reservations[0]?.room?.roomNumber ?? "";
 
       const matchesSearch =
-        !searchValue ||
-        guest.fullName.toLowerCase().includes(searchValue) ||
-        guest.id.toLowerCase().includes(searchValue) ||
-        guest.phone?.toLowerCase().includes(searchValue) ||
-        guest.email?.toLowerCase().includes(searchValue) ||
-        reservation?.room?.roomNumber?.toLowerCase().includes(searchValue);
+        !query ||
+        guest.fullName.toLowerCase().includes(query) ||
+        guest.id.toLowerCase().includes(query) ||
+        (guest.phone ?? "").toLowerCase().includes(query) ||
+        (guest.email ?? "").toLowerCase().includes(query) ||
+        roomNumber.toLowerCase().includes(query);
 
-      const matchesStatus =
-        statusFilter === "ALL" || reservation?.status === statusFilter;
+      if (!matchesSearch) {
+        return false;
+      }
 
-      return matchesSearch && matchesStatus;
+      if (statusFilter === "all") {
+        return true;
+      }
+
+      return deriveStay(guest).statusKey === statusFilter;
     });
   }, [guests, search, statusFilter]);
+
   /**
-   * Reset to page 1 whenever the search changes.
+   * Reset to page 1 whenever the search or filter changes.
    *
    * This prevents situations where the user is on page 5,
-   * searches for something with only 2 results, and sees
-   * an empty page.
+   * filters down to only 2 results, and sees an empty page.
    */
   useEffect(() => {
     setCurrentPage(1);
-  }, [search]);
+  }, [search, statusFilter]);
 
   /**
    * Calculate total pages based on the filtered results.
@@ -277,6 +297,10 @@ export default function GuestsPage() {
     });
   }
 
+  const activeFilterLabel =
+    FILTER_OPTIONS.find((option) => option.value === statusFilter)?.label ??
+    "Filter by status";
+
   return (
     <div className={styles.layout}>
       <main className={styles.main}>
@@ -299,33 +323,52 @@ export default function GuestsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
 
-          <button
-            className={styles.filterButton}
-            onClick={() => {
-              const statuses: Array<
-                | "ALL"
-                | "BOOKED"
-                | "CHECKED_IN"
-                | "CHECKED_OUT"
-                | "CANCELLED"
-                | "NO_SHOW"
-              > = [
-                "ALL",
-                "BOOKED",
-                "CHECKED_IN",
-                "CHECKED_OUT",
-                "CANCELLED",
-                "NO_SHOW",
-              ];
+          <div className={styles.filterWrapper}>
+            <button
+              className={styles.filterButton}
+              type="button"
+              onClick={() => setIsFilterOpen((open) => !open)}
+              aria-haspopup="listbox"
+              aria-expanded={isFilterOpen}
+            >
+              {activeFilterLabel}
+              <span className={styles.filterCaret} aria-hidden="true">
+                ▾
+              </span>
+            </button>
 
-              const currentIndex = statuses.indexOf(statusFilter);
-              const nextStatus = statuses[(currentIndex + 1) % statuses.length];
-
-              setStatusFilter(nextStatus);
-            }}
-          >
-            Filter by status
-          </button>
+            {isFilterOpen && (
+              <>
+                {/* click-catcher to close the dropdown on outside click */}
+                <div
+                  className={styles.filterBackdrop}
+                  onClick={() => setIsFilterOpen(false)}
+                />
+                <ul className={styles.filterMenu} role="listbox">
+                  {FILTER_OPTIONS.map((option) => (
+                    <li key={option.value}>
+                      <button
+                        type="button"
+                        className={
+                          option.value === statusFilter
+                            ? styles.filterOptionActive
+                            : styles.filterOption
+                        }
+                        onClick={() => {
+                          setStatusFilter(option.value);
+                          setIsFilterOpen(false);
+                        }}
+                        role="option"
+                        aria-selected={option.value === statusFilter}
+                      >
+                        {option.label}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </>
+            )}
+          </div>
 
           <button
             className={styles.addButton}
@@ -354,8 +397,8 @@ export default function GuestsPage() {
 
           {!isLoading && !error && filteredGuests.length === 0 && (
             <div className={styles.stateRow}>
-              {search.trim()
-                ? "No guests match your search."
+              {search.trim() || statusFilter !== "all"
+                ? "No guests match your search or filter."
                 : "No guests yet — add your first one."}
             </div>
           )}
@@ -406,7 +449,7 @@ export default function GuestsPage() {
                     </Link>
 
                     <Link
-                      href={`/Pages/Reservations/new?guestId=${guest.id}`}
+                      href={`/Pages/Reservations?guestId=${guest.id}`}
                       className={styles.bookLink}
                     >
                       Book a room
@@ -426,9 +469,9 @@ export default function GuestsPage() {
                   <strong>{filteredGuests.length}</strong>
                 </span>
 
-                {search.trim() && (
+                {(search.trim() || statusFilter !== "all") && (
                   <span className={styles.searchResultLabel}>
-                    Search results
+                    Filtered results
                   </span>
                 )}
               </div>

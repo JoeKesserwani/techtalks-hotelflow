@@ -30,26 +30,6 @@
   margin: 0;
 }
 
-.adminBadge {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.adminBadge > span:first-child {
-  font-size: 0.85rem;
-  color: #4b4636;
-}
-
-.adminPill {
-  background: #c1573c;
-  color: #fdf8ef;
-  padding: 6px 16px;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 600;
-}
-
 .toolbar {
   display: flex;
   gap: 12px;
@@ -70,15 +50,76 @@
   color: #a8a292;
 }
 
+/* --- Filter by status --- */
+
+.filterWrapper {
+  position: relative;
+}
+
 .filterButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   background: #8a8f5c;
   color: #fdf8ef;
   border: none;
   border-radius: 6px;
-  padding: 10px 18px;
+  padding: 10px 16px;
   font-size: 0.85rem;
   cursor: pointer;
+  white-space: nowrap;
 }
+
+.filterCaret {
+  font-size: 0.7rem;
+}
+
+.filterBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+}
+
+.filterMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 180px;
+  background: #fdfbf5;
+  border: 1px solid #e3dcc9;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(46, 42, 34, 0.12);
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  z-index: 31;
+}
+
+.filterOption,
+.filterOptionActive {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  border: none;
+  background: none;
+  border-radius: 5px;
+  font-size: 0.85rem;
+  color: #4b4636;
+  cursor: pointer;
+}
+
+.filterOption:hover {
+  background: #f3eee2;
+}
+
+.filterOptionActive {
+  background: #4c5a3e;
+  color: #fdf8ef;
+  font-weight: 600;
+}
+
+/* --- Add button --- */
 
 .addButton {
   background: #c1573c;
@@ -89,6 +130,7 @@
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
 }
 
 .filterButton:hover,
