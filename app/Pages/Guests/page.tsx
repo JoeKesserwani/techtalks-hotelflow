@@ -146,6 +146,10 @@ export default function GuestsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
+  const [statusFilter, setStatusFilter] = useState<
+    "ALL" | "BOOKED" | "CHECKED_IN" | "CHECKED_OUT" | "CANCELLED" | "NO_SHOW"
+  >("ALL");
+
   const [currentPage, setCurrentPage] = useState(1);
 
   async function loadGuests() {
@@ -184,25 +188,25 @@ export default function GuestsPage() {
    * - Room number
    */
   const filteredGuests = useMemo(() => {
-    const query = search.trim().toLowerCase();
-
-    if (!query) {
-      return guests;
-    }
+    const searchValue = search.trim().toLowerCase();
 
     return guests.filter((guest) => {
-      const roomNumber = guest.reservations[0]?.room?.roomNumber ?? "";
+      const reservation = guest.reservations?.[0];
 
-      return (
-        guest.fullName.toLowerCase().includes(query) ||
-        guest.id.toLowerCase().includes(query) ||
-        (guest.phone ?? "").toLowerCase().includes(query) ||
-        (guest.email ?? "").toLowerCase().includes(query) ||
-        roomNumber.toLowerCase().includes(query)
-      );
+      const matchesSearch =
+        !searchValue ||
+        guest.fullName.toLowerCase().includes(searchValue) ||
+        guest.id.toLowerCase().includes(searchValue) ||
+        guest.phone?.toLowerCase().includes(searchValue) ||
+        guest.email?.toLowerCase().includes(searchValue) ||
+        reservation?.room?.roomNumber?.toLowerCase().includes(searchValue);
+
+      const matchesStatus =
+        statusFilter === "ALL" || reservation?.status === statusFilter;
+
+      return matchesSearch && matchesStatus;
     });
-  }, [guests, search]);
-
+  }, [guests, search, statusFilter]);
   /**
    * Reset to page 1 whenever the search changes.
    *
@@ -295,7 +299,31 @@ export default function GuestsPage() {
             onChange={(e) => setSearch(e.target.value)}
           />
 
-          <button className={styles.filterButton} type="button">
+          <button
+            className={styles.filterButton}
+            onClick={() => {
+              const statuses: Array<
+                | "ALL"
+                | "BOOKED"
+                | "CHECKED_IN"
+                | "CHECKED_OUT"
+                | "CANCELLED"
+                | "NO_SHOW"
+              > = [
+                "ALL",
+                "BOOKED",
+                "CHECKED_IN",
+                "CHECKED_OUT",
+                "CANCELLED",
+                "NO_SHOW",
+              ];
+
+              const currentIndex = statuses.indexOf(statusFilter);
+              const nextStatus = statuses[(currentIndex + 1) % statuses.length];
+
+              setStatusFilter(nextStatus);
+            }}
+          >
             Filter by status
           </button>
 
@@ -378,7 +406,7 @@ export default function GuestsPage() {
                     </Link>
 
                     <Link
-                      href={`/reservations/new?guestId=${guest.id}`}
+                      href={`/Pages/Reservations/new?guestId=${guest.id}`}
                       className={styles.bookLink}
                     >
                       Book a room
