@@ -52,9 +52,13 @@ function statusLabel(status: Reservation["status"]) {
   }
 }
 
-function statusPillClass(status: Reservation["status"], styles: Record<string, string>) {
+function statusPillClass(
+  status: Reservation["status"],
+  styles: Record<string, string>,
+) {
   if (status === "CHECKED_IN") return styles.pillInStay;
-  if (status === "CANCELLED" || status === "NO_SHOW") return styles.pillCancelled;
+  if (status === "CANCELLED" || status === "NO_SHOW")
+    return styles.pillCancelled;
   return styles.pillCompleted;
 }
 
@@ -133,11 +137,14 @@ export default function GuestDetailPage() {
           <>
             <section className={styles.profileCard}>
               <div className={styles.profileHeader}>
-                <span className={styles.avatar}>{initials(guest.fullName)}</span>
+                <span className={styles.avatar}>
+                  {initials(guest.fullName)}
+                </span>
                 <div>
                   <h3>{guest.fullName}</h3>
                   <p className={styles.contactLine}>
-                    {guest.phone ?? "No phone on file"} · {guest.email ?? "No email on file"}
+                    {guest.phone ?? "No phone on file"} ·{" "}
+                    {guest.email ?? "No email on file"}
                   </p>
                 </div>
               </div>
@@ -151,7 +158,9 @@ export default function GuestDetailPage() {
                 </div>
                 <div>
                   <span className={styles.detailLabel}>Note</span>
-                  <span className={styles.detailValue}>{guest.note ?? "—"}</span>
+                  <span className={styles.detailValue}>
+                    {guest.note ?? "—"}
+                  </span>
                 </div>
               </div>
             </section>
