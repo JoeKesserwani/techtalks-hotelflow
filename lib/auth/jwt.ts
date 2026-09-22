@@ -6,7 +6,8 @@ const ACCESS_TOKEN_EXPIRES_IN = '15m';
 export type AccessTokenPayload = {
   userId: string;
   hotelId: string;
-  role: 'MANAGER' | 'RECEPTIONIST' | 'HOUSEKEEPING';
+  role: 'ADMIN' | 'MANAGER' | 'RECEPTIONIST' | 'HOUSEKEEPING';
+  fullName: string;
 };
 
 export function signAccessToken(payload: AccessTokenPayload): string {

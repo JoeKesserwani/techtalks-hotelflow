@@ -1,13 +1,13 @@
 "use client";
 
 import styles from "./page.module.css";
-import Sidebar from "@/components/Navbars/navbar";
-
+import { useAuth } from "@/components/Auth/AuthProvider";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
   const Router = useRouter();
+  const { setUser } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -34,16 +34,9 @@ export default function Home() {
           throw new Error(data.message || "An error occurred");
         }
 
+        setUser(data.user);
         const role = data.user.role;
-        if (role === "MANAGER") {
-          Router.push("/managerDashboard");
-        } else if (role === "RECEPTIONIST") {
-          Router.push("/receptionistDashboard");
-        } else if (role === "HOUSEKEEPING") {
-          Router.push("/housekeepingDashboard");
-        } else {
-          Router.push("/login");
-        }
+        Router.push("/Pages/Dashboard");
       }
     } catch (error) {
       setError("An error occurred");

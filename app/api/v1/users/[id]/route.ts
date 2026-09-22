@@ -22,7 +22,7 @@ function toSafeUser(user: {
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const user = await requireAuth({ roles: ['MANAGER'] });
+    const user = await requireAuth({ roles: ['ADMIN', 'MANAGER'] });
     if (!user) throw new ApiError('Unauthorized', 401);
 
     const target = await prisma.user.findFirst({ where: { id, hotelId: user.hotelId } });
@@ -37,7 +37,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const user = await requireAuth({ roles: ['MANAGER'] });
+    const user = await requireAuth({ roles: ['ADMIN', 'MANAGER'] });
     if (!user) throw new ApiError('Unauthorized', 401);
 
     const body = await req.json();
@@ -46,6 +46,11 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     const target = await prisma.user.findFirst({ where: { id, hotelId: user.hotelId } });
     if (!target) throw new ApiError('User not found', 404);
+
+    if (parsed.data.email && parsed.data.email !== target.email) {
+      const userWithEmail = await prisma.user.findUnique({ where: { email: parsed.data.email } });
+      if (userWithEmail) throw new ApiError('A user with this email already exists', 409);
+    }
 
     const { password, ...rest } = parsed.data;
     const data: Record<string, unknown> = { ...rest };

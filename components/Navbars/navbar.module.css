@@ -32,10 +32,31 @@
 }
 
 .navigation {
+  min-height: 0;
+  flex: 1 1 auto;
   display: flex;
   flex-direction: column;
   gap: 3px;
   padding: 0 9px;
+  overflow-y: auto;
+  scrollbar-color: #bfc8b5 transparent;
+  scrollbar-width: thin;
+}
+
+.navigation::-webkit-scrollbar {
+  width: 8px;
+}
+
+.navigation::-webkit-scrollbar-track,
+.navigation::-webkit-scrollbar-button,
+.navigation::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+.navigation::-webkit-scrollbar-thumb {
+  border: 0;
+  border-radius: 4px;
+  background: #bfc8b5;
 }
 
 .navItem {
@@ -76,8 +97,18 @@
 
 .userSection strong {
   color: #ffffff;
-  font-size: 10px;
+  font-size: 15px;
   letter-spacing: 0.4px;
+}
+.logoutButton {
+  margin: 10px;
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  background-color: #d76845;
+  color: #ffffff;
+  font-size: 14px;
+  cursor: pointer;
 }
 
 @media (max-width: 768px) {
@@ -107,6 +138,7 @@
 .backdrop {
   display: none;
 }
+
 
 @media (max-width: 768px) {
   .menuButton {

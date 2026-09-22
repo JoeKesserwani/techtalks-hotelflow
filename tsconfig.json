@@ -29,6 +29,6 @@
     ".next/types/**/*.ts",
     ".next/dev/types/**/*.ts",
     "**/*.mts"
-, "components/Dashboards/ReceptionistDash"  ],
+, "components/Dashboards/ReceptionistDash", "app/Pages/Rooms/view-room"  ],
   "exclude": ["node_modules"]
 }

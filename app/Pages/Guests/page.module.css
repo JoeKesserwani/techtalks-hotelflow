@@ -1,0 +1,426 @@
+.layout {
+  display: flex;
+  min-height: 100vh;
+  background: #f3eee2;
+  font-family: "Segoe UI", system-ui, sans-serif;
+  color: #2e2a22;
+}
+
+.main {
+  flex: 1;
+  padding: 32px 40px;
+}
+
+.topBar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  margin-bottom: 24px;
+}
+
+.topBar h2 {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 1.6rem;
+  margin: 0 0 4px;
+}
+
+.subtitle {
+  color: #8a8577;
+  font-size: 0.85rem;
+  margin: 0;
+}
+
+.toolbar {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.searchInput {
+  flex: 1;
+  padding: 10px 14px;
+  border: 1px solid #ddd5c3;
+  border-radius: 6px;
+  background: #fdfbf5;
+  font-size: 0.9rem;
+  color: #2e2a22;
+}
+
+.searchInput::placeholder {
+  color: #a8a292;
+}
+
+/* --- Filter by status --- */
+
+.filterWrapper {
+  position: relative;
+}
+
+.filterButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: #8a8f5c;
+  color: #fdf8ef;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 16px;
+  font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.filterCaret {
+  font-size: 0.7rem;
+}
+
+.filterBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+}
+
+.filterMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 180px;
+  background: #fdfbf5;
+  border: 1px solid #e3dcc9;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(46, 42, 34, 0.12);
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  z-index: 31;
+}
+
+.filterOption,
+.filterOptionActive {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  border: none;
+  background: none;
+  border-radius: 5px;
+  font-size: 0.85rem;
+  color: #4b4636;
+  cursor: pointer;
+}
+
+.filterOption:hover {
+  background: #f3eee2;
+}
+
+.filterOptionActive {
+  background: #4c5a3e;
+  color: #fdf8ef;
+  font-weight: 600;
+}
+
+/* --- Add button --- */
+
+.addButton {
+  background: #c1573c;
+  color: #fdf8ef;
+  border: none;
+  border-radius: 6px;
+  padding: 10px 18px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.filterButton:hover,
+.addButton:hover {
+  filter: brightness(0.95);
+}
+
+.tableCard {
+  background: #fdfbf5;
+  border: 1px solid #e3dcc9;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tableHeaderRow {
+  display: grid;
+  grid-template-columns: 2.2fr 1.6fr 1.8fr 1.4fr;
+  padding: 14px 20px;
+  background: #f3eee2;
+  font-size: 0.75rem;
+  color: #8a8577;
+  font-weight: 600;
+}
+
+.tableRow {
+  display: grid;
+  grid-template-columns: 2.2fr 1.6fr 1.8fr 1.4fr;
+  align-items: center;
+  padding: 16px 20px;
+  border-top: 1px solid #eee7d6;
+}
+
+.guestCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  color: #fdf8ef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.guestName {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.contactCell {
+  font-size: 0.85rem;
+  color: #6b6653;
+}
+
+.stayCell span {
+  display: inline-block;
+  padding: 5px 12px;
+  border-radius: 5px;
+  font-size: 0.78rem;
+  font-weight: 600;
+}
+
+.pillActive {
+  background: #e4dcc5;
+  color: #6b6248;
+}
+
+.pillInStay {
+  background: #dcd3b8;
+  color: #5c5540;
+}
+
+.pillCancelled {
+  background: #f1d3cb;
+  color: #b14b36;
+}
+
+.pillUpcoming {
+  background: #8b9a6b;
+  color: #fdf8ef;
+}
+
+.actionsCell {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+}
+
+.stateRow {
+  padding: 24px 20px;
+  text-align: center;
+  color: #8a8577;
+  font-size: 0.85rem;
+}
+
+.viewLink,
+.bookLink {
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.viewLink {
+  color: #c1573c;
+}
+
+.bookLink {
+  color: #4c5a3e;
+}
+
+.viewLink:hover,
+.bookLink:hover {
+  text-decoration: underline;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 18px 22px;
+  border-top: 1px solid rgba(76, 90, 62, 0.1);
+  background: rgba(250, 249, 246, 0.7);
+}
+
+.paginationInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #777a72;
+  font-size: 13px;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.paginationInfo strong {
+  color: #30352d;
+  font-weight: 600;
+}
+
+.searchResultLabel {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 9px;
+  border: 1px solid rgba(76, 90, 62, 0.12);
+  border-radius: 999px;
+  background: #ffffff;
+  color: #69705f;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pageNumbers {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.paginationArrow,
+.pageButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  background: transparent;
+  color: #656b60;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    color 160ms ease,
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.paginationArrow {
+  border-color: rgba(76, 90, 62, 0.12);
+  background: #ffffff;
+  color: #59604f;
+  box-shadow: 0 1px 2px rgba(20, 25, 18, 0.03);
+}
+
+.paginationArrow:hover:not(:disabled) {
+  border-color: rgba(76, 90, 62, 0.25);
+  background: #f4f5f0;
+  color: #4c5a3e;
+}
+
+.paginationArrow:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+.paginationArrow:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.pageButton:hover:not(.pageButtonActive) {
+  background: rgba(76, 90, 62, 0.07);
+  color: #4c5a3e;
+}
+
+.pageButtonActive {
+  background: #4c5a3e;
+  color: #ffffff;
+  font-weight: 600;
+  box-shadow: 0 3px 8px rgba(76, 90, 62, 0.18);
+}
+
+.pageButtonActive:hover {
+  background: #435036;
+  color: #ffffff;
+}
+
+.paginationEllipsis {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 34px;
+  color: #9a9d96;
+  font-size: 13px;
+  letter-spacing: 1px;
+  user-select: none;
+}
+
+@media (max-width: 768px) {
+  .pagination {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 16px;
+  }
+
+  .paginationInfo {
+    justify-content: space-between;
+  }
+
+  .paginationControls {
+    justify-content: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .paginationInfo {
+    font-size: 12px;
+  }
+
+  .searchResultLabel {
+    display: none;
+  }
+
+  .paginationControls {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .pageNumbers {
+    gap: 2px;
+  }
+
+  .paginationArrow,
+  .pageButton {
+    width: 32px;
+    height: 32px;
+  }
+
+  .paginationEllipsis {
+    width: 22px;
+  }
+}

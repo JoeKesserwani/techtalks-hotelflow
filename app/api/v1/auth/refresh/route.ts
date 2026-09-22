@@ -27,6 +27,7 @@ export async function POST() {
       userId: user.id,
       hotelId: user.hotelId,
       role: user.role,
+      fullName: user.fullName,
     });
 
     cookieStore.set('access_token', accessToken, {
