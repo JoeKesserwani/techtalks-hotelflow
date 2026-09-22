@@ -1,13 +1,49 @@
 ﻿.page {
   min-height: 100vh;
-  padding: 28px clamp(16px, 4vw, 64px) 48px;
-  background: #f5f1e8;
+  padding: 28px clamp(3px, 4vw, 6px) 48px;
+  background: #f5f1e7;
+  color: #2e2a25;
+  display: flex;
+  
+}.page {
+  min-height: 100vh;
+  padding: 28px clamp(16px, 4vw, 34px) 48px;
+  background: #f5f1e7;
   color: #2e2a25;
 }
+.role {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+}
 
+.roleInfo {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+  font-size: 12px;
+}
+
+.roleInfo span {
+  color: #99958a;
+  margin-top: 3px;
+}
+
+.roleBadge {
+  background: #c76543;
+  color: white;
+  padding: 9px 18px;
+  font-size: 13px;
+  font-weight: 600;
+}
 .header {
-  border-bottom: 1px solid #dfd7c8;
-  padding-bottom: 7px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #d9d3c4;
 }
 
 .header h1 {
@@ -75,10 +111,10 @@
 
 .tableWrap {
   width: 100%;
-  height: min(560px, calc(100dvh - 190px));
+  height:fit-content;
   min-height: 240px;
   overflow-y: scroll;
-  border: 1px solid #d7cebf;
+  border: 1px solid #f5f1e7;
   border-radius: 6px;
   background: #fffdfa;
   box-shadow: 0 8px 22px rgba(74, 61, 43, .07);
@@ -206,6 +242,38 @@
   font-size: 14px;
 }
 
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px 18px;
+  border-top: 1px solid #eee7da;
+  background: #fffdfa;
+  color: #574e45;
+  font-size: 14px;
+}
+
+.pagination button {
+  border: 1px solid #d9d1c2;
+  border-radius: 2px;
+  background: transparent;
+  color: #3d362f;
+  cursor: pointer;
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+.pagination button:disabled {
+  cursor: not-allowed;
+  opacity: .45;
+}
+
+.pagination span {
+  flex: 1;
+  text-align: center;
+}
+
 .message {
   display: flex;
   align-items: center;
@@ -254,7 +322,7 @@
   justify-content: space-between;
   gap: 14px;
   padding: 24px 25px 18px;
-  border-bottom: 1px solid #ded6c7;
+  border-bottom: 1px solid #f5f1e7;
 }
 
 .dialogHeader h2 {

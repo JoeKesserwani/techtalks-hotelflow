@@ -7,7 +7,7 @@ import { ApiError, handleRouteError } from '../../../../../lib/api/errors';
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const user = await requireAuth({ roles: ['MANAGER', 'RECEPTIONIST', 'HOUSEKEEPING'] });
+    const user = await requireAuth({ roles: ['ADMIN','MANAGER', 'RECEPTIONIST', 'HOUSEKEEPING'] });
     if (!user) throw new ApiError('Unauthorized', 401);
 
     const room = await prisma.room.findFirst({ where: { id, hotelId: user.hotelId } });
@@ -23,7 +23,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   try {
     const { id } = await params;
     // Manager can edit anything (number, type, price, status); housekeeping can only touch status.
-    const user = await requireAuth({ roles: ['MANAGER', 'HOUSEKEEPING'] });
+    const user = await requireAuth({ roles: ['ADMIN','MANAGER', 'HOUSEKEEPING'] });
     if (!user) throw new ApiError('Unauthorized', 401);
 
     const body = await req.json();

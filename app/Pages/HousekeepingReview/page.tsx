@@ -181,6 +181,11 @@ export default function HousekeepingReviewPage() {
   async function confirmReview() {
     if (!reviewTask || !reviewAction) return;
 
+    if (reviewAction === "rejected" && comment.trim() === "") {
+      setReviewError("A comment is required before rejecting a room.");
+      return;
+    }
+
     const response = await submitReview(
       reviewTask.id,
       reviewAction === "approved" ? "approve" : "reject",
@@ -253,13 +258,13 @@ export default function HousekeepingReviewPage() {
             </p>
           </div>
 
-          <div className={styles.receptionist}>
-            <div className={styles.receptionistInfo}>
+          <div className={styles.role}>
+            <div className={styles.roleInfo}>
               <strong>{user?.fullName}</strong>
               <span>Currently reviewing rooms</span>
             </div>
 
-            <div className={styles.receptionistBadge}>
+            <div className={styles.roleBadge}>
               {user?.role }
             </div>
           </div>
@@ -313,7 +318,6 @@ export default function HousekeepingReviewPage() {
             {activeTab === "approved" &&
               "Housekeeping tasks marked as done."}
           </p>
-          {reviewError && <p>{reviewError}</p>}
         </div>
 
         {/* Tasks */}
@@ -370,6 +374,8 @@ export default function HousekeepingReviewPage() {
           task={reviewTask}
           action={reviewAction}
           comment={comment}
+          reviewError={reviewError}
+          setReviewError={setReviewError}
           setComment={setComment}
           onCancel={() => {
             setReviewTask(null);
@@ -518,6 +524,8 @@ function ReviewModal({
   task,
   action,
   comment,
+  reviewError,
+  setReviewError,
   setComment,
   onCancel,
   onConfirm,
@@ -525,6 +533,8 @@ function ReviewModal({
   task: HousekeepingTask;
   action: "approved" | "rejected";
   comment: string;
+  reviewError: string | null;
+  setReviewError: (value: string | null) => void;
   setComment: (value: string) => void;
   onCancel: () => void;
   onConfirm: () => void;
@@ -557,12 +567,16 @@ function ReviewModal({
 
         <label className={styles.textareaLabel}>
           Comment
-          <span> (optional)</span>
+          <span> {approving ? "(optional)" : "(required)"} </span>
         </label>
 
         <textarea
           value={comment}
-          onChange={(e) => setComment(e.target.value)}
+          onChange={(e) => {
+            if (reviewError) setReviewError(null);
+            setComment(e.target.value);
+          }}
+          required={!approving}
           placeholder={
             approving
               ? "Leave a note for the housekeeper..."
@@ -570,6 +584,8 @@ function ReviewModal({
           }
           className={styles.textarea}
         />
+
+        {reviewError && <p className={styles.reviewError}>{reviewError}</p>}
 
         <div className={styles.modalActions}>
           <button
@@ -586,6 +602,7 @@ function ReviewModal({
                 : styles.modalReject
             }
             onClick={onConfirm}
+        
           >
             {approving
               ? "Approve room"
