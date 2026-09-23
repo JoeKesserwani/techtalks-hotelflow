@@ -120,7 +120,7 @@ export default function StaffPage() {
       : staff;
   }, [query, staff]);
 
-  const pageSize = 10;
+  const pageSize = 5;
   const totalPages = Math.max(1, Math.ceil(filteredStaff.length / pageSize));
   const safeCurrentPage = Math.min(currentPage, totalPages);
 

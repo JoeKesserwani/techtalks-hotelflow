@@ -11,6 +11,21 @@
   padding: 32px 40px;
 }
 
+.backLink {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #4c5a3e;
+  text-decoration: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.backLink:hover {
+  text-decoration: underline;
+}
+
 .topBar {
   display: flex;
   align-items: flex-start;
@@ -53,8 +68,7 @@
 .stateText {
   color: #8a8577;
   font-size: 0.85rem;
-  padding: 16px;
-  text-align: center;
+  padding: 16px 0;
 }
 
 .profileCard {
