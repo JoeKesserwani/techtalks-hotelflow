@@ -2,6 +2,81 @@
 
 @import "tailwindcss";
 
+/* ==========================================================================
+   HotelFlow — Global Design Tokens (Tailwind v4 @theme)
+   ==========================================================================
+   Defining tokens here does two things at once:
+   1. Generates real Tailwind utilities — e.g. --color-accent below gives you
+      bg-accent, text-accent, border-accent for free.
+   2. Exposes each token as a plain CSS variable, so any page.module.css
+      (CSS Modules, not Tailwind classes) can still do var(--color-accent).
+
+   Custom names (accent, primary, olive, card, pill...) were chosen
+   deliberately to avoid colliding with Tailwind's built-in defaults
+   (its default palette, default radius scale, etc.).
+   ========================================================================== */
+
+@theme {
+  /* --- Surfaces --- */
+  --color-bg: #f3eee2;
+  --color-surface: #fdfbf5;
+  --color-surface-alt: #ffffff;
+  --color-border: #e3dcc9;
+  --color-border-soft: #eee7d6;
+  --color-border-input: #ddd5c3;
+
+  /* --- Text --- */
+  --color-text: #2e2a22;
+  --color-muted: #8a8577;
+  --color-faint: #a8a292;
+  --color-label: #4b4636;
+
+  /* --- Brand / accent --- */
+  --color-accent: #c1573c;
+  --color-accent-hover: #a94f36;
+  --color-primary: #4c5a3e;
+  --color-primary-hover: #435036;
+  --color-olive: #8a8f5c;
+  --color-on-accent: #fdf8ef;
+
+  /* --- Status pills --- */
+  --color-status-active: #e4dcc5;
+  --color-status-active-text: #6b6248;
+  --color-status-instay: #dcd3b8;
+  --color-status-instay-text: #5c5540;
+  --color-status-upcoming: #8b9a6b;
+  --color-status-upcoming-text: #fdf8ef;
+  --color-status-cancelled: #f1d3cb;
+  --color-status-cancelled-text: #b14b36;
+  --color-status-success: #dce8c8;
+  --color-status-success-text: #4c6b2f;
+
+  /* --- Typography ---
+     font-heading -> Fraunces (serif, page titles / modal headings)
+     font-body    -> IBM Plex Sans (everything else)
+     Both were already imported above but never actually applied — this
+     is what wires them up as the app's real, single font system. */
+  --font-heading: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-body: "IBM Plex Sans", Arial, Helvetica, sans-serif;
+
+  /* --- Radius (custom names — won't override Tailwind's own rounded-md etc.) --- */
+  --radius-card: 8px;
+  --radius-field: 6px;
+  --radius-pill: 999px;
+
+  /* --- Shadows --- */
+  --shadow-card: 0 1px 2px rgba(20, 25, 18, 0.03);
+  --shadow-dropdown: 0 8px 20px rgba(46, 42, 34, 0.12);
+  --shadow-pagination-active: 0 3px 8px rgba(76, 90, 62, 0.18);
+}
+
+/* z-index isn't part of Tailwind's @theme utility system, so these stay as
+   plain custom properties — still usable via var(--z-modal-overlay) etc. */
+:root {
+  --z-dropdown: 30;
+  --z-modal-overlay: 9999;
+}
+
 * {
   box-sizing: border-box;
 }
@@ -13,5 +88,18 @@ body {
 }
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-heading);
+  margin: 0;
+}
+
+a {
+  color: inherit;
 }
