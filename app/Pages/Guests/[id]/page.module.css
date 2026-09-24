@@ -1,9 +1,9 @@
 .layout {
   display: flex;
   min-height: 100vh;
-  background: #f3eee2;
-  font-family: "Segoe UI", system-ui, sans-serif;
-  color: #2e2a22;
+  background: var(--color-bg);
+  font-family: var(--font-body);
+  color: var(--color-text);
 }
 
 .main {
@@ -15,7 +15,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  color: #4c5a3e;
+  color: var(--color-primary);
   text-decoration: none;
   font-size: 0.85rem;
   font-weight: 600;
@@ -34,13 +34,13 @@
 }
 
 .topBar h2 {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-heading);
   font-size: 1.5rem;
   margin: 0 0 4px;
 }
 
 .breadcrumb {
-  color: #8a8577;
+  color: var(--color-muted);
   font-size: 0.85rem;
   margin: 0;
 }
@@ -53,29 +53,29 @@
 
 .adminBadge > span:first-child {
   font-size: 0.85rem;
-  color: #4b4636;
+  color: var(--color-label);
 }
 
 .adminPill {
-  background: #c1573c;
-  color: #fdf8ef;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
   padding: 6px 16px;
-  border-radius: 6px;
+  border-radius: var(--radius-field);
   font-size: 0.8rem;
   font-weight: 600;
 }
 
 .stateText {
-  color: #8a8577;
+  color: var(--color-muted);
   font-size: 0.85rem;
   padding: 16px 0;
   text-align: center;
 }
 
 .profileCard {
-  background: #fdfbf5;
-  border: 1px solid #e3dcc9;
-  border-radius: 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
   padding: 24px 28px;
   margin-bottom: 20px;
 }
@@ -85,7 +85,7 @@
   align-items: center;
   gap: 16px;
   padding-bottom: 20px;
-  border-bottom: 1px solid #eee7d6;
+  border-bottom: 1px solid var(--color-border-soft);
   margin-bottom: 20px;
 }
 
@@ -93,8 +93,8 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background: #4c5a3e;
-  color: #fdf8ef;
+  background: var(--color-primary);
+  color: var(--color-on-accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -110,7 +110,7 @@
 .contactLine {
   margin: 0;
   font-size: 0.85rem;
-  color: #8a8577;
+  color: var(--color-muted);
 }
 
 .detailsGrid {
@@ -124,20 +124,20 @@
   display: block;
   font-size: 0.75rem;
   font-weight: 600;
-  color: #2e2a22;
+  color: var(--color-text);
   margin-bottom: 4px;
 }
 
 .detailValue {
   display: block;
   font-size: 0.85rem;
-  color: #8a8577;
+  color: var(--color-muted);
 }
 
 .tableCard {
-  background: #fdfbf5;
-  border: 1px solid #e3dcc9;
-  border-radius: 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
   overflow: hidden;
 }
 
@@ -145,9 +145,9 @@
   display: grid;
   grid-template-columns: 1.4fr 1.6fr 0.8fr 1fr;
   padding: 12px 20px;
-  background: #f3eee2;
+  background: var(--color-bg);
   font-size: 0.75rem;
-  color: #8a8577;
+  color: var(--color-muted);
   font-weight: 600;
 }
 
@@ -156,7 +156,7 @@
   grid-template-columns: 1.4fr 1.6fr 0.8fr 1fr;
   align-items: center;
   padding: 14px 20px;
-  border-top: 1px solid #eee7d6;
+  border-top: 1px solid var(--color-border-soft);
   font-size: 0.85rem;
 }
 
@@ -171,16 +171,16 @@
 }
 
 .pillInStay {
-  background: #dcd3b8;
-  color: #5c5540;
+  background: var(--color-status-instay);
+  color: var(--color-status-instay-text);
 }
 
 .pillCompleted {
-  background: #8b9a6b;
-  color: #fdf8ef;
+  background: var(--color-status-upcoming);
+  color: var(--color-status-upcoming-text);
 }
 
 .pillCancelled {
-  background: #f1d3cb;
-  color: #b14b36;
+  background: var(--color-status-cancelled);
+  color: var(--color-status-cancelled-text);
 }
