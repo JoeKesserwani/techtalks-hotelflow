@@ -433,7 +433,10 @@
 
   box-sizing: border-box;
 }
-
+.inReviewStatus {
+  background: #fff3cd;
+  color: #856404;
+}
 /* =========================
    MODAL HEADER
 ========================= */

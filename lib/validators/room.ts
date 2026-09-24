@@ -16,11 +16,11 @@ export const updateRoomSchema = z.object({
   floor: z.coerce.number().int().optional(),
   capacity: z.coerce.number().int().optional(),
   status: z
-    .enum(['AVAILABLE', 'RESERVED', 'OCCUPIED', 'NEEDS_CLEANING', 'CLEANING', 'OUT_OF_SERVICE'])
+    .enum(['AVAILABLE', 'RESERVED', 'OCCUPIED','IN_REVIEW', 'NEEDS_CLEANING', 'CLEANING', 'OUT_OF_SERVICE'])
     .optional(),
 });
 
 // Housekeeping restricted edit — status only
 export const updateRoomStatusSchema = z.object({
-  status: z.enum(['AVAILABLE', 'RESERVED', 'OCCUPIED', 'NEEDS_CLEANING', 'CLEANING', 'OUT_OF_SERVICE']),
+  status: z.enum(['AVAILABLE', 'RESERVED', 'OCCUPIED' ,'IN_REVIEW', 'NEEDS_CLEANING', 'CLEANING', 'OUT_OF_SERVICE']),
 });
