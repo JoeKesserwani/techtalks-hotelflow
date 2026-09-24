@@ -23,7 +23,7 @@ model Hotel {
   guests            Guest[]
   reservations      Reservation[]
   housekeepingTasks HousekeepingTask[]
-  auditLogs         AuditLog[]
+  users             User[]
 
   @@map("hotels")
 }
@@ -58,15 +58,6 @@ model Session {
   @@map("sessions")
 }
 
-enum RoomStatus {
-  AVAILABLE
-  RESERVED
-  OCCUPIED
-  NEEDS_CLEANING
-  CLEANING
-  OUT_OF_SERVICE
-}
-
 model Room {
   id                String             @id @default(uuid())
   hotelId           String             @map("hotel_id")
@@ -78,7 +69,6 @@ model Room {
   updatedAt         DateTime           @updatedAt @map("updated_at")
   floor             Int                @default(1)
   capacity          Int                @default(1)
-  housekeepingTasks HousekeepingTask[]
   reservations      Reservation[]
   housekeepingTasks HousekeepingTask[]
 
@@ -100,20 +90,6 @@ model Guest {
   reservations   Reservation[]
 
   @@map("guests")
-}
-
-enum ReservationStatus {
-  BOOKED
-  CHECKED_IN
-  CHECKED_OUT
-  CANCELLED
-  NO_SHOW
-}
-
-enum PaymentStatus {
-  UNPAID
-  PARTIAL
-  PAID
 }
 
 model Reservation {
