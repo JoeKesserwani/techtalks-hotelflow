@@ -8,23 +8,73 @@ import {
   handleRouteError,
 } from "../../../../../lib/api/errors";
 
-function getStartOfToday() {
-  const today = new Date();
+const HOTEL_TIME_ZONE = "Asia/Beirut";
 
-  today.setHours(0, 0, 0, 0);
-
-  return today;
+/*
+ * Return today's date in the hotel's timezone.
+ *
+ * Example:
+ * 2026-09-23
+ */
+function getTodayString() {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: HOTEL_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 }
 
-function calculateNights(
-  checkInDate: Date,
-  checkOutDate: Date
-) {
-  const checkIn = new Date(checkInDate);
-  const checkOut = new Date(checkOutDate);
+/*
+ * Convert a date-only string such as:
+ *
+ * 2026-09-23
+ *
+ * into a UTC Date.
+ *
+ * We intentionally use UTC midnight so that
+ * date-only reservation values do not shift
+ * because of the server timezone.
+ */
+function dateOnlyToUtcDate(value: string) {
+  return new Date(`${value}T00:00:00.000Z`);
+}
 
-  checkIn.setHours(0, 0, 0, 0);
-  checkOut.setHours(0, 0, 0, 0);
+/*
+ * Convert a Date from the database into
+ * a date-only string in the hotel timezone.
+ */
+function dateToHotelDateString(value: Date) {
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: HOTEL_TIME_ZONE,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(value);
+}
+
+/*
+ * Convert either a Date or string into:
+ *
+ * YYYY-MM-DD
+ */
+function toDateOnlyString(value: string | Date) {
+  if (value instanceof Date) {
+    return dateToHotelDateString(value);
+  }
+
+  return value.split("T")[0];
+}
+
+/*
+ * Calculate number of nights using date-only values.
+ */
+function calculateNights(
+  checkInDate: string,
+  checkOutDate: string
+) {
+  const checkIn = dateOnlyToUtcDate(checkInDate);
+  const checkOut = dateOnlyToUtcDate(checkOutDate);
 
   const difference =
     checkOut.getTime() -
@@ -94,19 +144,6 @@ export async function GET(
  * --------------------------------------------------
  * UPDATE RESERVATION
  * --------------------------------------------------
- *
- * Edit is allowed for:
- *
- * BOOKED
- * CHECKED_IN
- * CHECKED_OUT
- *
- * Edit does NOT change the reservation status.
- *
- * The room cannot be changed.
- *
- * Price always comes from Room.basePrice.
- *
  */
 
 export async function PATCH(
@@ -134,9 +171,7 @@ export async function PATCH(
     const body = await req.json();
 
     const parsed =
-      updateReservationSchema.safeParse(
-        body
-      );
+      updateReservationSchema.safeParse(body);
 
     if (!parsed.success) {
       throw new ApiError(
@@ -166,44 +201,36 @@ export async function PATCH(
     }
 
     /*
-     * We intentionally DO NOT check:
-     *
-     * reservation.status === "BOOKED"
-     *
-     * because Edit is allowed for:
-     *
-     * BOOKED
-     * CHECKED_IN
-     * CHECKED_OUT
+     * Use the submitted dates if they were provided.
+     * Otherwise keep the existing dates.
      */
+    const newCheckInDateString =
+      parsed.data.checkInDate
+        ? toDateOnlyString(
+            parsed.data.checkInDate
+          )
+        : toDateOnlyString(
+            reservation.checkInDate
+          );
 
-    const newCheckInDate =
-      parsed.data.checkInDate ??
-      reservation.checkInDate;
-
-    const newCheckOutDate =
-      parsed.data.checkOutDate ??
-      reservation.checkOutDate;
+    const newCheckOutDateString =
+      parsed.data.checkOutDate
+        ? toDateOnlyString(
+            parsed.data.checkOutDate
+          )
+        : toDateOnlyString(
+            reservation.checkOutDate
+          );
 
     /*
      * Check-in cannot be before today.
      */
-    const checkIn =
-      new Date(newCheckInDate);
-
-    const today =
-      getStartOfToday();
-
-    checkIn.setHours(
-      0,
-      0,
-      0,
-      0
-    );
+    const todayString =
+      getTodayString();
 
     if (
-      checkIn.getTime() <
-      today.getTime()
+      newCheckInDateString <
+      todayString
     ) {
       throw new ApiError(
         "Check-in date cannot be before today",
@@ -214,19 +241,9 @@ export async function PATCH(
     /*
      * Check-out must be after check-in.
      */
-    const checkOut =
-      new Date(newCheckOutDate);
-
-    checkOut.setHours(
-      0,
-      0,
-      0,
-      0
-    );
-
     if (
-      checkOut.getTime() <=
-      checkIn.getTime()
+      newCheckOutDateString <=
+      newCheckInDateString
     ) {
       throw new ApiError(
         "Check-out date must be after check-in date",
@@ -235,26 +252,39 @@ export async function PATCH(
     }
 
     /*
-     * Calculate nights.
+     * Calculate nights using date-only values.
      */
     const nights =
       calculateNights(
-        new Date(newCheckInDate),
-        new Date(newCheckOutDate)
+        newCheckInDateString,
+        newCheckOutDateString
       );
 
     if (nights <= 0) {
       throw new ApiError(
-        "Check-out date must be after check-in date",
+        "Reservation must be at least one night",
         400
       );
     }
+
+    /*
+     * Convert date-only strings to database Dates.
+     */
+    const newCheckInDate =
+      dateOnlyToUtcDate(
+        newCheckInDateString
+      );
+
+    const newCheckOutDate =
+      dateOnlyToUtcDate(
+        newCheckOutDateString
+      );
 
     const updated =
       await prisma.$transaction(
         async (tx) => {
           /*
-           * Get the real room from MySQL.
+           * Get the room from the database.
            */
           const room =
             await tx.room.findFirst({
@@ -272,12 +302,9 @@ export async function PATCH(
           }
 
           /*
-           * Prevent overlapping active
-           * reservations.
+           * Prevent overlapping active reservations.
            *
-           * CHECKED_OUT reservations are
-           * ignored because they are no
-           * longer active.
+           * CHECKED_OUT reservations are ignored.
            */
           const overlap =
             await tx.reservation.findFirst({
@@ -317,22 +344,17 @@ export async function PATCH(
           }
 
           /*
-           * Price always comes from
-           * Room.basePrice.
-           *
-           * The receptionist cannot
-           * manually change it.
+           * Price always comes from the room.
            */
           const pricePerNight =
             room.basePrice;
 
           const totalPrice =
-            pricePerNight.mul(
-              nights
-            );
+            pricePerNight.mul(nights);
 
           /*
-           * Payment status can be changed.
+           * Keep the existing payment status
+           * unless a new one was submitted.
            */
           const paymentStatus =
             parsed.data.paymentStatus ??
@@ -340,17 +362,7 @@ export async function PATCH(
 
           /*
            * IMPORTANT:
-           *
-           * Keep the existing status.
-           *
-           * If reservation is CHECKED_IN,
-           * it stays CHECKED_IN.
-           *
-           * If reservation is CHECKED_OUT,
-           * it stays CHECKED_OUT.
-           *
-           * If reservation is BOOKED,
-           * it stays BOOKED.
+           * Keep the current reservation status.
            */
           const result =
             await tx.reservation.update({
@@ -382,24 +394,12 @@ export async function PATCH(
             });
 
           /*
-           * DO NOT change the room status here.
-           *
-           * Edit should not accidentally
-           * change:
-           *
-           * OCCUPIED
-           * NEEDS_CLEANING
-           * CLEANING
-           * OUT_OF_SERVICE
-           * RESERVED
+           * Do NOT change room status here.
            *
            * Check-in and check-out endpoints
-           * are responsible for room status.
+           * control the physical room status.
            */
 
-          /*
-           * Audit log.
-           */
           await writeAuditLog(
             tx,
             {
@@ -424,10 +424,10 @@ export async function PATCH(
 
                 changes: {
                   checkInDate:
-                    newCheckInDate,
+                    newCheckInDateString,
 
                   checkOutDate:
-                    newCheckOutDate,
+                    newCheckOutDateString,
 
                   paymentStatus,
 
@@ -453,13 +453,6 @@ export async function PATCH(
  * --------------------------------------------------
  * DELETE RESERVATION
  * --------------------------------------------------
- *
- * Delete is allowed for:
- *
- * BOOKED
- * CHECKED_IN
- * CHECKED_OUT
- *
  */
 
 export async function DELETE(
@@ -499,17 +492,6 @@ export async function DELETE(
       );
     }
 
-    /*
-     * IMPORTANT:
-     *
-     * There is intentionally NO status
-     * restriction here.
-     *
-     * BOOKED       -> can delete
-     * CHECKED_IN   -> can delete
-     * CHECKED_OUT  -> can delete
-     */
-
     await prisma.$transaction(
       async (tx) => {
         /*
@@ -523,7 +505,7 @@ export async function DELETE(
 
         /*
          * Check whether another active
-         * reservation is using this room.
+         * reservation is using the same room.
          */
         const activeReservation =
           await tx.reservation.findFirst({
@@ -544,14 +526,10 @@ export async function DELETE(
           });
 
         /*
-         * Only release the room if
-         * there is no other active
-         * reservation.
+         * Only release a BOOKED reservation's room.
          *
-         * For a checked-out reservation,
-         * this also prevents us from
-         * incorrectly changing a room that
-         * may currently be NEEDS_CLEANING.
+         * We do not change the room for
+         * CHECKED_IN or CHECKED_OUT reservations.
          */
         if (
           !activeReservation &&
