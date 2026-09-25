@@ -3,6 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Sidebar from "@/components/Navbars/navbar";
+import Pagination from "@/components/Pagination";
 import styles from "./rooms.module.css";
 import { useAuth } from "@/components/Auth/AuthProvider";
 
@@ -91,15 +92,13 @@ function getStatusClass(status: RoomStatus) {
       return styles.availableStatus;
   }
 }
+
 function sortRoomsByNumber(rooms: Room[]) {
-  return [...rooms].sort(
-    (a, b) => Number(a.roomNumber) - Number(b.roomNumber),
-  );
+  return [...rooms].sort((a, b) => Number(a.roomNumber) - Number(b.roomNumber));
 }
 
 const Page = () => {
   const { user } = useAuth();
-
   const router = useRouter();
 
   /* -------------------------------------------------------------------------- */
@@ -119,7 +118,7 @@ const Page = () => {
   const [roomTypeFilter, setRoomTypeFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
 
-  const roomsPerPage = 10;
+  const roomsPerPage = 8;
 
   /* -------------------------------------------------------------------------- */
   /* Edit Room                                                                  */
@@ -165,7 +164,6 @@ const Page = () => {
         setError(null);
 
         const response = await fetch("/api/v1/rooms");
-
         const data = await response.json();
 
         if (!response.ok) {
@@ -198,8 +196,7 @@ const Page = () => {
         room.roomNumber.toLowerCase().includes(searchValue) ||
         room.roomType.toLowerCase().includes(searchValue);
 
-      const matchesStatus =
-        !statusFilter || room.status === statusFilter;
+      const matchesStatus = !statusFilter || room.status === statusFilter;
 
       const matchesRoomType =
         !roomTypeFilter || room.roomType === roomTypeFilter;
@@ -209,7 +206,7 @@ const Page = () => {
   }, [rooms, search, statusFilter, roomTypeFilter]);
 
   /* -------------------------------------------------------------------------- */
-  /* Pagination                                                                  */
+  /* Pagination                                                                 */
   /* -------------------------------------------------------------------------- */
 
   const totalPages = Math.ceil(filteredRooms.length / roomsPerPage);
@@ -329,9 +326,9 @@ const Page = () => {
 
       const createdRoom = data as Room;
 
-     setRooms((currentRooms) =>
-  sortRoomsByNumber([...currentRooms, createdRoom]),
-);
+      setRooms((currentRooms) =>
+        sortRoomsByNumber([...currentRooms, createdRoom]),
+      );
 
       setIsAddRoomOpen(false);
       setCreateError(null);
@@ -430,10 +427,7 @@ const Page = () => {
       return;
     }
 
-    if (
-      roomTypeChanged &&
-      priceNumber === Number(editingRoom.basePrice)
-    ) {
+    if (roomTypeChanged && priceNumber === Number(editingRoom.basePrice)) {
       setSaveError(
         "Please review and update the base price because the room type has changed.",
       );
@@ -467,13 +461,13 @@ const Page = () => {
 
       const updatedRoom = data as Room;
 
-    setRooms((currentRooms) =>
-  sortRoomsByNumber(
-    currentRooms.map((room) =>
-      room.id === updatedRoom.id ? updatedRoom : room,
-    ),
-  ),
-);
+      setRooms((currentRooms) =>
+        sortRoomsByNumber(
+          currentRooms.map((room) =>
+            room.id === updatedRoom.id ? updatedRoom : room,
+          ),
+        ),
+      );
 
       setEditingRoom(null);
       setSaveError(null);
@@ -501,7 +495,6 @@ const Page = () => {
   return (
     <div className={styles.page}>
       <main className={styles.main}>
-
         {/* Header */}
         <header className={styles.header}>
           <div>
@@ -520,15 +513,12 @@ const Page = () => {
               <span>Currently managing rooms</span>
             </div>
 
-            <div className={styles.roleBadge}>
-              {user?.role}
-            </div>
+            <div className={styles.roleBadge}>{user?.role}</div>
           </div>
         </header>
 
         {/* Search + Filters + Add Room */}
         <div className={styles.toolbar}>
-
           <input
             type="text"
             value={search}
@@ -555,9 +545,7 @@ const Page = () => {
 
           <select
             value={roomTypeFilter}
-            onChange={(event) =>
-              setRoomTypeFilter(event.target.value)
-            }
+            onChange={(event) => setRoomTypeFilter(event.target.value)}
             className={styles.filterSelect}
           >
             <option value="">All room types</option>
@@ -593,7 +581,6 @@ const Page = () => {
             </thead>
 
             <tbody>
-
               {/* Loading */}
               {isLoading && (
                 <tr>
@@ -613,53 +600,39 @@ const Page = () => {
               )}
 
               {/* No results */}
-              {!isLoading &&
-                !error &&
-                filteredRooms.length === 0 && (
-                  <tr>
-                    <td
-                      colSpan={6}
-                      className={styles.tableMessage}
-                    >
-                      {search || statusFilter || roomTypeFilter
-                        ? "No rooms match your filters."
-                        : "No rooms have been added yet."}
-                    </td>
-                  </tr>
-                )}
+              {!isLoading && !error && filteredRooms.length === 0 && (
+                <tr>
+                  <td colSpan={6} className={styles.tableMessage}>
+                    {search || statusFilter || roomTypeFilter
+                      ? "No rooms match your filters."
+                      : "No rooms have been added yet."}
+                  </td>
+                </tr>
+              )}
 
               {/* Rooms */}
               {!isLoading &&
                 !error &&
                 paginatedRooms.map((room) => (
                   <tr key={room.id}>
-
-                    <td className={styles.roomNumber}>
-                      {room.roomNumber}
-                    </td>
+                    <td className={styles.roomNumber}>{room.roomNumber}</td>
 
                     <td>{room.roomType}</td>
 
                     <td>{room.floor}</td>
 
                     <td>
-                      {room.capacity}{" "}
-                      {room.capacity === 1
-                        ? "guest"
-                        : "guests"}
+                      {room.capacity} {room.capacity === 1 ? "guest" : "guests"}
                     </td>
 
                     <td>
-                      <span
-                        className={getStatusClass(room.status)}
-                      >
+                      <span className={getStatusClass(room.status)}>
                         {getRoomStatusLabel(room.status)}
                       </span>
                     </td>
 
                     <td>
                       <div className={styles.roomActions}>
-
                         <button
                           type="button"
                           className={styles.viewButton}
@@ -675,10 +648,8 @@ const Page = () => {
                         >
                           Edit
                         </button>
-
                       </div>
                     </td>
-
                   </tr>
                 ))}
             </tbody>
@@ -686,72 +657,15 @@ const Page = () => {
         </div>
 
         {/* Pagination */}
-        {!isLoading &&
-          !error &&
-          filteredRooms.length > 0 && (
-            <div className={styles.pagination}>
-
-              <div className={styles.paginationInfo}>
-                Showing{" "}
-                {(currentPage - 1) * roomsPerPage + 1}
-                {" - "}
-                {Math.min(
-                  currentPage * roomsPerPage,
-                  filteredRooms.length,
-                )}
-                {" of "}
-                {filteredRooms.length}
-              </div>
-
-              <div className={styles.paginationControls}>
-
-                <button
-                  type="button"
-                  className={styles.paginationButton}
-                  onClick={() =>
-                    setCurrentPage((page) =>
-                      Math.max(page - 1, 1),
-                    )
-                  }
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </button>
-
-                {Array.from(
-                  { length: totalPages },
-                  (_, index) => index + 1,
-                ).map((page) => (
-                  <button
-                    key={page}
-                    type="button"
-                    className={`${styles.pageButton} ${
-                      currentPage === page
-                        ? styles.activePage
-                        : ""
-                    }`}
-                    onClick={() => setCurrentPage(page)}
-                  >
-                    {page}
-                  </button>
-                ))}
-
-                <button
-                  type="button"
-                  className={styles.paginationButton}
-                  onClick={() =>
-                    setCurrentPage((page) =>
-                      Math.min(page + 1, totalPages),
-                    )
-                  }
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </button>
-
-              </div>
-            </div>
-          )}
+        {!isLoading && !error && filteredRooms.length > 0 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filteredRooms.length}
+            itemsPerPage={roomsPerPage}
+            onPageChange={setCurrentPage}
+          />
+        )}
       </main>
 
       {/* ================================================================== */}
@@ -764,7 +678,6 @@ const Page = () => {
             className={styles.editModal}
             onClick={(event) => event.stopPropagation()}
           >
-
             <div className={styles.modalHeader}>
               <div>
                 <p className={styles.modalLabel}>ROOM SETUP</p>
@@ -784,38 +697,27 @@ const Page = () => {
             </div>
 
             <div className={styles.form}>
-
               <div className={styles.formGroup}>
-                <label htmlFor="newRoomNumber">
-                  Room number
-                </label>
+                <label htmlFor="newRoomNumber">Room number</label>
 
                 <input
                   id="newRoomNumber"
                   type="text"
                   value={newRoomNumber}
-                  onChange={(event) =>
-                    setNewRoomNumber(event.target.value)
-                  }
+                  onChange={(event) => setNewRoomNumber(event.target.value)}
                   placeholder="e.g. 101"
                 />
               </div>
 
               <div className={styles.formGroup}>
-                <label htmlFor="newRoomType">
-                  Room type
-                </label>
+                <label htmlFor="newRoomType">Room type</label>
 
                 <select
                   id="newRoomType"
                   value={newRoomType}
-                  onChange={(event) =>
-                    setNewRoomType(event.target.value)
-                  }
+                  onChange={(event) => setNewRoomType(event.target.value)}
                 >
-                  <option value="">
-                    Select room type
-                  </option>
+                  <option value="">Select room type</option>
 
                   {roomTypes.map((type) => (
                     <option key={type} value={type}>
@@ -826,47 +728,35 @@ const Page = () => {
               </div>
 
               <div className={styles.formRow}>
-
                 <div className={styles.formGroup}>
-                  <label htmlFor="newFloor">
-                    Floor
-                  </label>
+                  <label htmlFor="newFloor">Floor</label>
 
                   <input
                     id="newFloor"
                     type="number"
                     min="1"
                     value={newFloor}
-                    onChange={(event) =>
-                      setNewFloor(event.target.value)
-                    }
+                    onChange={(event) => setNewFloor(event.target.value)}
                     placeholder="e.g. 1"
                   />
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label htmlFor="newCapacity">
-                    Capacity
-                  </label>
+                  <label htmlFor="newCapacity">Capacity</label>
 
                   <input
                     id="newCapacity"
                     type="number"
                     min="1"
                     value={newCapacity}
-                    onChange={(event) =>
-                      setNewCapacity(event.target.value)
-                    }
+                    onChange={(event) => setNewCapacity(event.target.value)}
                     placeholder="e.g. 2"
                   />
                 </div>
-
               </div>
 
               <div className={styles.formGroup}>
-                <label htmlFor="newBasePrice">
-                  Base price
-                </label>
+                <label htmlFor="newBasePrice">Base price</label>
 
                 <input
                   id="newBasePrice"
@@ -874,22 +764,15 @@ const Page = () => {
                   min="0"
                   step="0.01"
                   value={newBasePrice}
-                  onChange={(event) =>
-                    setNewBasePrice(event.target.value)
-                  }
+                  onChange={(event) => setNewBasePrice(event.target.value)}
                   placeholder="e.g. 120"
                 />
               </div>
 
-              {createError && (
-                <p className={styles.formError}>
-                  {createError}
-                </p>
-              )}
+              {createError && <p className={styles.formError}>{createError}</p>}
             </div>
 
             <div className={styles.modalActions}>
-
               <button
                 type="button"
                 className={styles.cancelButton}
@@ -907,7 +790,6 @@ const Page = () => {
               >
                 {isCreating ? "Adding..." : "Add Room"}
               </button>
-
             </div>
           </div>
         </div>
@@ -923,16 +805,11 @@ const Page = () => {
             className={styles.editModal}
             onClick={(event) => event.stopPropagation()}
           >
-
             <div className={styles.modalHeader}>
               <div>
-                <p className={styles.modalLabel}>
-                  ROOM SETUP
-                </p>
+                <p className={styles.modalLabel}>ROOM SETUP</p>
 
-                <h2>
-                  Edit Room {editingRoom.roomNumber}
-                </h2>
+                <h2>Edit Room {editingRoom.roomNumber}</h2>
               </div>
 
               <button
@@ -947,26 +824,19 @@ const Page = () => {
             </div>
 
             <div className={styles.form}>
-
               <div className={styles.formGroup}>
-                <label htmlFor="roomNumber">
-                  Room number
-                </label>
+                <label htmlFor="roomNumber">Room number</label>
 
                 <input
                   id="roomNumber"
                   type="text"
                   value={roomNumber}
-                  onChange={(event) =>
-                    setRoomNumber(event.target.value)
-                  }
+                  onChange={(event) => setRoomNumber(event.target.value)}
                 />
               </div>
 
               <div className={styles.formGroup}>
-                <label htmlFor="roomType">
-                  Room type
-                </label>
+                <label htmlFor="roomType">Room type</label>
 
                 <select
                   id="roomType"
@@ -977,14 +847,11 @@ const Page = () => {
                     setRoomType(newType);
 
                     setRoomTypeChanged(
-                      editingRoom !== null &&
-                        newType !== editingRoom.roomType,
+                      editingRoom !== null && newType !== editingRoom.roomType,
                     );
                   }}
                 >
-                  <option value="">
-                    Select room type
-                  </option>
+                  <option value="">Select room type</option>
 
                   {roomTypes.map((type) => (
                     <option key={type} value={type}>
@@ -995,45 +862,33 @@ const Page = () => {
               </div>
 
               <div className={styles.formRow}>
-
                 <div className={styles.formGroup}>
-                  <label htmlFor="floor">
-                    Floor
-                  </label>
+                  <label htmlFor="floor">Floor</label>
 
                   <input
                     id="floor"
                     type="number"
                     min="1"
                     value={floor}
-                    onChange={(event) =>
-                      setFloor(event.target.value)
-                    }
+                    onChange={(event) => setFloor(event.target.value)}
                   />
                 </div>
 
                 <div className={styles.formGroup}>
-                  <label htmlFor="capacity">
-                    Capacity
-                  </label>
+                  <label htmlFor="capacity">Capacity</label>
 
                   <input
                     id="capacity"
                     type="number"
                     min="1"
                     value={capacity}
-                    onChange={(event) =>
-                      setCapacity(event.target.value)
-                    }
+                    onChange={(event) => setCapacity(event.target.value)}
                   />
                 </div>
-
               </div>
 
               <div className={styles.formGroup}>
-                <label htmlFor="basePrice">
-                  Base price
-                </label>
+                <label htmlFor="basePrice">Base price</label>
 
                 <input
                   id="basePrice"
@@ -1041,9 +896,7 @@ const Page = () => {
                   min="0"
                   step="0.01"
                   value={basePrice}
-                  onChange={(event) =>
-                    setBasePrice(event.target.value)
-                  }
+                  onChange={(event) => setBasePrice(event.target.value)}
                 />
 
                 <p className={styles.priceWarning}>
@@ -1052,39 +905,27 @@ const Page = () => {
               </div>
 
               <div className={styles.formGroup}>
-                <label htmlFor="status">
-                  Status
-                </label>
+                <label htmlFor="status">Status</label>
 
                 <select
                   id="status"
                   value={status}
                   onChange={(event) =>
-                    setStatus(
-                      event.target.value as RoomStatus,
-                    )
+                    setStatus(event.target.value as RoomStatus)
                   }
                 >
                   {roomStatuses.map((roomStatus) => (
-                    <option
-                      key={roomStatus}
-                      value={roomStatus}
-                    >
+                    <option key={roomStatus} value={roomStatus}>
                       {getRoomStatusLabel(roomStatus)}
                     </option>
                   ))}
                 </select>
               </div>
 
-              {saveError && (
-                <p className={styles.formError}>
-                  {saveError}
-                </p>
-              )}
+              {saveError && <p className={styles.formError}>{saveError}</p>}
             </div>
 
             <div className={styles.modalActions}>
-
               <button
                 type="button"
                 className={styles.cancelButton}
@@ -1102,7 +943,6 @@ const Page = () => {
               >
                 {isSaving ? "Saving..." : "Save Changes"}
               </button>
-
             </div>
           </div>
         </div>

@@ -1,7 +1,9 @@
 .page {
   min-height: 100vh;
   display: flex;
-  background: #f7f4ec;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
   overflow-x: hidden;
 }
 
@@ -10,7 +12,6 @@
   min-width: 0;
   width: 100%;
   padding: 38px 42px;
-  box-sizing: border-box;
 }
 
 /* =========================
@@ -22,30 +23,24 @@
   justify-content: space-between;
   align-items: flex-start;
   gap: 24px;
-
   padding-bottom: 20px;
   margin-bottom: 20px;
-
-  border-bottom: 1px solid #d9d3c4;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .title {
   margin: 0;
-
-  font-family: Georgia, serif;
+  font-family: var(--font-heading);
   font-size: clamp(26px, 2.4vw, 34px);
   font-weight: 600;
   line-height: 1.2;
-
-  color: #292821;
+  color: var(--color-text);
 }
 
 .subtitle {
   margin-top: 4px;
-
-  color: #8a877e;
-
-  font-family: "IBM Plex Sans", sans-serif;
+  color: var(--color-muted);
+  font-family: var(--font-body);
   font-size: clamp(11px, 1vw, 14px);
 }
 
@@ -59,43 +54,36 @@
 .roleInfo {
   display: flex;
   flex-direction: column;
-
   text-align: right;
-
-  font-family: "IBM Plex Sans", sans-serif;
+  font-family: var(--font-body);
   font-size: 12px;
+  color: var(--color-label);
 }
 
 .roleInfo strong {
-  color: #292821;
+  color: var(--color-text);
   font-weight: 600;
-
   overflow-wrap: anywhere;
 }
 
 .roleInfo span {
   margin-top: 3px;
-  color: #99958a;
+  color: var(--color-faint);
 }
 
 .roleBadge {
   display: flex;
   align-items: center;
   justify-content: center;
-
   min-width: 70px;
   min-height: 36px;
   padding: 0 14px;
-
-  box-sizing: border-box;
-
-  background: #c76543;
-  color: white;
-
-  font-family: "IBM Plex Sans", sans-serif;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  border-radius: var(--radius-field);
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
-
   white-space: nowrap;
 }
 
@@ -107,9 +95,7 @@
   display: flex;
   align-items: center;
   gap: 10px;
-
   margin: 22px 0 14px;
-
   min-width: 0;
 }
 
@@ -117,55 +103,65 @@
   flex: 1;
   min-width: 0;
   height: 38px;
-  box-sizing: border-box;
-
   padding: 0 14px;
-
-  border: 1px solid #ddd5c5;
-  border-radius: 2px;
-
-  background: #fffdf9;
-  color: #26332a;
-
-  font-family: "IBM Plex Sans", sans-serif;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-field);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font-family: var(--font-body);
   font-size: 12px;
-
   outline: none;
 }
 
 .searchInput::placeholder {
-  color: #aaa49a;
+  color: var(--color-faint);
 }
 
 .searchInput:focus {
-  border-color: #a97c50;
+  border-color: var(--color-primary);
 }
 
 .addButton {
   flex-shrink: 0;
-
   min-height: 38px;
   padding: 0 18px;
-
   border: none;
-  border-radius: 2px;
-
-  background: #c1633b;
-  color: white;
-
-  font-family: "IBM Plex Sans", sans-serif;
+  border-radius: var(--radius-field);
+  background: var(--color-primary);
+  color: var(--color-on-accent);
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
-
   cursor: pointer;
-
   white-space: nowrap;
-
-  transition: background 0.2s ease;
+  transition: background-color 0.15s ease;
 }
 
 .addButton:hover {
-  background: #ad5633;
+  background: var(--color-primary-hover);
+}
+
+/* =========================
+   FILTERS
+========================= */
+
+.filterSelect {
+  height: 38px;
+  min-width: 145px;
+  max-width: 220px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-field);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 12px;
+  outline: none;
+  cursor: pointer;
+}
+
+.filterSelect:focus {
+  border-color: var(--color-primary);
 }
 
 /* =========================
@@ -177,56 +173,40 @@
   max-width: 100%;
   overflow-x: auto;
   overflow-y: hidden;
-
-  box-sizing: border-box;
-
-  border: 1px solid #e0d8c9;
-  background: #fffdf9;
-
-  box-shadow: 0 4px 14px rgba(50, 45, 35, 0.04);
-
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
   -webkit-overflow-scrolling: touch;
 }
 
 .table {
   width: 100%;
   min-width: 720px;
-
   border-collapse: collapse;
-
-  color: #26332a;
-
-  font-family: "IBM Plex Sans", sans-serif;
+  color: var(--color-text);
+  font-family: var(--font-body);
   font-size: 12px;
 }
 
 .table th {
   height: 38px;
-
   padding: 0 14px;
-
-  background: #ebe5d7;
-  color: #777268;
-
+  background: var(--color-surface);
+  color: var(--color-label);
   text-align: left;
-
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-
   white-space: nowrap;
 }
 
 .table td {
   height: 48px;
-
   padding: 0 14px;
-
-  border-bottom: 1px solid #ebe5d9;
-
-  color: #3c403a;
-
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
   white-space: nowrap;
 }
 
@@ -235,21 +215,18 @@
 }
 
 .table tbody tr:hover {
-  background: #faf7ef;
+  background: var(--color-surface);
 }
 
 .roomNumber {
-  color: #26332a;
+  color: var(--color-text);
   font-weight: 700;
 }
 
 .tableMessage {
   height: 100px !important;
-
   text-align: center;
-
-  color: #8a877e !important;
-
+  color: var(--color-muted) !important;
   white-space: normal !important;
 }
 
@@ -265,43 +242,39 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-
   min-width: 80px;
   min-height: 23px;
   padding: 3px 10px;
-
-  box-sizing: border-box;
-
-  font-family: "IBM Plex Sans", sans-serif;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-body);
   font-size: 10px;
   font-weight: 600;
-
   white-space: nowrap;
 }
 
 .availableStatus {
-  background: #d1dbc7;
-  color: #526447;
+  background: var(--color-status-active);
+  color: var(--color-status-active-text);
 }
 
 .reservedStatus {
-  background: #eee8d9;
-  color: #746d5d;
+  background: var(--color-status-instay);
+  color: var(--color-status-instay-text);
 }
 
 .occupiedStatus {
-  background: #e2eaf0;
-  color: #496579;
+  background: var(--color-border-soft);
+  color: var(--color-label);
 }
 
 .cleaningStatus {
-  background: #f3ead8;
-  color: #806b42;
+  background: var(--color-status-success);
+  color: var(--color-status-success-text);
 }
 
 .outOfServiceStatus {
-  background: #f8e4dc;
-  color: #a84e34;
+  background: var(--color-status-cancelled);
+  color: var(--color-status-cancelled-text);
 }
 
 /* =========================
@@ -317,75 +290,39 @@
 .viewButton,
 .editButton {
   min-height: 27px;
-
   padding: 4px 9px;
-
-  border-radius: 2px;
-
-  font-family: "IBM Plex Sans", sans-serif;
+  border-radius: var(--radius-field);
+  font-family: var(--font-body);
   font-size: 10px;
   font-weight: 600;
-
   cursor: pointer;
-
   transition:
-    background 0.2s ease,
-    border-color 0.2s ease,
-    color 0.2s ease;
-
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
   white-space: nowrap;
 }
 
 .viewButton {
-  border: 1px solid #6f8f63;
-  background: #6f8f63;
-  color: white;
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-accent);
 }
 
 .viewButton:hover {
-  background: #5d7b53;
-  border-color: #5d7b53;
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
 }
 
 .editButton {
-  border: 1px solid #dfc4b5;
-  background: transparent;
-  color: #c1633b;
+  border: 1px solid var(--color-border-input);
+  background: var(--color-surface-alt);
+  color: var(--color-label);
 }
 
 .editButton:hover {
-  background: #c1633b;
-  border-color: #c1633b;
-  color: white;
-}
-
-/* =========================
-   FILTERS
-========================= */
-
-.filterSelect {
-  height: 40px;
-  min-width: 145px;
-  max-width: 220px;
-
-  padding: 0 12px;
-
-  border: 1px solid #d9d3c4;
-  border-radius: 2px;
-
-  background: #ffffff;
-  color: #334238;
-
-  font-family: "IBM Plex Sans", sans-serif;
-  font-size: 12px;
-
-  outline: none;
-
-  cursor: pointer;
-}
-
-.filterSelect:focus {
-  border-color: #8a9b7d;
+  background: var(--color-surface);
+  color: var(--color-text);
 }
 
 /* =========================
@@ -395,18 +332,12 @@
 .modalOverlay {
   position: fixed;
   inset: 0;
-  z-index: 1000;
-
+  z-index: var(--z-modal-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
-
   padding: 24px;
-
-  box-sizing: border-box;
-
-  background: rgba(38, 51, 42, 0.58);
-
+  background: rgba(0, 0, 0, 0.5);
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -418,20 +349,14 @@
 .editModal {
   width: 100%;
   max-width: 500px;
-
   max-height: calc(100vh - 48px);
-
   display: flex;
   flex-direction: column;
-
   overflow: hidden;
-
-  background: #fffdf8;
-  border: 1px solid #ded8ca;
-
-  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
-
-  box-sizing: border-box;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-dropdown);
 }
 
 /* =========================
@@ -443,20 +368,15 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 15px;
-
   flex-shrink: 0;
-
   padding: 24px 26px 18px;
-
-  border-bottom: 1px solid #e1dccf;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .modalLabel {
   margin: 0 0 5px;
-
-  color: #8a877e;
-
-  font-family: "IBM Plex Sans", sans-serif;
+  color: var(--color-faint);
+  font-family: var(--font-body);
   font-size: 10px;
   font-weight: 700;
   letter-spacing: 1.5px;
@@ -464,10 +384,8 @@
 
 .modalHeader h2 {
   margin: 0;
-
-  color: #26332a;
-
-  font-family: Georgia, serif;
+  color: var(--color-text);
+  font-family: var(--font-heading);
   font-size: 25px;
   font-weight: 600;
   line-height: 1.2;
@@ -475,23 +393,19 @@
 
 .closeButton {
   flex-shrink: 0;
-
   width: 34px;
   height: 34px;
-
   border: none;
   background: transparent;
-
-  color: #77746c;
-
+  color: var(--color-faint);
   font-size: 25px;
   line-height: 1;
-
   cursor: pointer;
+  transition: color 0.15s ease;
 }
 
 .closeButton:hover {
-  color: #c16343;
+  color: var(--color-accent);
 }
 
 .closeButton:disabled {
@@ -507,9 +421,7 @@
   display: flex;
   flex-direction: column;
   gap: 17px;
-
   padding: 24px 26px;
-
   overflow-y: auto;
   overscroll-behavior: contain;
 }
@@ -524,14 +436,12 @@
   display: flex;
   flex-direction: column;
   gap: 7px;
-
   min-width: 0;
 }
 
 .formGroup label {
-  color: #4c5149;
-
-  font-family: "IBM Plex Sans", sans-serif;
+  color: var(--color-label);
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
 }
@@ -540,61 +450,45 @@
 .formGroup select {
   width: 100%;
   min-width: 0;
-
-  box-sizing: border-box;
-
   padding: 10px 12px;
-
-  border: 1px solid #d8d3c7;
-  border-radius: 0;
-
-  background: #fffefa;
-  color: #26332a;
-
-  font-family: "IBM Plex Sans", sans-serif;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-field);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font-family: var(--font-body);
   font-size: 13px;
-
   outline: none;
 }
 
 .formGroup input:focus,
 .formGroup select:focus {
-  border-color: #7c8b6f;
+  border-color: var(--color-primary);
 }
 
 .formGroup input::placeholder {
-  color: #aaa49a;
+  color: var(--color-faint);
 }
 
 /* =========================
-   PRICE WARNING
+   PRICE WARNING & ERROR
 ========================= */
 
 .priceWarning {
   margin: -4px 0 0;
-
-  color: #a56a32;
-
-  font-family: "IBM Plex Sans", sans-serif;
+  color: var(--color-accent);
+  font-family: var(--font-body);
   font-size: 12px;
   line-height: 1.4;
 }
 
-/* =========================
-   FORM ERROR
-========================= */
-
 .formError {
   margin: 0;
-
   padding: 9px 11px;
-
-  border-left: 3px solid #c76543;
-
-  background: #f8e4dc;
-  color: #984d36;
-
-  font-family: "IBM Plex Sans", sans-serif;
+  border-left: 3px solid var(--color-accent);
+  border-radius: 0 var(--radius-field) var(--radius-field) 0;
+  background: var(--color-status-cancelled);
+  color: var(--color-status-cancelled-text);
+  font-family: var(--font-body);
   font-size: 11px;
   line-height: 1.4;
 }
@@ -608,47 +502,45 @@
   justify-content: flex-end;
   align-items: center;
   gap: 10px;
-
   flex-shrink: 0;
-
   padding: 18px 26px 24px;
-
-  border-top: 1px solid #e1dccf;
-
-  background: #faf7ef;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
 }
 
 .cancelButton,
 .saveButton {
   min-height: 36px;
-
   padding: 0 18px;
-
-  border: none;
-
-  font-family: "IBM Plex Sans", sans-serif;
+  border-radius: var(--radius-field);
+  font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
-
   cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .cancelButton {
-  background: #eeeae0;
-  color: #4f554d;
+  border: 1px solid var(--color-border-input);
+  background: var(--color-surface-alt);
+  color: var(--color-label);
 }
 
 .cancelButton:hover {
-  background: #e4dfd3;
+  background: var(--color-surface);
 }
 
 .saveButton {
-  background: #485d39;
-  color: white;
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-accent);
 }
 
 .saveButton:hover {
-  background: #3d5031;
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
 }
 
 .cancelButton:disabled,
@@ -663,92 +555,16 @@
 
 .loading {
   min-height: 250px;
-
   display: flex;
   align-items: center;
   justify-content: center;
-
-  color: #8a877e;
-
-  font-family: "IBM Plex Sans", sans-serif;
+  color: var(--color-muted);
+  font-family: var(--font-body);
   font-size: 13px;
 }
 
-/* =========================
-   PAGINATION
-========================= */
-
-.pagination {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-
-  margin-top: 14px;
-  padding: 12px 4px;
-
-  min-width: 0;
-}
-
-.paginationInfo {
-  color: #8a877e;
-
-  font-family: "IBM Plex Sans", sans-serif;
-  font-size: 11px;
-}
-
-.paginationControls {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 5px;
-
-  flex-wrap: wrap;
-}
-
-.paginationButton,
-.pageButton {
-  height: 32px;
-  min-width: 32px;
-
-  padding: 0 10px;
-
-  border: 1px solid #d9d3c4;
-  border-radius: 2px;
-
-  background: #fffdf9;
-  color: #4f554d;
-
-  font-family: "IBM Plex Sans", sans-serif;
-  font-size: 11px;
-  font-weight: 600;
-
-  cursor: pointer;
-
-  transition:
-    background 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.paginationButton:hover:not(:disabled),
-.pageButton:hover {
-  background: #eeeae1;
-  border-color: #bfb8a9;
-}
-
-.pageButton.activePage {
-  background: #485d39;
-  border-color: #485d39;
-  color: white;
-}
-
-.paginationButton:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
-
 /* =========================================================
-   LARGE TABLET / SMALL LAPTOP
+   RESPONSIVE BREAKPOINTS
 ========================================================= */
 
 @media (max-width: 1100px) {
@@ -783,10 +599,6 @@
     min-width: 125px;
   }
 }
-
-/* =========================================================
-   TABLET
-========================================================= */
 
 @media (max-width: 900px) {
   .main {
@@ -823,22 +635,15 @@
   }
 }
 
-/* =========================================================
-   SMALL TABLET
-========================================================= */
-
 @media (max-width: 700px) {
   .main {
     width: 100%;
     padding: 24px 18px 35px;
   }
 
-  /* Header */
-
   .header {
     flex-direction: column;
     gap: 18px;
-
     padding-bottom: 18px;
     margin-bottom: 18px;
   }
@@ -860,19 +665,15 @@
     text-align: left;
   }
 
-  /* Toolbar */
-
   .toolbar {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 8px;
-
     margin-top: 18px;
   }
 
   .searchInput {
     grid-column: 1 / -1;
-
     width: 100%;
     min-height: 40px;
   }
@@ -888,12 +689,9 @@
     min-height: 40px;
   }
 
-  /* Table */
-
   .tableWrapper {
     width: 100%;
     max-width: 100%;
-
     overflow-x: auto;
   }
 
@@ -901,37 +699,16 @@
     min-width: 720px;
   }
 
-  /* Pagination */
-
-  .pagination {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 10px;
-  }
-
-  .paginationInfo {
-    text-align: center;
-  }
-
-  .paginationControls {
-    justify-content: center;
-  }
-
-  /* Modal */
-
   .modalOverlay {
     align-items: flex-start;
-
     padding: 14px;
     padding-top: 30px;
-
     overflow-y: auto;
   }
 
   .editModal {
     width: 100%;
     max-width: 500px;
-
     max-height: calc(100vh - 44px);
   }
 
@@ -953,16 +730,10 @@
   }
 }
 
-/* =========================================================
-   MOBILE
-========================================================= */
-
 @media (max-width: 520px) {
   .main {
     padding: 22px 14px 30px;
   }
-
-  /* Header */
 
   .title {
     font-size: 27px;
@@ -994,8 +765,6 @@
     font-size: 10px;
   }
 
-  /* Toolbar */
-
   .toolbar {
     grid-template-columns: 1fr;
   }
@@ -1009,13 +778,9 @@
     width: 100%;
   }
 
-  /* Table */
-
   .table {
     min-width: 680px;
   }
-
-  /* Modal */
 
   .modalOverlay {
     padding: 10px;
@@ -1061,7 +826,6 @@
   .modalActions {
     flex-direction: column-reverse;
     gap: 8px;
-
     padding: 15px 18px 18px;
   }
 
@@ -1071,10 +835,6 @@
     min-height: 40px;
   }
 }
-
-/* =========================================================
-   VERY SMALL PHONES
-========================================================= */
 
 @media (max-width: 360px) {
   .main {
@@ -1104,7 +864,6 @@
   .roleBadge {
     min-height: 32px;
     padding: 0 9px;
-
     font-size: 9px;
   }
 
@@ -1122,10 +881,7 @@
     min-width: 660px;
   }
 
-  .table th {
-    padding: 0 11px;
-  }
-
+  .table th,
   .table td {
     padding: 0 11px;
   }
@@ -1139,25 +895,6 @@
     min-height: 30px;
     padding: 5px 8px;
   }
-
-  .pagination {
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  .paginationControls {
-    gap: 4px;
-  }
-
-  .paginationButton,
-  .pageButton {
-    height: 30px;
-    min-width: 30px;
-    padding: 0 7px;
-    font-size: 10px;
-  }
-
-  /* Modal */
 
   .modalOverlay {
     padding: 8px;
