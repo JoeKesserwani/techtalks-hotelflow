@@ -544,6 +544,7 @@ const Page = () => {
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search by room number or type"
             className={styles.searchInput}
+            maxLength={30}
           />
 
           <select
