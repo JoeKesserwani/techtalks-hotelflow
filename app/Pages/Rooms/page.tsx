@@ -10,6 +10,7 @@ type RoomStatus =
   | "AVAILABLE"
   | "RESERVED"
   | "OCCUPIED"
+  | "IN_REVIEW"
   | "NEEDS_CLEANING"
   | "CLEANING"
   | "OUT_OF_SERVICE";
@@ -37,6 +38,7 @@ const roomStatuses: RoomStatus[] = [
   "AVAILABLE",
   "RESERVED",
   "OCCUPIED",
+  "IN_REVIEW",
   "NEEDS_CLEANING",
   "CLEANING",
   "OUT_OF_SERVICE",
@@ -52,6 +54,9 @@ function getRoomStatusLabel(status: RoomStatus) {
 
     case "OCCUPIED":
       return "Occupied";
+
+    case "IN_REVIEW":
+      return "In review";
 
     case "NEEDS_CLEANING":
       return "Needs cleaning";
@@ -78,6 +83,9 @@ function getStatusClass(status: RoomStatus) {
     case "OCCUPIED":
       return styles.occupiedStatus;
 
+    case "IN_REVIEW":
+      return styles.inReviewStatus;
+
     case "NEEDS_CLEANING":
       return styles.cleaningStatus;
 
@@ -91,6 +99,7 @@ function getStatusClass(status: RoomStatus) {
       return styles.availableStatus;
   }
 }
+
 function sortRoomsByNumber(rooms: Room[]) {
   return [...rooms].sort(
     (a, b) => Number(a.roomNumber) - Number(b.roomNumber),
@@ -209,7 +218,7 @@ const Page = () => {
   }, [rooms, search, statusFilter, roomTypeFilter]);
 
   /* -------------------------------------------------------------------------- */
-  /* Pagination                                                                  */
+  /* Pagination                                                                 */
   /* -------------------------------------------------------------------------- */
 
   const totalPages = Math.ceil(filteredRooms.length / roomsPerPage);
@@ -329,9 +338,9 @@ const Page = () => {
 
       const createdRoom = data as Room;
 
-     setRooms((currentRooms) =>
-  sortRoomsByNumber([...currentRooms, createdRoom]),
-);
+      setRooms((currentRooms) =>
+        sortRoomsByNumber([...currentRooms, createdRoom]),
+      );
 
       setIsAddRoomOpen(false);
       setCreateError(null);
@@ -467,13 +476,13 @@ const Page = () => {
 
       const updatedRoom = data as Room;
 
-    setRooms((currentRooms) =>
-  sortRoomsByNumber(
-    currentRooms.map((room) =>
-      room.id === updatedRoom.id ? updatedRoom : room,
-    ),
-  ),
-);
+      setRooms((currentRooms) =>
+        sortRoomsByNumber(
+          currentRooms.map((room) =>
+            room.id === updatedRoom.id ? updatedRoom : room,
+          ),
+        ),
+      );
 
       setEditingRoom(null);
       setSaveError(null);
