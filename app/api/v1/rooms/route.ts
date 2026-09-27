@@ -24,7 +24,7 @@ export async function GET() {
 
 export async function POST(req: Request) {
   try {
-    const user = await requireAuth({ roles: ["ADMIN", "MANAGER"] });
+    const user = await requireAuth({ roles: ["ADMIN", "MANAGER", "RECEPTIONIST"] });
     if (!user) throw new ApiError("Unauthorized", 401);
 
     const body = await req.json();

@@ -4,15 +4,9 @@ import { requireAuth } from "@/lib/middleware/requireAuth";
 
 export async function GET() {
   try {
-    const authStart = performance.now();
-
-const authUser = await requireAuth({
-  roles: ["ADMIN"],
-});
-
-console.log(
-  `Dashboard auth: ${(performance.now() - authStart).toFixed(0)}ms`
-);
+    const authUser = await requireAuth({
+      roles: ["ADMIN"],
+    });
 
     if (!authUser) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
