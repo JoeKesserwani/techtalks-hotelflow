@@ -5,7 +5,7 @@ import { requireAuth } from "@/lib/middleware/requireAuth";
 export async function GET() {
   try {
     const authUser = await requireAuth({
-      roles: ["ADMIN"],
+      roles: ["ADMIN","MANAGER"],
     });
 
     if (!authUser) {

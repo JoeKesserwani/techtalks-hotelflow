@@ -261,7 +261,8 @@
 .reservedStatus,
 .occupiedStatus,
 .cleaningStatus,
-.outOfServiceStatus {
+.outOfServiceStatus,
+.inReviewStatus {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -302,6 +303,11 @@
 .outOfServiceStatus {
   background: #f8e4dc;
   color: #a84e34;
+}
+
+.inReviewStatus {
+  background: #fff3cd;
+  color: #856404;
 }
 
 /* =========================

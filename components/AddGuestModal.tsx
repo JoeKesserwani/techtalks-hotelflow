@@ -149,6 +149,7 @@ export default function AddGuestModal({
           placeholder="full guest's name"
           value={fullName}
           onChange={(e) => setFullName(e.target.value)}
+          maxLength={20}
         />
 
         <div className={styles.row}>
@@ -162,6 +163,7 @@ export default function AddGuestModal({
               placeholder="+961 12345678"
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
+              maxLength={20}
             />
           </div>
           <div className={styles.col}>
@@ -174,6 +176,7 @@ export default function AddGuestModal({
               placeholder="XXXXXXXXXX"
               value={passportNumber}
               onChange={(e) => setPassportNumber(e.target.value)}
+              maxLength={10}
             />
           </div>
         </div>
@@ -187,6 +190,7 @@ export default function AddGuestModal({
           placeholder="XXXX@gmail.com"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
+          maxLength={40}
         />
 
         <label className={styles.label} htmlFor="note">
@@ -198,6 +202,7 @@ export default function AddGuestModal({
           placeholder="Notes"
           value={note}
           onChange={(e) => setNote(e.target.value)}
+          maxLength={250}
         />
 
         {error && <p className={styles.errorText}>{error}</p>}

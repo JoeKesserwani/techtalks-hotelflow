@@ -321,6 +321,7 @@ export default function GuestsPage() {
             placeholder="Search by guest's name, id, room number"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            maxLength={30}
           />
 
           <div className={styles.filterWrapper}>
