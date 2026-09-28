@@ -174,8 +174,7 @@
 .formGroup input:focus {
   border-color: #ba6035;
 
-  box-shadow:
-    0 0 0 3px rgba(186, 96, 53, 0.1);
+  box-shadow: 0 0 0 3px rgba(186, 96, 53, 0.1);
 }
 
 .passwordContainer {
@@ -331,7 +330,6 @@
 }
 
 @media (max-width: 550px) {
-
   .page {
     padding: 0;
 
@@ -397,7 +395,6 @@
     display: none;
   }
 
-
   /* LOGIN */
 
   .rightPanel {
@@ -446,7 +443,6 @@
 }
 
 @media (max-width: 360px) {
-
   .leftPanel {
     padding: 25px 20px;
   }
@@ -461,5 +457,38 @@
 
   .brand h1 {
     font-size: 27px;
+  }
+}
+
+.loginError {
+  margin: -8px 0 18px;
+  padding: 12px 14px;
+  border: 1px solid #e2a3a3;
+  border-radius: 4px;
+  background: #fff1f1;
+  color: #b94040;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.signInButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+
+.spinner {
+  width: 19px;
+  height: 19px;
+  border: 2px solid rgba(255, 255, 255, 0.45);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: loginSpin 0.7s linear infinite;
+}
+
+@keyframes loginSpin {
+  to {
+    transform: rotate(360deg);
   }
 }

@@ -3,6 +3,7 @@
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
+import Pagination from "@/components/Pagination";
 import styles from "./page.module.css";
 
 /*
@@ -60,6 +61,8 @@ type FormData = {
   status: string;
   paymentStatus: string;
 };
+
+const ITEMS_PER_PAGE = 5;
 
 /*
  * ================================
@@ -357,24 +360,18 @@ export default function ReservationsPage() {
    * DATA
    */
   const [reservations, setReservations] = useState<Reservation[]>([]);
-
   const [guests, setGuests] = useState<Guest[]>([]);
-
   const [rooms, setRooms] = useState<Room[]>([]);
 
   /*
    * UI STATE
    */
   const [loading, setLoading] = useState(true);
-
   const [saving, setSaving] = useState(false);
-
   const [error, setError] = useState("");
-
   const [search, setSearch] = useState("");
-
   const [filter, setFilter] = useState("all");
-
+  const [currentPage, setCurrentPage] = useState(1);
   const [showModal, setShowModal] = useState(false);
 
   const [editingReservation, setEditingReservation] =
@@ -400,11 +397,6 @@ export default function ReservationsPage() {
   const today =
     getTodayString();
 
-  /*
-   * PRE-FILL FROM ?guestId= (arriving from the Guests page's
-   * "Book a room" button). Only auto-open the modal once, even
-   * if the component re-renders.
-   */
   const searchParams = useSearchParams();
   const presetGuestId = searchParams.get("guestId");
   const hasAutoOpenedRef = useRef(false);
@@ -420,23 +412,13 @@ export default function ReservationsPage() {
 
       const [reservationsResponse, guestsResponse, roomsResponse] =
         await Promise.all([
-          fetch("/api/v1/reservations", {
-            credentials: "include",
-          }),
-
-          fetch("/api/v1/guests", {
-            credentials: "include",
-          }),
-
-          fetch("/api/v1/rooms", {
-            credentials: "include",
-          }),
+          fetch("/api/v1/reservations", { credentials: "include" }),
+          fetch("/api/v1/guests", { credentials: "include" }),
+          fetch("/api/v1/rooms", { credentials: "include" }),
         ]);
 
       const reservationsData = await readApiResponse(reservationsResponse);
-
       const guestsData = await readApiResponse(guestsResponse);
-
       const roomsData = await readApiResponse(roomsResponse);
 
       if (
@@ -490,7 +472,6 @@ export default function ReservationsPage() {
       );
     } catch (err) {
       console.error(err);
-
       setError(err instanceof Error ? err.message : "Failed to load data");
     } finally {
       setLoading(false);
@@ -501,11 +482,6 @@ export default function ReservationsPage() {
     loadData();
   }, []);
 
-  /*
-   * Once guests have loaded, if a guestId came in via the URL
-   * (e.g. "Book a room" from the Guests page), preselect that
-   * guest and open the new-reservation modal automatically.
-   */
   useEffect(() => {
     if (hasAutoOpenedRef.current) return;
     if (!presetGuestId || loading) return;
@@ -526,9 +502,7 @@ export default function ReservationsPage() {
 
     return reservations.filter((reservation) => {
       const guestName = reservation.guest?.fullName?.toLowerCase() || "";
-
       const roomNumber = reservation.room?.roomNumber?.toLowerCase() || "";
-
       const reservationId = reservation.id.toLowerCase();
 
       const matchesSearch =
@@ -547,7 +521,6 @@ export default function ReservationsPage() {
 
       if (filter === "this_month") {
         const reservationDate = new Date(reservation.checkInDate);
-
         const currentDate = new Date();
 
         return (
@@ -627,29 +600,27 @@ export default function ReservationsPage() {
 
   /*
    * EDIT RESERVATION
-   *
-   * IMPORTANT:
-   * Edit is available for ALL reservation statuses.
    */
   const openEditReservation = (reservation: Reservation) => {
     setEditingReservation(reservation);
 
-        checkInDate:
-          today,
-
+    setForm({
+      guestId: reservation.guestId,
+      roomId: reservation.roomId,
       checkInDate: reservation.checkInDate.split("T")[0],
-
       checkOutDate: reservation.checkOutDate.split("T")[0],
-
       pricePerNight: String(
         reservation.room?.basePrice ?? reservation.pricePerNight,
       ),
-
       totalPrice: String(reservation.totalPrice),
-
-        paymentStatus:
-          "UNPAID",
-      });
+      status: reservation.status,
+      paymentStatus:
+        reservation.paymentStatus === "PAID"
+          ? "PAID"
+          : reservation.paymentStatus === "PARTIAL"
+            ? "PARTIAL"
+            : "UNPAID",
+    });
 
       setError("");
       setShowModal(true);
@@ -722,9 +693,7 @@ export default function ReservationsPage() {
    */
 
   const closeModal = () => {
-    if (saving) {
-      return;
-    }
+    if (saving) return;
 
     setShowModal(false);
     setEditingReservation(
@@ -736,9 +705,7 @@ export default function ReservationsPage() {
   };
 
   /*
-   * ================================
-   * GUEST CHANGE
-   * ================================
+   * HANDLERS FOR INPUTS
    */
   const handleGuestChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     setForm((current) => ({
@@ -747,14 +714,8 @@ export default function ReservationsPage() {
     }));
   };
 
-  /*
-   * ================================
-   * ROOM CHANGE
-   * ================================
-   */
   const handleRoomChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const roomId = event.target.value;
-
     const selectedRoom = rooms.find((room) => room.id === roomId);
 
     if (!selectedRoom) {
@@ -764,13 +725,11 @@ export default function ReservationsPage() {
         pricePerNight: "",
         totalPrice: "",
       }));
-
       return;
     }
 
     if (isRoomCurrentlyUnavailable(selectedRoom)) {
       setError("This room is currently unavailable.");
-
       return;
     }
 
@@ -786,11 +745,8 @@ export default function ReservationsPage() {
      */
 
     setError("");
-
     const nights = calculateNights(form.checkInDate, form.checkOutDate);
-
     const pricePerNight = Number(selectedRoom.basePrice);
-
     const totalPrice = nights > 0 ? pricePerNight * nights : 0;
 
     setForm((current) => ({
@@ -801,15 +757,11 @@ export default function ReservationsPage() {
     }));
   };
 
-  /*
-   * CHECK-IN DATE CHANGE
-   */
   const handleCheckInChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const checkInDate = event.target.value;
 
     if (checkInDate < today) {
       setError("Check-in date cannot be before today.");
-
       return;
     }
 
@@ -820,9 +772,7 @@ export default function ReservationsPage() {
     }
 
     const nights = calculateNights(checkInDate, form.checkOutDate);
-
     const selectedRoom = rooms.find((room) => room.id === form.roomId);
-
     const pricePerNight = selectedRoom ? Number(selectedRoom.basePrice) : 0;
 
     setForm((current) => ({
@@ -832,9 +782,6 @@ export default function ReservationsPage() {
     }));
   };
 
-  /*
-   * CHECK-OUT DATE CHANGE
-   */
   const handleCheckOutChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const checkOutDate = event.target.value;
 
@@ -845,9 +792,7 @@ export default function ReservationsPage() {
     }
 
     const nights = calculateNights(form.checkInDate, checkOutDate);
-
     const selectedRoom = rooms.find((room) => room.id === form.roomId);
-
     const pricePerNight = selectedRoom ? Number(selectedRoom.basePrice) : 0;
 
     setForm((current) => ({
@@ -858,33 +803,18 @@ export default function ReservationsPage() {
   };
 
   /*
-   * ================================
-   * CHECK-IN DATE CHANGE
-   * ================================
+   * CHECK IN / OUT / DELETE
    */
   const handleCheckIn = async (reservationId: string) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to check in this guest?",
-    );
-
-  const handleCheckInChange =
-    (
-      event: React.ChangeEvent<HTMLInputElement>
-    ) => {
-      const checkInDate =
-        event.target.value;
+    if (!window.confirm("Are you sure you want to check in this guest?"))
+      return;
 
     try {
       setError("");
-
       const response = await fetch(
         `/api/v1/reservations/${reservationId}/check-in`,
-        {
-          method: "POST",
-          credentials: "include",
-        },
+        { method: "POST", credentials: "include" },
       );
-
       const data = await readApiResponse(response);
 
       if (!response.ok) {
@@ -894,88 +824,60 @@ export default function ReservationsPage() {
       } else {
         setError("");
       }
-
       await loadData();
     } catch (err) {
       console.error(err);
-
       setError(
         err instanceof Error ? err.message : "Failed to check in reservation",
       );
     }
   };
 
-  /*
-   * CHECK OUT
-   */
   const handleCheckOut = async (reservationId: string) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to check out this guest?",
-    );
-
-    if (!confirmed) {
+    if (!window.confirm("Are you sure you want to check out this guest?"))
       return;
-    }
 
     try {
       setError("");
-
       const response = await fetch(
         `/api/v1/reservations/${reservationId}/check-out`,
-        {
-          method: "POST",
-          credentials: "include",
-        },
+        { method: "POST", credentials: "include" },
       );
-
       const data = await readApiResponse(response);
 
       if (!response.ok) {
         throw new Error(
           data?.error || data?.message || "Failed to check out reservation",
         );
-
+      }
+      await loadData();
+    } catch (err) {
+      console.error(err);
       setError(
         err instanceof Error ? err.message : "Failed to check out reservation",
       );
     };
 
-  /*
-   * ================================
-   * CHECK-OUT DATE CHANGE
-   * ================================
-   */
   const handleDelete = async (reservationId: string) => {
-    const confirmed = window.confirm(
-      "Are you sure you want to delete this reservation?",
-    );
-
-    if (!confirmed) {
+    if (!window.confirm("Are you sure you want to delete this reservation?"))
       return;
-    }
 
     try {
       setError("");
-
       const response = await fetch(`/api/v1/reservations/${reservationId}`, {
         method: "DELETE",
         credentials: "include",
       });
-
       const data = await readApiResponse(response);
 
       if (!response.ok) {
         throw new Error(
           data?.error || data?.message || "Failed to delete reservation",
         );
-
-      const selectedRoom =
-        rooms.find(
-          (room) =>
-            room.id ===
-            form.roomId
-        );
-
+      }
+      await loadData();
+    } catch (err) {
+      console.error(err);
       setError(
         err instanceof Error ? err.message : "Failed to delete reservation",
       );
@@ -986,36 +888,25 @@ export default function ReservationsPage() {
    */
   const saveReservation = async (event: React.FormEvent) => {
     event.preventDefault();
-
     setError("");
 
-    /*
-     * VALIDATION
-     */
     if (!form.guestId) {
       setError("Please select a guest.");
       return;
     }
-
     if (!form.roomId) {
       setError("Please select a room.");
       return;
     }
-
     if (!form.checkInDate) {
       setError("Please select a check-in date.");
       return;
     }
-
     if (!form.checkOutDate) {
       setError("Please select a check-out date.");
       return;
     }
 
-    /*
-     * For NEW reservations, check-in
-     * cannot be before today.
-     */
     if (!editingReservation && form.checkInDate < today) {
       setError("Check-in date cannot be before today.");
       return;
@@ -1027,27 +918,17 @@ export default function ReservationsPage() {
     }
 
     const selectedRoom = rooms.find((room) => room.id === form.roomId);
-
     if (!selectedRoom) {
       setError("Selected room was not found.");
       return;
     }
 
-    /*
-     * For a NEW reservation, the room must
-     * currently be available.
-     *
-     * During editing, we allow the current
-     * room even if its status changed because
-     * the reservation may already be checked in.
-     */
     if (!editingReservation && isRoomCurrentlyUnavailable(selectedRoom)) {
       setError("This room is currently unavailable.");
       return;
     }
 
     const nights = calculateNights(form.checkInDate, form.checkOutDate);
-
     if (nights <= 0) {
       setError("Reservation must be at least one night.");
       return;
@@ -1056,70 +937,42 @@ export default function ReservationsPage() {
       try {
         setError("");
 
-      /*
-       * EDIT EXISTING RESERVATION
-       */
       if (editingReservation) {
         const response = await fetch(
           `/api/v1/reservations/${editingReservation.id}`,
           {
             method: "PATCH",
             credentials: "include",
-            headers: {
-              "Content-Type": "application/json",
-            },
-
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
               checkInDate: form.checkInDate,
-
               checkOutDate: form.checkOutDate,
-
               paymentStatus: form.paymentStatus,
             }),
           },
         );
 
         const data = await readApiResponse(response);
-
         if (!response.ok) {
           throw new Error(
             data?.error || data?.message || "Failed to update reservation",
           );
         }
       } else {
-
-      /*
-       * CREATE NEW RESERVATION
-       *
-       * createdByUserId is NOT sent.
-       * Backend gets it from authentication.
-       *
-       * pricePerNight and totalPrice are
-       * NOT sent.
-       * Backend gets price from the room.
-       */
         const response = await fetch("/api/v1/reservations", {
           method: "POST",
           credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             guestId: form.guestId,
-
             roomId: form.roomId,
-
             checkInDate: form.checkInDate,
-
             checkOutDate: form.checkOutDate,
-
             paymentStatus: form.paymentStatus,
           }),
         });
 
         const data = await readApiResponse(response);
-
         if (!response.ok) {
           throw new Error(
             data?.error || data?.message || "Failed to create reservation",
@@ -1152,61 +1005,12 @@ export default function ReservationsPage() {
 
       setError("");
 
-      /*
-       * VALIDATION
-       */
-
-      if (!form.guestId) {
-        setError(
-          "Please select a guest."
-        );
-
-        return;
-      }
-
-      if (!form.roomId) {
-        setError(
-          "Please select a room."
-        );
-
-        return;
-      }
-
-      if (!form.checkInDate) {
-        setError(
-          "Please select a check-in date."
-        );
-
-        return;
-      }
-
-      if (!form.checkOutDate) {
-        setError(
-          "Please select a check-out date."
-        );
-
-        return;
-      }
-
-      /*
-       * CHECK-IN CANNOT BE BEFORE TODAY.
-       *
-       * This applies to both NEW
-       * and EDIT reservations.
-       */
-      if (
-        dateToNumber(
-          form.checkInDate
-        ) <
-        dateToNumber(today)
-      ) {
-        setError(
-          "Check-in date cannot be before today."
-        );
-
-        return;
-      }
-
+      await loadData();
+      setShowModal(false);
+      setEditingReservation(null);
+      resetForm();
+    } catch (err) {
+      console.error(err);
       setError(
         err instanceof Error ? err.message : "Failed to save reservation",
       );
@@ -1215,28 +1019,11 @@ export default function ReservationsPage() {
     }
   };
 
-  /*
-   * ================================
-   * SELECTED ROOM
-   * ================================
-   */
   const selectedRoom = rooms.find((room) => room.id === form.roomId);
-
-  /*
-   * PRICE
-   */
   const displayedPricePerNight = selectedRoom
     ? Number(selectedRoom.basePrice)
     : Number(form.pricePerNight || 0);
-
-  /*
-   * NIGHTS
-   */
   const displayedNights = calculateNights(form.checkInDate, form.checkOutDate);
-
-  /*
-   * TOTAL
-   */
   const displayedTotal =
     displayedNights > 0 ? displayedPricePerNight * displayedNights : 0;
 
@@ -1303,7 +1090,10 @@ export default function ReservationsPage() {
             type="text"
             placeholder="Search by guest's name, ID, room number"
             value={search}
-            onChange={(event) => setSearch(event.target.value)}
+            onChange={(event) => {
+              setSearch(event.target.value);
+              setCurrentPage(1);
+            }}
           />
 
           <select
@@ -1311,18 +1101,16 @@ export default function ReservationsPage() {
               styles.filter
             }
             value={filter}
-            onChange={(event) => setFilter(event.target.value)}
+            onChange={(event) => {
+              setFilter(event.target.value);
+              setCurrentPage(1);
+            }}
           >
             <option value="all">All</option>
-
             <option value="this_month">This month</option>
-
             <option value="upcoming">Upcoming</option>
-
             <option value="in_stay">In stay</option>
-
             <option value="checked_out">Checked-out</option>
-
             <option value="cancelled">Cancelled</option>
           </select>
 
@@ -1335,7 +1123,6 @@ export default function ReservationsPage() {
         </div>
 
         {/* ERROR */}
-
         {error && !showModal && <div className={styles.error}>{error}</div>}
 
         {/* TABLE */}
@@ -1450,61 +1237,34 @@ export default function ReservationsPage() {
                         {reservation.status === "BOOKED" && (
                           <button
                             className={styles.editButton}
-                            onClick={() => handleCheckIn(reservation.id)}
+                            onClick={() => openEditReservation(reservation)}
                           >
-                            Check in
+                            Edit
                           </button>
-                        )}
 
-                        {/* IN STAY */}
-
-                        {reservation.status === "CHECKED_IN" && (
                           <button
                             className={styles.editButton}
-                            onClick={() => handleCheckOut(reservation.id)}
+                            onClick={() => handleDelete(reservation.id)}
                           >
-                            Check out
+                            Delete
                           </button>
-                        )}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
 
-                        {/*
-                         * IMPORTANT:
-                         * Edit is OUTSIDE the
-                         * status conditions.
-                         *
-                         * Therefore it appears
-                         * for EVERY status.
-                         */}
-
-                        <button
-                          className={styles.editButton}
-                          onClick={() => openEditReservation(reservation)}
-                        >
-                          Edit
-                        </button>
-
-                        {/*
-                         * IMPORTANT:
-                         * Delete is OUTSIDE the
-                         * status conditions.
-                         *
-                         * Therefore it appears
-                         * for EVERY status.
-                         */}
-
-                        <button
-                          className={styles.editButton}
-                          onClick={() => handleDelete(reservation.id)}
-                        >
-                          Delete
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+            {/* REUSABLE PAGINATION COMPONENT */}
+            <Pagination
+              currentPage={activePage}
+              totalPages={totalPages}
+              totalItems={filteredReservations.length}
+              itemsPerPage={ITEMS_PER_PAGE}
+              onPageChange={(page) => setCurrentPage(page)}
+            />
+          </>
         )}
 
         {/* ================================
@@ -1514,13 +1274,10 @@ export default function ReservationsPage() {
         {showModal && (
           <div className={styles.overlay}>
             <div className={styles.modal}>
-              {/* MODAL HEADER */}
-
               <div className={styles.modalHeader}>
                 <h2>
                   {editingReservation ? "Edit reservation" : "New reservation"}
                 </h2>
-
                 <button
                   className={styles.closeButton}
                   onClick={closeModal}
@@ -1530,16 +1287,10 @@ export default function ReservationsPage() {
                 </button>
               </div>
 
-              {/* MODAL ERROR */}
-
               {error && <div className={styles.error}>{error}</div>}
-
-              {/* FORM */}
 
               <form onSubmit={saveReservation}>
                 <div className={styles.formGrid}>
-                  {/* GUEST */}
-
                   <label>
                     Guest
                     <select
@@ -1548,7 +1299,6 @@ export default function ReservationsPage() {
                       required
                     >
                       <option value="">Select guest</option>
-
                       {guests.map((guest) => (
                         <option key={guest.id} value={guest.id}>
                           {guest.fullName}
@@ -1556,8 +1306,6 @@ export default function ReservationsPage() {
                       ))}
                     </select>
                   </label>
-
-                  {/* ROOM */}
 
                   <label>
                     Room
@@ -1568,7 +1316,6 @@ export default function ReservationsPage() {
                       required
                     >
                       <option value="">Select room</option>
-
                       {rooms.map((room) => {
                         const unavailable = isRoomCurrentlyUnavailable(room);
 
@@ -1592,8 +1339,6 @@ export default function ReservationsPage() {
                     </select>
                   </label>
 
-                  {/* CHECK-IN */}
-
                   <label>
                     Check-in
                     <input
@@ -1610,8 +1355,6 @@ export default function ReservationsPage() {
                     />
                   </label>
 
-                  {/* CHECK-OUT */}
-
                   <label>
                     Check-out
                     <input
@@ -1623,8 +1366,6 @@ export default function ReservationsPage() {
                     />
                   </label>
 
-                  {/* PRICE */}
-
                   <label>
                     Price per night
                     <input
@@ -1634,31 +1375,21 @@ export default function ReservationsPage() {
                     />
                   </label>
 
-                  {/* TOTAL */}
-
                   <label>
                     Total price
                     <input type="number" value={displayedTotal} readOnly />
                   </label>
 
-                  {/* STATUS */}
-
                   <label>
                     Status
                     <select value={form.status} disabled>
                       <option value="BOOKED">Upcoming</option>
-
                       <option value="CHECKED_IN">In stay</option>
-
                       <option value="CHECKED_OUT">Checked-out</option>
-
                       <option value="CANCELLED">Cancelled</option>
-
                       <option value="NO_SHOW">No-show</option>
                     </select>
                   </label>
-
-                  {/* PAYMENT */}
 
                   <label>
                     Payment status
@@ -1672,15 +1403,11 @@ export default function ReservationsPage() {
                       }
                     >
                       <option value="UNPAID">Unpaid</option>
-
                       <option value="PAID">Paid</option>
-
                       <option value="PARTIAL">Partial</option>
                     </select>
                   </label>
                 </div>
-
-                {/* BUTTONS */}
 
                 <div className={styles.modalActions}>
                   <button

@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Role } from "@/app/generated/prisma/enums";
 import styles from "./page.module.css";
 import { useAuth } from "@/components/Auth/AuthProvider";
+import Pagination from "@/components/Pagination";
 
 type StaffMember = {
   id: string;
@@ -21,9 +22,7 @@ type StaffForm = {
   role: Role;
 };
 
-const roleOptions = Object.values(Role).filter(
-  (role) => role !== Role.ADMIN,
-);
+const roleOptions = Object.values(Role).filter((role) => role !== Role.ADMIN);
 const emptyForm: StaffForm = {
   fullName: "",
   email: "",
@@ -52,7 +51,8 @@ export default function StaffPage() {
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [form, setForm] = useState<StaffForm>(emptyForm);
-  const {user} = useAuth();
+  const { user } = useAuth();
+
   async function loadStaff() {
     setIsLoading(true);
     setError(null);
@@ -167,6 +167,7 @@ export default function StaffPage() {
   ) {
     setForm((current) => ({ ...current, [key]: value }));
   }
+
   async function saveStaff(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError(null);
@@ -253,6 +254,7 @@ export default function StaffPage() {
       setIsSaving(false);
     }
   }
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -264,15 +266,13 @@ export default function StaffPage() {
           </p>
         </div>
         <div className={styles.role}>
-            <div className={styles.roleInfo}>
-              <strong>{user?.fullName}</strong>
-              <span>Currently reviewing rooms</span>
-            </div>
-
-            <div className={styles.roleBadge}>
-              {user?.role }
-            </div>
+          <div className={styles.roleInfo}>
+            <strong>{user?.fullName}</strong>
+            <span>Currently reviewing rooms</span>
           </div>
+
+          <div className={styles.roleBadge}>{user?.role}</div>
+        </div>
       </header>
 
       <section className={styles.toolbar} aria-label="Staff controls">
@@ -308,89 +308,77 @@ export default function StaffPage() {
       ) : isLoading ? (
         <p className={styles.loading}>Loading staff…</p>
       ) : (
-        <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Role</th>
-                <th scope="col">Status</th>
-                <th scope="col">Added</th>
-                <th scope="col">
-                  <span className="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedStaff.map((member) => (
-                <tr key={member.id}>
-                  <td>
-                    <div className={styles.member}>
-                      <span className={styles.avatar} aria-hidden="true">
-                        {member.fullName.charAt(0).toUpperCase()}
-                      </span>
-                      <span>
-                        <strong>{member.fullName}</strong>
-                        <small>{member.email}</small>
-                      </span>
-                    </div>
-                  </td>
-                  <td>{formatRole(member.role)}</td>
-                  <td>
-                    <span
-                      className={
-                        member.isActive ? styles.active : styles.inactive
-                      }
-                    >
-                      {member.isActive ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td>{formatDate(member.createdAt)}</td>
-                  <td>
-                    <button
-                      type="button"
-                      className={styles.editButton}
-                      onClick={() => openEditDialog(member)}
-                    >
-                      Edit
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {filteredStaff.length === 0 && (
+        <>
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
                 <tr>
-                  <td className={styles.empty} colSpan={5}>
-                    No staff members match your search.
-                  </td>
+                  <th scope="col">Name</th>
+                  <th scope="col">Role</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Added</th>
+                  <th scope="col">
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
-              )}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {paginatedStaff.map((member) => (
+                  <tr key={member.id}>
+                    <td>
+                      <div className={styles.member}>
+                        <span className={styles.avatar} aria-hidden="true">
+                          {member.fullName.charAt(0).toUpperCase()}
+                        </span>
+                        <span>
+                          <strong>{member.fullName}</strong>
+                          <small>{member.email}</small>
+                        </span>
+                      </div>
+                    </td>
+                    <td>{formatRole(member.role)}</td>
+                    <td>
+                      <span
+                        className={
+                          member.isActive ? styles.active : styles.inactive
+                        }
+                      >
+                        {member.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td>{formatDate(member.createdAt)}</td>
+                    <td>
+                      <button
+                        type="button"
+                        className={styles.editButton}
+                        onClick={() => openEditDialog(member)}
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {filteredStaff.length === 0 && (
+                  <tr>
+                    <td className={styles.empty} colSpan={5}>
+                      No staff members match your search.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
 
-          {filteredStaff.length > pageSize && (
-            <div className={styles.pagination} aria-label="Staff pagination">
-              <button
-                type="button"
-                onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
-                disabled={safeCurrentPage === 1}
-              >
-                Previous
-              </button>
-              <span>
-                Page {safeCurrentPage} of {totalPages}
-              </span>
-              <button
-                type="button"
-                onClick={() =>
-                  setCurrentPage((page) => Math.min(totalPages, page + 1))
-                }
-                disabled={safeCurrentPage === totalPages}
-              >
-                Next
-              </button>
-            </div>
+          {filteredStaff.length > 0 && (
+            <Pagination
+              currentPage={safeCurrentPage}
+              totalPages={totalPages}
+              totalItems={filteredStaff.length}
+              itemsPerPage={pageSize}
+              onPageChange={setCurrentPage}
+            />
           )}
-        </div>
+        </>
       )}
 
       {mode && (
@@ -445,7 +433,7 @@ export default function StaffPage() {
                   required
                   type="email"
                   autoComplete="off"
-                  data-lpignore="true"         
+                  data-lpignore="true"
                   data-1pignore="true"
                   maxLength={40}
                   value={form.email}
@@ -461,7 +449,7 @@ export default function StaffPage() {
                   type="password"
                   value={form.password}
                   autoComplete="off"
-                  data-lpignore="true"         
+                  data-lpignore="true"
                   data-1pignore="true"
                   onChange={(event) =>
                     updateForm("password", event.target.value)

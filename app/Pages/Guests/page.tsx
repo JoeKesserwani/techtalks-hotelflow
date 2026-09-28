@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import AddGuestModal from "../../../components/AddGuestModal";
+import Pagination from "../../../components/Pagination"; // Adjust path if using alias like "@/components/Pagination"
 import styles from "./page.module.css";
 
 type Room = { roomNumber: string };
@@ -111,50 +112,6 @@ function statusClass(tone: StatusTone, styles: Record<string, string>) {
   }
 }
 
-/**
- * Creates a compact pagination list such as:
- *
- * [1] [2] [3] ... [9] [10]
- *
- * or:
- *
- * [1] ... [5] [6] [7] ... [20]
- */
-function getPaginationItems(
-  currentPage: number,
-  totalPages: number,
-): (number | "ellipsis-left" | "ellipsis-right")[] {
-  if (totalPages <= 7) {
-    return Array.from({ length: totalPages }, (_, i) => i + 1);
-  }
-
-  if (currentPage <= 4) {
-    return [1, 2, 3, 4, 5, "ellipsis-right", totalPages];
-  }
-
-  if (currentPage >= totalPages - 3) {
-    return [
-      1,
-      "ellipsis-left",
-      totalPages - 4,
-      totalPages - 3,
-      totalPages - 2,
-      totalPages - 1,
-      totalPages,
-    ];
-  }
-
-  return [
-    1,
-    "ellipsis-left",
-    currentPage - 1,
-    currentPage,
-    currentPage + 1,
-    "ellipsis-right",
-    totalPages,
-  ];
-}
-
 export default function GuestsPage() {
   const [guests, setGuests] = useState<Guest[]>([]);
   const [search, setSearch] = useState("");
@@ -194,13 +151,6 @@ export default function GuestsPage() {
 
   /**
    * Search + status filter guests.
-   *
-   * Search covers:
-   * - Guest name
-   * - Guest ID
-   * - Phone
-   * - Email
-   * - Room number
    */
   const filteredGuests = useMemo(() => {
     const query = search.trim().toLowerCase();
@@ -229,10 +179,7 @@ export default function GuestsPage() {
   }, [guests, search, statusFilter]);
 
   /**
-   * Reset to page 1 whenever the search or filter changes.
-   *
-   * This prevents situations where the user is on page 5,
-   * filters down to only 2 results, and sees an empty page.
+   * Reset to page 1 whenever search or filter changes.
    */
   useEffect(() => {
     setCurrentPage(1);
@@ -247,15 +194,14 @@ export default function GuestsPage() {
   );
 
   /**
-   * If guests are removed or filtered and the current page
-   * no longer exists, move back to the last available page.
+   * Adjust page number if filtered items decrease below current page boundary.
    */
   useEffect(() => {
     setCurrentPage((page) => Math.min(page, totalPages));
   }, [totalPages]);
 
   /**
-   * Get only the guests that belong to the current page.
+   * Get guests for current page.
    */
   const paginatedGuests = useMemo(() => {
     const startIndex = (currentPage - 1) * GUESTS_PER_PAGE;
@@ -264,25 +210,6 @@ export default function GuestsPage() {
     return filteredGuests.slice(startIndex, endIndex);
   }, [filteredGuests, currentPage]);
 
-  /**
-   * Pagination numbers / ellipsis.
-   */
-  const paginationItems = useMemo(
-    () => getPaginationItems(currentPage, totalPages),
-    [currentPage, totalPages],
-  );
-
-  /**
-   * Results range displayed below the table.
-   */
-  const rangeStart =
-    filteredGuests.length === 0 ? 0 : (currentPage - 1) * GUESTS_PER_PAGE + 1;
-
-  const rangeEnd = Math.min(
-    currentPage * GUESTS_PER_PAGE,
-    filteredGuests.length,
-  );
-
   function goToPage(page: number) {
     if (page < 1 || page > totalPages || page === currentPage) {
       return;
@@ -290,7 +217,6 @@ export default function GuestsPage() {
 
     setCurrentPage(page);
 
-    // Smoothly bring the table back into view.
     window.scrollTo({
       top: 0,
       behavior: "smooth",
@@ -340,7 +266,6 @@ export default function GuestsPage() {
 
             {isFilterOpen && (
               <>
-                {/* click-catcher to close the dropdown on outside click */}
                 <div
                   className={styles.filterBackdrop}
                   onClick={() => setIsFilterOpen(false)}
@@ -408,11 +333,6 @@ export default function GuestsPage() {
             !error &&
             paginatedGuests.map((guest, index) => {
               const stay = deriveStay(guest);
-
-              /**
-               * Use the absolute index within the full filtered
-               * result so avatar colors don't restart on every page.
-               */
               const absoluteIndex = (currentPage - 1) * GUESTS_PER_PAGE + index;
 
               return (
@@ -460,113 +380,16 @@ export default function GuestsPage() {
               );
             })}
 
+          {/* AFTER (Single self-contained <Pagination /> component): */}
           {!isLoading && !error && filteredGuests.length > 0 && (
-            <div className={styles.pagination}>
-              <div className={styles.paginationInfo}>
-                <span>
-                  Showing <strong>{rangeStart}</strong>
-                  {"–"}
-                  <strong>{rangeEnd}</strong> of{" "}
-                  <strong>{filteredGuests.length}</strong>
-                </span>
-
-                {(search.trim() || statusFilter !== "all") && (
-                  <span className={styles.searchResultLabel}>
-                    Filtered results
-                  </span>
-                )}
-              </div>
-
-              {totalPages > 1 && (
-                <nav
-                  className={styles.paginationControls}
-                  aria-label="Guests pagination"
-                >
-                  <button
-                    type="button"
-                    className={styles.paginationArrow}
-                    onClick={() => goToPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    aria-label="Previous page"
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M15 18L9 12L15 6"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-
-                  <div className={styles.pageNumbers}>
-                    {paginationItems.map((item) => {
-                      if (
-                        item === "ellipsis-left" ||
-                        item === "ellipsis-right"
-                      ) {
-                        return (
-                          <span
-                            key={item}
-                            className={styles.paginationEllipsis}
-                            aria-hidden="true"
-                          >
-                            ···
-                          </span>
-                        );
-                      }
-
-                      const isActive = item === currentPage;
-
-                      return (
-                        <button
-                          key={item}
-                          type="button"
-                          className={`${styles.pageButton} ${
-                            isActive ? styles.pageButtonActive : ""
-                          }`}
-                          onClick={() => goToPage(item)}
-                          aria-current={isActive ? "page" : undefined}
-                        >
-                          {item}
-                        </button>
-                      );
-                    })}
-                  </div>
-
-                  <button
-                    type="button"
-                    className={styles.paginationArrow}
-                    onClick={() => goToPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    aria-label="Next page"
-                  >
-                    <svg
-                      width="16"
-                      height="16"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M9 18L15 12L9 6"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </button>
-                </nav>
-              )}
-            </div>
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={goToPage}
+              totalItems={filteredGuests.length}
+              itemsPerPage={GUESTS_PER_PAGE}
+              isFiltered={Boolean(search.trim() || statusFilter !== "all")}
+            />
           )}
         </div>
       </main>
