@@ -1,14 +1,18 @@
 .page {
-  min-height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+  overflow: hidden;
   background: #f7f4ec;
   color: #26332a;
 }
 
 .main {
+  height: 100%;
   width: 100%;
   max-width: 1200px;
   margin: 0 auto;
-  padding: 36px 42px 60px;
+  padding: clamp(16px, 4vh, 36px) clamp(14px, 3.5vw, 42px)
+    clamp(16px, 5vh, 60px);
   box-sizing: border-box;
 }
 
@@ -308,7 +312,7 @@
   align-items: center;
   gap: 10px;
 
-  margin-top: 22px;
+  margin-top: clamp(12px, 2.5vh, 22px);
 }
 
 .backAction {
@@ -330,6 +334,169 @@
 
 .backAction:hover {
   background: #eeeae1;
+}
+.assignTask {
+  min-height: 40px;
+
+  border: 1px solid #d0c9ba;
+  background: #c76543;
+
+  color: #ffffff;
+
+  padding: 0 18px;
+
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+
+  cursor: pointer;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Assign Task Modal                                                          */
+/* -------------------------------------------------------------------------- */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 20px;
+  background: rgba(38, 51, 42, 0.42);
+}
+
+.taskModal {
+  width: min(100%, 500px);
+  padding: 30px;
+
+  background: #fffdf8;
+  border: 1px solid #d9d3c4;
+  box-shadow: 0 18px 50px rgba(38, 51, 42, 0.2);
+}
+
+.modalHeader {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 26px;
+}
+
+.modalHeader h2 {
+  margin: 0;
+  color: #26332a;
+  font-family: Georgia, serif;
+  font-size: 26px;
+  font-weight: 600;
+}
+
+.modalSubtitle {
+  max-width: 360px;
+  margin: 8px 0 0;
+  color: #8a877e;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.closeButton {
+  align-self: flex-start;
+  border: 0;
+  background: transparent;
+  color: #8a877e;
+  font-size: 28px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modalLabel {
+  display: block;
+  margin: 0 0 7px;
+  color: #4e5d50;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.modalInput,
+.modalTextarea {
+  width: 100%;
+  margin-bottom: 20px;
+  padding: 11px 12px;
+  box-sizing: border-box;
+  border: 1px solid #d0c9ba;
+  background: #ffffff;
+  color: #26332a;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 14px;
+}
+
+.modalTextarea {
+  min-height: 110px;
+  resize: vertical;
+}
+
+.characterCount {
+  display: block;
+  margin: -14px 0 18px;
+  color: #99958a;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 11px;
+  text-align: right;
+}
+
+.modalError,
+.modalSuccess {
+  margin: 0 0 16px;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 13px;
+}
+
+.modalError {
+  color: #934c47;
+}
+
+.modalSuccess {
+  color: #496342;
+}
+
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.modalCancel,
+.modalSubmit {
+  min-height: 40px;
+  padding: 0 18px;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.modalCancel {
+  border: 1px solid #d0c9ba;
+  background: transparent;
+  color: #4e5d50;
+}
+
+.modalSubmit {
+  border: 1px solid #c76543;
+  background: #c76543;
+  color: #ffffff;
+}
+
+.modalCancel:disabled,
+.modalSubmit:disabled,
+.modalInput:disabled,
+.modalTextarea:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
 }
 
 /* -------------------------------------------------------------------------- */
@@ -395,7 +562,7 @@
 
 @media (max-width: 1000px) {
   .main {
-    padding: 30px 28px 50px;
+    padding: clamp(18px, 3.5vh, 30px) 28px clamp(18px, 5vh, 50px);
   }
 
   .header {
@@ -425,7 +592,7 @@
 
 @media (max-width: 768px) {
   .main {
-    padding: 25px 20px 40px;
+    padding: clamp(14px, 2.5vh, 25px) 20px clamp(14px, 4vh, 40px);
   }
 
   .header {
@@ -467,11 +634,11 @@
   }
 
   .detailsGrid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   .detailItem:nth-child(odd) {
-    border-right: none;
+    border-right: 1px solid #eeeae1;
   }
 
   .detailItem {
@@ -502,7 +669,7 @@
 
 @media (max-width: 480px) {
   .main {
-    padding: 20px 14px 30px;
+    padding: 12px 14px 16px;
   }
 
   .title {
@@ -623,5 +790,58 @@
 
   .errorCard {
     padding: 18px;
+  }
+}
+
+/* -------------------------------------------------------------------------- */
+/* Short Viewports                                                            */
+/* -------------------------------------------------------------------------- */
+
+@media (max-height: 800px) {
+  .main {
+    width: 117.65%;
+    max-width: none;
+    padding-top: 12px;
+    padding-bottom: 12px;
+    transform: scale(0.85);
+    transform-origin: top left;
+  }
+
+  .backButton {
+    margin-bottom: 8px;
+  }
+
+  .header {
+    padding-bottom: 12px;
+    margin-bottom: 12px;
+  }
+
+  .statusSection {
+    padding: 12px 18px;
+    margin-bottom: 12px;
+  }
+
+  .cardHeader {
+    padding: 12px 18px;
+  }
+
+  .detailItem {
+    gap: 4px;
+    padding: 12px 18px;
+  }
+
+  .actions {
+    margin-top: 10px;
+  }
+
+  .backAction {
+    min-height: 34px;
+  }
+}
+
+@media (max-height: 600px) {
+  .main {
+    width: 142.86%;
+    transform: scale(0.7);
   }
 }

@@ -286,6 +286,7 @@ export default function StaffPage() {
               setQuery(event.target.value);
               setCurrentPage(1);
             }}
+            maxLength={30}
           />
         </label>
         <button

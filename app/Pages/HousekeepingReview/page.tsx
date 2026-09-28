@@ -531,6 +531,7 @@ function ReviewModal({
               : "Explain what needs to be corrected..."
           }
           className={styles.textarea}
+          maxLength={250}
         />
 
         {reviewError && <p className={styles.reviewError}>{reviewError}</p>}

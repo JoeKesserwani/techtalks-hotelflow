@@ -1,9 +1,16 @@
+
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import Pagination from "@/components/Pagination";
 import styles from "./page.module.css";
+
+/*
+ * ================================
+ * TYPES
+ * ================================
+ */
 
 type Guest = {
   id: string;
@@ -26,12 +33,17 @@ type Reservation = {
   roomId: string;
   guestId: string;
   createdByUserId: string;
+
   checkInDate: string;
   checkOutDate: string;
+
   status: string;
+
   pricePerNight: string | number;
   totalPrice: string | number;
+
   paymentStatus: string;
+
   guest: Guest;
   room: Room;
 };
@@ -39,10 +51,13 @@ type Reservation = {
 type FormData = {
   guestId: string;
   roomId: string;
+
   checkInDate: string;
   checkOutDate: string;
+
   pricePerNight: string;
   totalPrice: string;
+
   status: string;
   paymentStatus: string;
 };
@@ -50,22 +65,173 @@ type FormData = {
 const ITEMS_PER_PAGE = 5;
 
 /*
- * TODAY
+ * ================================
+ * DATE HELPERS
+ * ================================
+ */
+
+/*
+ * Get today's calendar date in Beirut.
+ *
+ * Returns:
+ *
+ * YYYY-MM-DD
+ *
+ * Example:
+ *
+ * 2026-09-24
  */
 const getTodayString = () => {
-  const today = new Date();
-
-  const year = today.getFullYear();
-  const month = String(today.getMonth() + 1).padStart(2, "0");
-  const day = String(today.getDate()).padStart(2, "0");
-
-  return `${year}-${month}-${day}`;
+  return new Intl.DateTimeFormat(
+    "en-CA",
+    {
+      timeZone: "Asia/Beirut",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }
+  ).format(new Date());
 };
 
 /*
- * ROOM STATUS LABEL
+ * Convert YYYY-MM-DD into a number.
+ *
+ * Example:
+ *
+ * 2026-09-24
+ *
+ * becomes:
+ *
+ * 20260924
+ *
+ * This allows safe date comparison
+ * without timezone conversion.
  */
-const getRoomStatusLabel = (status: string) => {
+const dateToNumber = (
+  value: string
+) => {
+  if (!value) {
+    return 0;
+  }
+
+  return Number(
+    value.replaceAll("-", "")
+  );
+};
+
+/*
+ * Calculate number of nights without
+ * using the browser's local timezone.
+ */
+const calculateNights = (checkInDate: string, checkOutDate: string) => {
+  if (!checkInDate || !checkOutDate) {
+    return 0;
+  }
+
+  const [
+    checkInYear,
+    checkInMonth,
+    checkInDay,
+  ] = checkInDate
+    .split("-")
+    .map(Number);
+
+  const [
+    checkOutYear,
+    checkOutMonth,
+    checkOutDay,
+  ] = checkOutDate
+    .split("-")
+    .map(Number);
+
+  /*
+   * UTC is used only for arithmetic.
+   *
+   * The actual reservation dates remain
+   * YYYY-MM-DD date-only values.
+   */
+  const checkIn = Date.UTC(
+    checkInYear,
+    checkInMonth - 1,
+    checkInDay
+  );
+
+  const checkOut = Date.UTC(
+    checkOutYear,
+    checkOutMonth - 1,
+    checkOutDay
+  );
+
+  const difference = checkOut.getTime() - checkIn.getTime();
+
+  const nights = Math.ceil(difference / (1000 * 60 * 60 * 24));
+
+  return nights > 0 ? nights : 0;
+};
+
+/*
+ * Format a database reservation date.
+ *
+ * IMPORTANT:
+ *
+ * Do NOT use:
+ *
+ * new Date(dateString)
+ *
+ * because it can move the date one day
+ * backward depending on timezone.
+ */
+const formatDate = (
+  dateString: string
+) => {
+  if (!dateString) {
+    return "-";
+  }
+
+  const dateOnly =
+    dateString.split("T")[0];
+
+  const [
+    year,
+    month,
+    day,
+  ] = dateOnly.split("-");
+
+  if (
+    !year ||
+    !month ||
+    !day
+  ) {
+    return dateString;
+  }
+
+  return `${month}/${day}/${year}`;
+};
+
+/*
+ * FORMAT PRICE
+ */
+const formatPrice = (
+  value: string | number
+) => {
+  const number = Number(value);
+
+  if (Number.isNaN(number)) {
+    return "0.00";
+  }
+
+  return number.toFixed(2);
+};
+
+/*
+ * ================================
+ * ROOM STATUS
+ * ================================
+ */
+
+const getRoomStatusLabel = (
+  status: string
+) => {
   switch (status) {
     case "AVAILABLE":
       return "Available";
@@ -94,64 +260,36 @@ const getRoomStatusLabel = (status: string) => {
 };
 
 /*
- * ROOMS THAT CANNOT BE SELECTED
+ * IMPORTANT:
+ *
+ * This function is kept for display/labels,
+ * but it is NO LONGER used to block
+ * future reservations.
  */
-const isRoomCurrentlyUnavailable = (room: Room) => {
+const isRoomCurrentlyUnavailable = (
+  room: Room
+) => {
   return (
     room.status === "OCCUPIED" ||
     room.status === "CLEANING" ||
-    room.status === "NEEDS_CLEANING" ||
-    room.status === "OUT_OF_SERVICE" ||
-    room.status === "MAINTENANCE"
+    room.status ===
+      "NEEDS_CLEANING" ||
+    room.status ===
+      "OUT_OF_SERVICE" ||
+    room.status ===
+      "MAINTENANCE"
   );
 };
 
 /*
- * CALCULATE NIGHTS
+ * ================================
+ * RESERVATION STATUS
+ * ================================
  */
-const calculateNights = (checkInDate: string, checkOutDate: string) => {
-  if (!checkInDate || !checkOutDate) {
-    return 0;
-  }
 
-  const checkIn = new Date(`${checkInDate}T00:00:00`);
-  const checkOut = new Date(`${checkOutDate}T00:00:00`);
-
-  const difference = checkOut.getTime() - checkIn.getTime();
-
-  const nights = Math.ceil(difference / (1000 * 60 * 60 * 24));
-
-  return nights > 0 ? nights : 0;
-};
-
-/*
- * FORMAT DATE
- */
-const formatDate = (dateString: string) => {
-  if (!dateString) {
-    return "-";
-  }
-
-  return new Date(dateString).toLocaleDateString();
-};
-
-/*
- * FORMAT PRICE
- */
-const formatPrice = (value: string | number) => {
-  const number = Number(value);
-
-  if (Number.isNaN(number)) {
-    return "0.00";
-  }
-
-  return number.toFixed(2);
-};
-
-/*
- * RESERVATION STATUS LABEL
- */
-const getStatusLabel = (status: string) => {
+const getStatusLabel = (
+  status: string
+) => {
   switch (status) {
     case "BOOKED":
       return "Upcoming";
@@ -173,10 +311,9 @@ const getStatusLabel = (status: string) => {
   }
 };
 
-/*
- * RESERVATION STATUS CSS
- */
-const getStatusClass = (status: string) => {
+const getStatusClass = (
+  status: string
+) => {
   switch (status) {
     case "BOOKED":
       return styles.upcoming;
@@ -197,14 +334,17 @@ const getStatusClass = (status: string) => {
 };
 
 /*
- * SAFELY READ API RESPONSE
+ * ================================
+ * API RESPONSE
+ * ================================
  */
-const readApiResponse = async (response: Response) => {
-  const text = await response.text();
 
-  if (!text) {
-    return {};
-  }
+const readApiResponse =
+  async (
+    response: Response
+  ) => {
+    const text =
+      await response.text();
 
   try {
     return JSON.parse(text);
@@ -251,7 +391,11 @@ export default function ReservationsPage() {
     paymentStatus: "UNPAID",
   });
 
-  const today = getTodayString();
+  /*
+   * TODAY
+   */
+  const today =
+    getTodayString();
 
   const searchParams = useSearchParams();
   const presetGuestId = searchParams.get("guestId");
@@ -260,6 +404,7 @@ export default function ReservationsPage() {
   /*
    * LOAD DATABASE DATA
    */
+
   const loadData = async () => {
     try {
       setLoading(true);
@@ -276,7 +421,9 @@ export default function ReservationsPage() {
       const guestsData = await readApiResponse(guestsResponse);
       const roomsData = await readApiResponse(roomsResponse);
 
-      if (!reservationsResponse.ok) {
+      if (
+        !reservationsResponse.ok
+      ) {
         throw new Error(
           reservationsData?.error ||
             reservationsData?.message ||
@@ -284,32 +431,42 @@ export default function ReservationsPage() {
         );
       }
 
-      if (!guestsResponse.ok) {
+      if (
+        !guestsResponse.ok
+      ) {
         throw new Error(
           guestsData?.error || guestsData?.message || "Failed to load guests",
         );
       }
 
-      if (!roomsResponse.ok) {
+      if (
+        !roomsResponse.ok
+      ) {
         throw new Error(
           roomsData?.error || roomsData?.message || "Failed to load rooms",
         );
       }
 
       setReservations(
-        Array.isArray(reservationsData)
+        Array.isArray(
+          reservationsData
+        )
           ? reservationsData
           : reservationsData?.data || reservationsData?.reservations || [],
       );
 
       setGuests(
-        Array.isArray(guestsData)
+        Array.isArray(
+          guestsData
+        )
           ? guestsData
           : guestsData?.data || guestsData?.guests || [],
       );
 
       setRooms(
-        Array.isArray(roomsData)
+        Array.isArray(
+          roomsData
+        )
           ? roomsData
           : roomsData?.data || roomsData?.rooms || [],
       );
@@ -338,6 +495,7 @@ export default function ReservationsPage() {
 
   /*
    * SEARCH + FILTER
+   * ================================
    */
   const filteredReservations = useMemo(() => {
     const searchValue = search.trim().toLowerCase();
@@ -394,23 +552,11 @@ export default function ReservationsPage() {
   }, [reservations, search, filter]);
 
   /*
-   * PAGINATION CALCULATIONS
-   */
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredReservations.length / ITEMS_PER_PAGE),
-  );
-
-  const activePage = Math.min(currentPage, totalPages);
-
-  const paginatedReservations = useMemo(() => {
-    const start = (activePage - 1) * ITEMS_PER_PAGE;
-    return filteredReservations.slice(start, start + ITEMS_PER_PAGE);
-  }, [filteredReservations, activePage]);
-
-  /*
+   * ================================
    * RESET FORM
+   * ================================
    */
+
   const resetForm = () => {
     setForm({
       guestId: "",
@@ -425,7 +571,9 @@ export default function ReservationsPage() {
   };
 
   /*
+   * ================================
    * NEW RESERVATION
+   * ================================
    */
   const openNewReservation = (presetGuestIdArg?: string) => {
     setEditingReservation(null);
@@ -445,9 +593,10 @@ export default function ReservationsPage() {
       paymentStatus: "UNPAID",
     });
 
-    setError("");
-    setShowModal(true);
-  };
+      setForm({
+        guestId:
+          guests[0]?.id ||
+          "",
 
   /*
    * EDIT RESERVATION
@@ -473,18 +622,84 @@ export default function ReservationsPage() {
             : "UNPAID",
     });
 
-    setError("");
-    setShowModal(true);
-  };
+      setError("");
+      setShowModal(true);
+    };
 
   /*
-   * CLOSE MODAL
+   * ================================
+   * EDIT RESERVATION
+   * ================================
    */
+
+  const openEditReservation =
+    (
+      reservation: Reservation
+    ) => {
+      setEditingReservation(
+        reservation
+      );
+
+      setForm({
+        guestId:
+          reservation.guestId,
+
+        roomId:
+          reservation.roomId,
+
+        checkInDate:
+          reservation.checkInDate.split(
+            "T"
+          )[0],
+
+        checkOutDate:
+          reservation.checkOutDate.split(
+            "T"
+          )[0],
+
+        pricePerNight:
+          String(
+            reservation.room
+              ?.basePrice ??
+              reservation.pricePerNight
+          ),
+
+        totalPrice:
+          String(
+            reservation.totalPrice
+          ),
+
+        status:
+          reservation.status,
+
+        paymentStatus:
+          reservation.paymentStatus ===
+          "PAID"
+            ? "PAID"
+            : reservation.paymentStatus ===
+                "PARTIAL"
+              ? "PARTIAL"
+              : "UNPAID",
+      });
+
+      setError("");
+      setShowModal(true);
+    };
+
+  /*
+   * ================================
+   * CLOSE MODAL
+   * ================================
+   */
+
   const closeModal = () => {
     if (saving) return;
 
     setShowModal(false);
-    setEditingReservation(null);
+    setEditingReservation(
+      null
+    );
+
     resetForm();
     setError("");
   };
@@ -517,6 +732,17 @@ export default function ReservationsPage() {
       setError("This room is currently unavailable.");
       return;
     }
+
+    /*
+     * IMPORTANT:
+     *
+     * We do NOT reject OCCUPIED,
+     * CLEANING, etc.
+     *
+     * The backend checks whether
+     * the selected reservation dates
+     * overlap another reservation.
+     */
 
     setError("");
     const nights = calculateNights(form.checkInDate, form.checkOutDate);
@@ -595,6 +821,8 @@ export default function ReservationsPage() {
         throw new Error(
           data?.error || data?.message || "Failed to check in reservation",
         );
+      } else {
+        setError("");
       }
       await loadData();
     } catch (err) {
@@ -628,8 +856,7 @@ export default function ReservationsPage() {
       setError(
         err instanceof Error ? err.message : "Failed to check out reservation",
       );
-    }
-  };
+    };
 
   const handleDelete = async (reservationId: string) => {
     if (!window.confirm("Are you sure you want to delete this reservation?"))
@@ -654,8 +881,7 @@ export default function ReservationsPage() {
       setError(
         err instanceof Error ? err.message : "Failed to delete reservation",
       );
-    }
-  };
+    };
 
   /*
    * SAVE RESERVATION
@@ -708,8 +934,8 @@ export default function ReservationsPage() {
       return;
     }
 
-    try {
-      setSaving(true);
+      try {
+        setError("");
 
       if (editingReservation) {
         const response = await fetch(
@@ -752,7 +978,32 @@ export default function ReservationsPage() {
             data?.error || data?.message || "Failed to create reservation",
           );
         }
+
+        await loadData();
+      } catch (err) {
+        console.error(err);
+
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Failed to delete reservation"
+        );
       }
+    };
+
+  /*
+   * ================================
+   * SAVE RESERVATION
+   * ================================
+   */
+
+  const saveReservation =
+    async (
+      event: React.FormEvent
+    ) => {
+      event.preventDefault();
+
+      setError("");
 
       await loadData();
       setShowModal(false);
@@ -776,25 +1027,66 @@ export default function ReservationsPage() {
   const displayedTotal =
     displayedNights > 0 ? displayedPricePerNight * displayedNights : 0;
 
+  /*
+   * ================================
+   * PAGE UI
+   * ================================
+   */
+
   return (
-    <div className={styles.page}>
-      <main className={styles.content}>
-        <header className={styles.header}>
-          <div className={styles.title}>
-            <h1>Reservations</h1>
+    <div
+      className={
+        styles.page
+      }
+    >
+      <main
+        className={
+          styles.content
+        }
+      >
+        {/* HEADER */}
+
+        <header
+          className={
+            styles.header
+          }
+        >
+          <div
+            className={
+              styles.title
+            }
+          >
+            <h1>
+              Reservations
+            </h1>
+
             <p>{reservations.length} reservations this month</p>
           </div>
 
-          <div className={styles.userInfo}>
-            <span>Receptionist</span>
+          <div
+            className={
+              styles.userInfo
+            }
+          >
+            <span>
+              Receptionist
+            </span>
+
             <span className={styles.userRole}>Receptionist</span>
           </div>
         </header>
 
         {/* TOOLBAR */}
-        <div className={styles.toolbar}>
+
+        <div
+          className={
+            styles.toolbar
+          }
+        >
           <input
-            className={styles.search}
+            className={
+              styles.search
+            }
             type="text"
             placeholder="Search by guest's name, ID, room number"
             value={search}
@@ -805,7 +1097,9 @@ export default function ReservationsPage() {
           />
 
           <select
-            className={styles.filter}
+            className={
+              styles.filter
+            }
             value={filter}
             onChange={(event) => {
               setFilter(event.target.value);
@@ -831,86 +1125,116 @@ export default function ReservationsPage() {
         {/* ERROR */}
         {error && !showModal && <div className={styles.error}>{error}</div>}
 
-        {/* LOADING & TABLE */}
+        {/* TABLE */}
+
         {loading ? (
           <div className={styles.empty}>Loading reservations...</div>
         ) : filteredReservations.length === 0 ? (
           <div className={styles.empty}>No reservations found.</div>
         ) : (
-          <>
-            <div className={styles.tableContainer}>
-              <table className={styles.table}>
-                <thead>
-                  <tr>
-                    <th>Guest</th>
-                    <th>Room</th>
-                    <th>Check-in</th>
-                    <th>Check-out</th>
-                    <th>Status</th>
-                    <th>Payment</th>
-                    <th>Total</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
+          /* TABLE */
 
-                <tbody>
-                  {paginatedReservations.map((reservation) => (
-                    <tr key={reservation.id}>
-                      <td>
-                        <div className={styles.guest}>
-                          <strong>
-                            {reservation.guest?.fullName || "Unknown guest"}
-                          </strong>
-                          {reservation.guest?.phone && (
-                            <small>{reservation.guest.phone}</small>
-                          )}
-                        </div>
-                      </td>
+          <div className={styles.tableContainer}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th>
+                    Guest
+                  </th>
 
-                      <td>Room {reservation.room?.roomNumber || "-"}</td>
-                      <td>{formatDate(reservation.checkInDate)}</td>
-                      <td>{formatDate(reservation.checkOutDate)}</td>
+                  <th>
+                    Room
+                  </th>
 
-                      <td>
-                        <span
-                          className={`${styles.status} ${getStatusClass(
-                            reservation.status,
-                          )}`}
-                        >
-                          {getStatusLabel(reservation.status)}
-                        </span>
-                      </td>
+                  <th>
+                    Check-in
+                  </th>
 
-                      <td>{reservation.paymentStatus}</td>
-                      <td>${formatPrice(reservation.totalPrice)}</td>
+                  <th>
+                    Check-out
+                  </th>
 
-                      <td>
-                        <div
-                          style={{
-                            display: "flex",
-                            gap: "8px",
-                            alignItems: "center",
-                            flexWrap: "wrap",
-                          }}
-                        >
-                          {reservation.status === "BOOKED" && (
-                            <button
-                              className={styles.editButton}
-                              onClick={() => handleCheckIn(reservation.id)}
-                            >
-                              Check in
-                            </button>
-                          )}
+                  <th>
+                    Status
+                  </th>
 
-                          {reservation.status === "CHECKED_IN" && (
-                            <button
-                              className={styles.editButton}
-                              onClick={() => handleCheckOut(reservation.id)}
-                            >
-                              Check out
-                            </button>
-                          )}
+                  <th>
+                    Payment
+                  </th>
 
+                  <th>
+                    Total
+                  </th>
+
+                  <th>
+                    Action
+                  </th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {filteredReservations.map((reservation) => (
+                  <tr key={reservation.id}>
+                    {/* GUEST */}
+
+                    <td>
+                      <div className={styles.guest}>
+                        <strong>
+                          {reservation.guest?.fullName || "Unknown guest"}
+                        </strong>
+
+                        {reservation.guest?.phone && (
+                          <small>{reservation.guest.phone}</small>
+                        )}
+                      </div>
+                    </td>
+
+                    {/* ROOM */}
+
+                    <td>Room {reservation.room?.roomNumber || "-"}</td>
+
+                    {/* CHECK-IN */}
+
+                    <td>{formatDate(reservation.checkInDate)}</td>
+
+                    {/* CHECK-OUT */}
+
+                    <td>{formatDate(reservation.checkOutDate)}</td>
+
+                    {/* STATUS */}
+
+                    <td>
+                      <span
+                        className={`${styles.status} ${getStatusClass(
+                          reservation.status,
+                        )}`}
+                      >
+                        {getStatusLabel(reservation.status)}
+                      </span>
+                    </td>
+
+                    {/* PAYMENT */}
+
+                    <td>{reservation.paymentStatus}</td>
+
+                    {/* TOTAL */}
+
+                    <td>${formatPrice(reservation.totalPrice)}</td>
+
+                    {/* ACTIONS */}
+
+                    <td>
+                      <div
+                        style={{
+                          display: "flex",
+                          gap: "8px",
+                          alignItems: "center",
+                          flexWrap: "wrap",
+                        }}
+                      >
+                        {/* UPCOMING */}
+
+                        {reservation.status === "BOOKED" && (
                           <button
                             className={styles.editButton}
                             onClick={() => openEditReservation(reservation)}
@@ -943,7 +1267,10 @@ export default function ReservationsPage() {
           </>
         )}
 
-        {/* MODAL */}
+        {/* ================================
+            MODAL
+            ================================ */}
+
         {showModal && (
           <div className={styles.overlay}>
             <div className={styles.modal}>
