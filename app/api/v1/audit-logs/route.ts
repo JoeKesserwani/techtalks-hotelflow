@@ -40,7 +40,7 @@ function intParam(
  */
 export async function GET(req: Request) {
   try {
-    const user = await requireAuth({ roles: ["MANAGER"] });
+    const user = await requireAuth({ roles: ["MANAGER", "ADMIN"] });
     if (!user) throw new ApiError("Unauthorized", 401);
 
     const url = new URL(req.url);
