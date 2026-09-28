@@ -48,25 +48,18 @@ function getRoomStatusLabel(status: RoomStatus) {
   switch (status) {
     case "AVAILABLE":
       return "Available";
-
     case "RESERVED":
-      return "Reserved";
-
+      return "Upcoming";
     case "OCCUPIED":
-      return "Occupied";
-
+      return "In stay";
     case "IN_REVIEW":
       return "In review";
-
     case "NEEDS_CLEANING":
       return "Needs cleaning";
-
     case "CLEANING":
       return "Cleaning";
-
     case "OUT_OF_SERVICE":
       return "Out of service";
-
     default:
       return status;
   }

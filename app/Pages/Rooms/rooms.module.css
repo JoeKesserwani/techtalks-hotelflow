@@ -433,10 +433,28 @@
 
   box-sizing: border-box;
 }
+
 .inReviewStatus {
-  background: #fff3cd;
-  color: #856404;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 80px;
+  min-height: 23px;
+  padding: 3px 10px;
+
+  box-sizing: border-box;
+
+   background: #e8e0f0;
+  color: #70558a;
+
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+
+  white-space: nowrap;
 }
+
 /* =========================
    MODAL HEADER
 ========================= */

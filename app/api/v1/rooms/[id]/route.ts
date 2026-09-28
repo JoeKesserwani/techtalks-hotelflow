@@ -23,7 +23,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   try {
     const { id } = await params;
     // Manager can edit anything (number, type, price, status); housekeeping can only touch status.
-    const user = await requireAuth({ roles: ['ADMIN','MANAGER', 'HOUSEKEEPING'] });
+    const user = await requireAuth({ roles: ['ADMIN','MANAGER', 'HOUSEKEEPING', 'RECEPTIONIST'] });
     if (!user) throw new ApiError('Unauthorized', 401);
 
     const body = await req.json();

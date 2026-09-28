@@ -225,7 +225,12 @@ const AdminDash = () => {
         <section className={styles.housekeepingSection}>
           <div className={styles.sectionHeader}>
             <h2>Housekeeping — awaiting approval</h2>
-            <button className={styles.viewAll}>View all</button>
+            <button
+              className={styles.viewAll}
+              onClick={() => router.push("/Pages/HousekeepingReview")}
+            >
+              View all
+            </button>
           </div>
 
           <div className={styles.housekeepingList}>
@@ -234,7 +239,7 @@ const AdminDash = () => {
                 No housekeeping tasks awaiting approval.
               </div>
             ) : (
-              housekeepingReview.map((task) => (
+             housekeepingReview.map((task) => (
                 <article key={task.id} className={styles.housekeepingCard}>
                   {/* Photo */}
                   <button
@@ -267,7 +272,7 @@ const AdminDash = () => {
 
                   {/* Actions */}
                   <div className={styles.actions}>
-                    <button
+                    {/* <button
                       className={styles.commentButton}
                       onClick={() => {
                         setSelectedTask(task);
@@ -275,7 +280,7 @@ const AdminDash = () => {
                       }}
                     >
                       Comment
-                    </button>
+                    </button> */}
 
                     <button
                       className={styles.rejectButton}
