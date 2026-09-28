@@ -86,7 +86,7 @@ export async function POST(
      * Only manager and receptionist can check out.
      */
     const user = await requireAuth({
-      roles: ["MANAGER", "RECEPTIONIST"],
+      roles: ["ADMIN","MANAGER", "RECEPTIONIST"],
     });
 
     if (!user) {

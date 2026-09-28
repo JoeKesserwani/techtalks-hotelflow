@@ -3,13 +3,51 @@
 import React from "react";
 import styles from "./AdminDash.module.css";
 import { useAuth } from "../Auth/AuthProvider";
+import { useRouter } from "next/navigation";
+
+type RoomStatus =
+  | "AVAILABLE"
+  | "RESERVED"
+  | "OCCUPIED"
+  | "IN_REVIEW"
+  | "NEEDS_CLEANING"
+  | "CLEANING"
+  | "OUT_OF_SERVICE";
 
 interface Room {
   id: string;
   roomNumber: string;
   roomType: string;
-  status: "AVAILABLE" | "RESERVED" | "OCCUPIED" | "NEEDS_CLEANING";
+  updatedAt: string;
+  status: RoomStatus;
 }
+const getRoomStatusLabel = (status: RoomStatus) => {
+  switch (status) {
+    case "AVAILABLE":
+      return "Available";
+
+    case "RESERVED":
+      return "Reserved";
+
+    case "OCCUPIED":
+      return "Occupied";
+
+    case "IN_REVIEW":
+      return "In review";
+
+    case "NEEDS_CLEANING":
+      return "Needs cleaning";
+
+    case "CLEANING":
+      return "Cleaning in progress";
+
+    case "OUT_OF_SERVICE":
+      return "Out of service";
+
+    default:
+      return "Unknown";
+  }
+};
 
 interface HousekeepingTask {
   id: string;
@@ -26,6 +64,7 @@ interface HousekeepingTask {
 
 const AdminDash = () => {
   const { user } = useAuth();
+  const router = useRouter();
 
   // Dashboard statistics fetched from the backend API
   const [occupancy, setOccupancy] = React.useState<number | null>(null);
@@ -68,7 +107,6 @@ const AdminDash = () => {
         const response = await fetch("/api/v1/Dashboard/stats");
 
         if (!response.ok) {
-          
           throw new Error("Failed to fetch dashboard stats");
         }
 
@@ -148,7 +186,7 @@ const AdminDash = () => {
           </div>
 
           <div className={styles.user}>
-            <span className={styles.role}>{user?.role}</span>
+            <span className={styles.roleBadge}>{user?.role}</span>
           </div>
         </header>
 
@@ -187,7 +225,12 @@ const AdminDash = () => {
         <section className={styles.housekeepingSection}>
           <div className={styles.sectionHeader}>
             <h2>Housekeeping — awaiting approval</h2>
-            <button className={styles.viewAll}>View all</button>
+            <button
+              className={styles.viewAll}
+              onClick={() => router.push("/Pages/HousekeepingReview")}
+            >
+              View all
+            </button>
           </div>
 
           <div className={styles.housekeepingList}>
@@ -196,7 +239,7 @@ const AdminDash = () => {
                 No housekeeping tasks awaiting approval.
               </div>
             ) : (
-              housekeepingReview.map((task) => (
+             housekeepingReview.map((task) => (
                 <article key={task.id} className={styles.housekeepingCard}>
                   {/* Photo */}
                   <button
@@ -229,7 +272,7 @@ const AdminDash = () => {
 
                   {/* Actions */}
                   <div className={styles.actions}>
-                    <button
+                    {/* <button
                       className={styles.commentButton}
                       onClick={() => {
                         setSelectedTask(task);
@@ -237,7 +280,7 @@ const AdminDash = () => {
                       }}
                     >
                       Comment
-                    </button>
+                    </button> */}
 
                     <button
                       className={styles.rejectButton}
@@ -419,19 +462,47 @@ const AdminDash = () => {
         <section className={styles.roomStatusSection}>
           <div className={styles.sectionHeader}>
             <h2>Room Status — All floors</h2>
-            <button className={styles.viewAll}>View all</button>
+            <button
+              className={styles.viewAll}
+              onClick={() => router.push("/Pages/Rooms")}
+            >
+              View all
+            </button>
           </div>
 
           <div className={styles.roomStatusGrid}>
-            {rooms.map((room) => {
+            {rooms.slice(0, 10).map((room) => {
               let statusClass = styles.available;
 
-              if (room.status === "RESERVED") {
-                statusClass = styles.reserved;
-              } else if (room.status === "OCCUPIED") {
-                statusClass = styles.occupied;
-              } else if (room.status === "NEEDS_CLEANING") {
-                statusClass = styles.needsCleaning;
+              switch (room.status) {
+                case "RESERVED":
+                  statusClass = styles.reserved;
+                  break;
+
+                case "OCCUPIED":
+                  statusClass = styles.occupied;
+                  break;
+
+                case "IN_REVIEW":
+                  statusClass = styles.inReview;
+                  break;
+
+                case "NEEDS_CLEANING":
+                  statusClass = styles.needsCleaning;
+                  break;
+
+                case "CLEANING":
+                  statusClass = styles.cleaning;
+                  break;
+
+                case "OUT_OF_SERVICE":
+                  statusClass = styles.outOfService;
+                  break;
+
+                case "AVAILABLE":
+                default:
+                  statusClass = styles.available;
+                  break;
               }
 
               return (
@@ -441,14 +512,7 @@ const AdminDash = () => {
                 >
                   <strong>{room.roomNumber}</strong>
 
-                  <span>
-                    {room.status === "NEEDS_CLEANING"
-                      ? "Needs cleaning"
-                      : room.status
-                        ? room.status.charAt(0) +
-                          room.status.slice(1).toLowerCase()
-                        : "Unknown"}
-                  </span>
+                  <span>{getRoomStatusLabel(room.status)}</span>
                 </div>
               );
             })}
@@ -477,7 +541,21 @@ const AdminDash = () => {
 
             <div>
               <span className={`${styles.legendDot} ${styles.approvalDot}`} />
-              Awaiting approval
+              In review
+            </div>
+
+            <div>
+              <span
+                className={`${styles.legendDot} ${styles.cleaningProgressDot}`}
+              />
+              Cleaning 
+            </div>
+
+            <div>
+              <span
+                className={`${styles.legendDot} ${styles.outOfServiceDot}`}
+              />
+              Out of service
             </div>
           </div>
         </section>

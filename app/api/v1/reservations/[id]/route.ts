@@ -104,7 +104,7 @@ export async function GET(
     const { id } = await params;
 
     const user = await requireAuth({
-      roles: ["MANAGER", "RECEPTIONIST"],
+      roles: ["ADMIN","MANAGER", "RECEPTIONIST"],
     });
 
     if (!user) {
@@ -158,7 +158,7 @@ export async function PATCH(
     const { id } = await params;
 
     const user = await requireAuth({
-      roles: ["MANAGER", "RECEPTIONIST"],
+      roles: ["ADMIN","MANAGER", "RECEPTIONIST"],
     });
 
     if (!user) {
@@ -467,7 +467,7 @@ export async function DELETE(
     const { id } = await params;
 
     const user = await requireAuth({
-      roles: ["MANAGER", "RECEPTIONIST"],
+      roles: ["ADMIN","MANAGER", "RECEPTIONIST"],
     });
 
     if (!user) {

@@ -261,7 +261,8 @@
 .reservedStatus,
 .occupiedStatus,
 .cleaningStatus,
-.outOfServiceStatus {
+.outOfServiceStatus,
+.inReviewStatus {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -302,6 +303,11 @@
 .outOfServiceStatus {
   background: #f8e4dc;
   color: #a84e34;
+}
+
+.inReviewStatus {
+  background: #fff3cd;
+  color: #856404;
 }
 
 /* =========================
@@ -432,6 +438,27 @@
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
 
   box-sizing: border-box;
+}
+
+.inReviewStatus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  min-width: 80px;
+  min-height: 23px;
+  padding: 3px 10px;
+
+  box-sizing: border-box;
+
+   background: #e8e0f0;
+  color: #70558a;
+
+  font-family: "IBM Plex Sans", sans-serif;
+  font-size: 10px;
+  font-weight: 600;
+
+  white-space: nowrap;
 }
 
 /* =========================

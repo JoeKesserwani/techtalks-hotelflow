@@ -25,8 +25,9 @@ const DashboardPage = () => {
     user && user.role in dashboardByRole
       ? dashboardByRole[user.role as keyof typeof dashboardByRole]
       : ManagerDash;
-
+  
   return <DashboardComponent />;
+  
 };
 
 export default DashboardPage;

@@ -72,17 +72,17 @@ const page = () => {
           <div className="bg-white rounded-md border border-gray-200 p-6 mb-6 max-w-2xl">
             <h2 className="font-semibold text-gray-900 mb-4">Hotel profile</h2>
             <label className="block text-xs font-medium text-gray-500 mb-1">HOTEL NAME</label>
-            <input className="w-full border border-gray-300 rounded px-3 py-2 mb-4 text-sm" value={settings.name || ''} onChange={(e) => updateField('name', e.target.value)} />
+            <input className="w-full border border-gray-300 rounded px-3 py-2 mb-4 text-sm" value={settings.name || ''} onChange={(e) => updateField('name', e.target.value)} maxLength={30}/>
             <label className="block text-xs font-medium text-gray-500 mb-1">ADDRESS</label>
-            <input className="w-full border border-gray-300 rounded px-3 py-2 mb-4 text-sm" value={settings.address || ''} onChange={(e) => updateField('address', e.target.value)} />
+            <input className="w-full border border-gray-300 rounded px-3 py-2 mb-4 text-sm" value={settings.address || ''} onChange={(e) => updateField('address', e.target.value)} maxLength={200}/>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">Phone number</label>
-                <input className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={settings.phone || ''} onChange={(e) => updateField('phone', e.target.value)} />
+                <input className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={settings.phone || ''} onChange={(e) => updateField('phone', e.target.value)} maxLength={20} />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-500 mb-1">Email</label>
-                <input className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={settings.email || ''} onChange={(e) => updateField('email', e.target.value)} />
+                <input className="w-full border border-gray-300 rounded px-3 py-2 text-sm" value={settings.email || ''} onChange={(e) => updateField('email', e.target.value)} maxLength={40} />
               </div>
             </div>
           </div>

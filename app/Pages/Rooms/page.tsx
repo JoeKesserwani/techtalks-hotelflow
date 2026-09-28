@@ -10,6 +10,7 @@ type RoomStatus =
   | "AVAILABLE"
   | "RESERVED"
   | "OCCUPIED"
+  | "IN_REVIEW"
   | "NEEDS_CLEANING"
   | "CLEANING"
   | "OUT_OF_SERVICE";
@@ -37,6 +38,7 @@ const roomStatuses: RoomStatus[] = [
   "AVAILABLE",
   "RESERVED",
   "OCCUPIED",
+  "IN_REVIEW",
   "NEEDS_CLEANING",
   "CLEANING",
   "OUT_OF_SERVICE",
@@ -46,22 +48,18 @@ function getRoomStatusLabel(status: RoomStatus) {
   switch (status) {
     case "AVAILABLE":
       return "Available";
-
     case "RESERVED":
-      return "Reserved";
-
+      return "Upcoming";
     case "OCCUPIED":
-      return "Occupied";
-
+      return "In stay";
+    case "IN_REVIEW":
+      return "In review";
     case "NEEDS_CLEANING":
       return "Needs cleaning";
-
     case "CLEANING":
       return "Cleaning";
-
     case "OUT_OF_SERVICE":
       return "Out of service";
-
     default:
       return status;
   }
@@ -78,6 +76,9 @@ function getStatusClass(status: RoomStatus) {
     case "OCCUPIED":
       return styles.occupiedStatus;
 
+    case "IN_REVIEW":
+      return styles.inReviewStatus;
+
     case "NEEDS_CLEANING":
       return styles.cleaningStatus;
 
@@ -91,6 +92,7 @@ function getStatusClass(status: RoomStatus) {
       return styles.availableStatus;
   }
 }
+
 function sortRoomsByNumber(rooms: Room[]) {
   return [...rooms].sort(
     (a, b) => Number(a.roomNumber) - Number(b.roomNumber),
@@ -209,7 +211,7 @@ const Page = () => {
   }, [rooms, search, statusFilter, roomTypeFilter]);
 
   /* -------------------------------------------------------------------------- */
-  /* Pagination                                                                  */
+  /* Pagination                                                                 */
   /* -------------------------------------------------------------------------- */
 
   const totalPages = Math.ceil(filteredRooms.length / roomsPerPage);
@@ -329,9 +331,9 @@ const Page = () => {
 
       const createdRoom = data as Room;
 
-     setRooms((currentRooms) =>
-  sortRoomsByNumber([...currentRooms, createdRoom]),
-);
+      setRooms((currentRooms) =>
+        sortRoomsByNumber([...currentRooms, createdRoom]),
+      );
 
       setIsAddRoomOpen(false);
       setCreateError(null);
@@ -467,13 +469,13 @@ const Page = () => {
 
       const updatedRoom = data as Room;
 
-    setRooms((currentRooms) =>
-  sortRoomsByNumber(
-    currentRooms.map((room) =>
-      room.id === updatedRoom.id ? updatedRoom : room,
-    ),
-  ),
-);
+      setRooms((currentRooms) =>
+        sortRoomsByNumber(
+          currentRooms.map((room) =>
+            room.id === updatedRoom.id ? updatedRoom : room,
+          ),
+        ),
+      );
 
       setEditingRoom(null);
       setSaveError(null);
@@ -535,6 +537,7 @@ const Page = () => {
             onChange={(event) => setSearch(event.target.value)}
             placeholder="Search by room number or type"
             className={styles.searchInput}
+            maxLength={30}
           />
 
           <select
@@ -798,6 +801,7 @@ const Page = () => {
                     setNewRoomNumber(event.target.value)
                   }
                   placeholder="e.g. 101"
+                  maxLength={10}
                 />
               </div>
 
@@ -836,11 +840,14 @@ const Page = () => {
                     id="newFloor"
                     type="number"
                     min="1"
+                    max="20"
                     value={newFloor}
                     onChange={(event) =>
                       setNewFloor(event.target.value)
                     }
                     placeholder="e.g. 1"
+                    maxLength={2}
+                    
                   />
                 </div>
 
@@ -853,11 +860,13 @@ const Page = () => {
                     id="newCapacity"
                     type="number"
                     min="1"
+                    max="10"
                     value={newCapacity}
                     onChange={(event) =>
                       setNewCapacity(event.target.value)
                     }
                     placeholder="e.g. 2"
+                    maxLength={2}
                   />
                 </div>
 
@@ -872,12 +881,14 @@ const Page = () => {
                   id="newBasePrice"
                   type="number"
                   min="0"
-                  step="0.01"
+                  step="1"
+                  max="9999"
                   value={newBasePrice}
                   onChange={(event) =>
                     setNewBasePrice(event.target.value)
                   }
                   placeholder="e.g. 120"
+                  maxLength={4}
                 />
               </div>
 
@@ -960,6 +971,7 @@ const Page = () => {
                   onChange={(event) =>
                     setRoomNumber(event.target.value)
                   }
+                  maxLength={10}
                 />
               </div>
 
@@ -1005,10 +1017,12 @@ const Page = () => {
                     id="floor"
                     type="number"
                     min="1"
+                    max="20"
                     value={floor}
                     onChange={(event) =>
                       setFloor(event.target.value)
                     }
+                    maxLength={2}
                   />
                 </div>
 
@@ -1021,10 +1035,12 @@ const Page = () => {
                     id="capacity"
                     type="number"
                     min="1"
+                    max="10"
                     value={capacity}
                     onChange={(event) =>
                       setCapacity(event.target.value)
                     }
+                    maxLength={2}
                   />
                 </div>
 
@@ -1039,11 +1055,13 @@ const Page = () => {
                   id="basePrice"
                   type="number"
                   min="0"
-                  step="0.01"
+                  step="1"
+                  max="9999"
                   value={basePrice}
                   onChange={(event) =>
                     setBasePrice(event.target.value)
                   }
+                  maxLength={4}
                 />
 
                 <p className={styles.priceWarning}>

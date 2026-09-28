@@ -65,26 +65,15 @@
   align-items: center;
 }
 
-.role {
-  min-width: 140px;
-  height: 46px;
+.roleBadge {
+  background: #c76543;
+  color: white;
 
-  padding: 0 20px;
+  padding: 9px 18px;
 
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  background: #c1633b;
-  color: #ffffff;
-
-  border-radius: 10px;
-
-  font-family: var(--font-heading);
-  font-size: 20px;
-  font-weight: 700;
-
-  letter-spacing: 2px;
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 1px;
 }
 
 /* =========================
@@ -288,6 +277,7 @@
   display: flex;
   align-items: center;
   gap: 7px;
+
   flex-shrink: 0;
   flex-wrap: wrap;
 }
@@ -313,7 +303,9 @@
     border-color 0.2s ease;
 }
 
-/* Comment */
+/* =========================
+   COMMENT
+========================= */
 
 .commentButton {
   height: 35px;
@@ -321,20 +313,22 @@
   padding: 0 12px;
 
   border-radius: 6px;
-  border: 1px solid #ddd8ca;
+  border: 1px solid #e1ddd3 !important;
 
   background: transparent;
 
-  font-family: var(--font-body);
-  border: 1px solid #e1ddd3 !important;
   color: #494640;
+
+  font-family: var(--font-body);
 }
 
 .commentButton:hover {
   background: #f4f0e7 !important;
 }
 
-/* Reject */
+/* =========================
+   REJECT
+========================= */
 
 .rejectButton {
   height: 35px;
@@ -342,20 +336,22 @@
   padding: 0 12px;
 
   border-radius: 6px;
-  border: 1px solid #ddd8ca;
+  border: 1px solid #d98a70 !important;
 
   background: transparent;
 
-  font-family: var(--font-body);
-  border: 1px solid #d98a70 !important;
   color: #c1633b;
+
+  font-family: var(--font-body);
 }
 
 .rejectButton:hover {
   background: #fbede7 !important;
 }
 
-/* Approve */
+/* =========================
+   APPROVE
+========================= */
 
 .approveButton {
   height: 35px;
@@ -363,11 +359,6 @@
   padding: 0 12px;
 
   border-radius: 6px;
-  border: 1px solid #ddd8ca;
-
-  background: transparent;
-
-  font-family: var(--font-body);
   border: 1px solid #aebba5 !important;
 
   background: #aebba5 !important;
@@ -550,15 +541,21 @@
 .sendCommentButton {
   width: 100%;
   height: 42px;
+
   margin-top: 14px;
+
   border: none;
   border-radius: 6px;
+
   background: #77736c;
   color: #ffffff;
+
   font-family: var(--font-body);
   font-size: 12px;
   font-weight: 600;
+
   cursor: pointer;
+
   transition: background 0.2s ease;
 }
 
@@ -569,11 +566,15 @@
 .resultIcon {
   width: 58px;
   height: 58px;
+
   margin: 8px auto 14px;
+
   display: flex;
   align-items: center;
   justify-content: center;
+
   border-radius: 50%;
+
   font-size: 28px;
   font-weight: 500;
 }
@@ -586,18 +587,22 @@
 .rejectedIcon {
   background: #fbede7;
   color: #c1633b;
+
   border: 1px solid #d98a70;
 }
 
 .commentIcon {
   background: #f4f0e7;
   color: #77736c;
+
   border: 1px solid #ddd8ca;
 }
 
 .resultTitle {
   margin: 0 0 8px;
+
   text-align: center;
+
   font-family: var(--font-heading);
   font-size: 22px;
   font-weight: 600;
@@ -617,9 +622,12 @@
 
 .modalSuccessText {
   margin: 0 0 20px;
+
   text-align: center;
+
   font-family: var(--font-body);
   font-size: 13px;
+
   color: #77736c;
 }
 
@@ -659,29 +667,41 @@
   border-bottom: 2px solid #eee8da;
 }
 
-/* Left status line */
+/* =========================
+   ROOM STATUS COLORS
+========================= */
 
 .roomStatusCard.available {
-  border-left: 5px solid #7d9169;
+  border-left: 5px solid #6f8f5f;
 }
 
 .roomStatusCard.reserved {
-  border-left: 5px solid #cfc5a9;
+  border-left: 5px solid #7b8fa3;
 }
 
 .roomStatusCard.occupied {
-  border-left: 5px solid #26332a;
+  border-left: 5px solid #34433d;
+}
+
+.roomStatusCard.inReview {
+  border-left: 5px solid #B08A3E;
 }
 
 .roomStatusCard.needsCleaning {
-  border-left: 5px solid #c96b3c;
+  border-left: 5px solid #c56b4a;
 }
 
-.roomStatusCard.awaitingApproval {
-  border-left: 5px solid #b65c35;
+.roomStatusCard.cleaning {
+  border-left: 5px solid #4190aa;
 }
 
-/* Number */
+.roomStatusCard.outOfService {
+  border-left: 5px solid #766878;
+}
+
+/* =========================
+   ROOM NUMBER
+========================= */
 
 .roomStatusCard strong {
   font-family: var(--font-heading);
@@ -694,7 +714,9 @@
   color: #26332a;
 }
 
-/* Label */
+/* =========================
+   ROOM STATUS LABEL
+========================= */
 
 .roomStatusCard span {
   margin-top: 5px;
@@ -740,29 +762,45 @@
   border-radius: 50%;
 }
 
+/* Available — sage green */
 .availableDot {
-  background: #7d9169;
+  background: #6f8f5f;
 }
 
+/* Reserved — muted blue */
 .reservedDot {
-  background: #cfc5a9;
+  background: #7b8fa3;
 }
 
+/* Occupied — deep charcoal */
 .occupiedDot {
-  background: #26332a;
+  background: #34433d;
 }
 
+/* Needs cleaning — warm terracotta */
 .cleaningDot {
-  background: #c96b3c;
+  background: #c56b4a;
 }
 
+/* Awaiting review — muted gold */
 .approvalDot {
-  background: #b65c35;
+  background: #B08A3E;
+}
+
+/* Cleaning in progress — soft amber */
+.cleaningProgressDot {
+  background: #4190aa;
+}
+
+/* Out of service — muted plum */
+.outOfServiceDot {
+  background: #766878;
 }
 
 /* =========================
    900px
 ========================= */
+
 @media (max-width: 900px) {
   .main {
     padding: 28px 30px;
@@ -772,9 +810,14 @@
     font-size: 30px;
   }
 
-  .role {
+  .roleBadge {
     min-width: 120px;
     height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
     font-size: 17px;
   }
 
@@ -813,9 +856,11 @@
     row-gap: 8px;
   }
 }
+
 /* =========================
    700px
 ========================= */
+
 @media (max-width: 700px) {
   .main {
     padding: 24px 20px;
@@ -833,10 +878,12 @@
     font-size: 12px;
   }
 
-  .role {
+  .roleBadge {
     min-width: 100px;
     height: 40px;
+
     padding: 0 15px;
+
     font-size: 12px;
   }
 
@@ -858,8 +905,10 @@
 
   .housekeepingCard {
     display: grid;
+
     grid-template-columns: 90px 1fr;
     grid-template-rows: auto auto;
+
     gap: 10px;
     padding: 10px;
   }
@@ -869,6 +918,7 @@
 
     width: 90px;
     min-width: 90px;
+
     height: 70px;
     min-height: 70px;
   }
@@ -890,13 +940,16 @@
     grid-column: 2;
 
     display: flex;
+
     gap: 5px;
     flex-wrap: wrap;
   }
 
   .actions button {
     height: 32px;
+
     padding: 0 9px;
+
     font-size: 10px;
   }
 
@@ -915,6 +968,7 @@
 /* =========================
    550px
 ========================= */
+
 @media (max-width: 550px) {
   .main {
     padding: 22px 18px;
@@ -923,6 +977,7 @@
   .header {
     flex-direction: column;
     align-items: flex-start;
+
     gap: 12px;
   }
 
@@ -930,17 +985,21 @@
     width: 100%;
   }
 
-  .role {
+  .roleBadge {
     width: auto;
     min-width: 90px;
     height: 36px;
+
     padding: 0 12px;
+
     border-radius: 7px;
+
     font-size: 11px;
   }
 
   .statsGrid {
     grid-template-columns: 1fr;
+
     gap: 12px;
   }
 
@@ -959,6 +1018,7 @@
 
   .sectionHeader {
     align-items: flex-start;
+
     gap: 10px;
   }
 
@@ -971,8 +1031,10 @@
 
   .housekeepingCard {
     display: grid;
+
     grid-template-columns: 70px 1fr;
     grid-template-rows: auto auto;
+
     gap: 8px;
     padding: 8px;
   }
@@ -982,6 +1044,7 @@
 
     width: 70px;
     min-width: 70px;
+
     height: 60px;
     min-height: 60px;
   }
@@ -999,13 +1062,16 @@
     grid-column: 2;
 
     display: flex;
+
     flex-wrap: wrap;
     gap: 4px;
   }
 
   .actions button {
     height: 30px;
+
     padding: 0 7px;
+
     font-size: 9px;
   }
 
@@ -1013,6 +1079,7 @@
 
   .roomStatusGrid {
     grid-template-columns: 1fr;
+
     gap: 6px;
   }
 
@@ -1030,7 +1097,9 @@
 
   .roomStatusLegend {
     flex-wrap: wrap;
+
     gap: 7px 12px;
+
     font-size: 11px;
   }
 
@@ -1043,6 +1112,7 @@
   .modal {
     width: 100%;
     max-width: 100%;
+
     padding: 22px;
   }
 
@@ -1058,6 +1128,7 @@
 /* =========================
    360px
 ========================= */
+
 @media (max-width: 360px) {
   .main {
     padding: 18px 12px;
@@ -1065,17 +1136,20 @@
 
   .header {
     gap: 8px;
+
     padding-bottom: 16px;
     margin-bottom: 20px;
   }
 
   .title {
     font-size: 20px;
+
     letter-spacing: -0.3px;
   }
 
   .date {
     font-size: 9px;
+
     white-space: normal;
   }
 
@@ -1083,17 +1157,21 @@
     width: 100%;
   }
 
-  .role {
+  .roleBadge {
     min-width: 70px;
     height: 34px;
+
     padding: 0 8px;
+
     border-radius: 7px;
+
     font-size: 10px;
     letter-spacing: 0.7px;
   }
 
   .statCard {
     min-height: 105px;
+
     padding: 16px;
   }
 
@@ -1109,7 +1187,9 @@
 
   .housekeepingCard {
     display: grid;
+
     grid-template-columns: 55px 1fr;
+
     gap: 7px;
     padding: 7px;
   }
@@ -1119,6 +1199,7 @@
 
     width: 55px;
     min-width: 55px;
+
     height: 48px;
     min-height: 48px;
   }
@@ -1139,7 +1220,9 @@
 
   .actions button {
     height: 27px;
+
     padding: 0 5px;
+
     font-size: 8px;
   }
 
@@ -1147,6 +1230,7 @@
 
   .roomStatusCard {
     height: 70px;
+
     padding: 7px 9px;
   }
 
@@ -1160,6 +1244,7 @@
 
   .roomStatusLegend {
     gap: 6px 10px;
+
     font-size: 10px;
   }
 
@@ -1171,6 +1256,7 @@
 
   .modal {
     padding: 20px 16px;
+
     border-radius: 8px;
   }
 
@@ -1188,6 +1274,7 @@
 
   .modalTextarea {
     min-height: 90px;
+
     font-size: 12px;
   }
 

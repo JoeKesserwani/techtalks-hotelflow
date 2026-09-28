@@ -57,7 +57,7 @@ function dateOnlyToDate(value: string) {
 export async function GET() {
   try {
     const user = await requireAuth({
-      roles: ["MANAGER", "RECEPTIONIST"],
+      roles: ["ADMIN","MANAGER", "RECEPTIONIST"],
     });
 
     if (!user) {
@@ -97,7 +97,7 @@ export async function POST(
 ) {
   try {
     const user = await requireAuth({
-      roles: ["MANAGER", "RECEPTIONIST"],
+      roles: ["ADMIN","MANAGER", "RECEPTIONIST"],
     });
 
     if (!user) {
