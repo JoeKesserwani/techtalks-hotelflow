@@ -1263,7 +1263,7 @@ export default function ReservationsPage() {
               </tbody>
             </table>
           </div>
-        )
+        
 
             {/* REUSABLE PAGINATION COMPONENT */}
             <Pagination

@@ -44,7 +44,7 @@ const navigationByRole = {
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, setUser } = useAuth();
+  const { user, setUser, hotel, hotelLoading } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
@@ -91,7 +91,7 @@ export default function Sidebar() {
       <aside className={`${styles.sidebar} ${isOpen ? styles.open : ""}`}>
       <div className={styles.hotelHeader}>
         <h1>HotelFlow</h1>
-        <p>Hotel Name - location</p>
+        <p>{hotel?.name ?? (hotelLoading ? "Loading hotel..." : "")}{" "}{hotel?.address ?? (hotelLoading ? "Loading address..." : "")}</p>
       </div>
 
       <nav className={styles.navigation}>
