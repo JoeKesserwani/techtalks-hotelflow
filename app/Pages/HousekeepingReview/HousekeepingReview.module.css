@@ -1,12 +1,15 @@
 .page {
   display: flex;
   min-height: 100vh;
-  background: #f5f1e7;
-  color: #292821;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
 }
-body {
+
+:global(body) {
   overflow: hidden;
 }
+
 .container {
   box-sizing: border-box;
   width: 100%;
@@ -28,19 +31,20 @@ body {
   align-items: flex-start;
   padding-bottom: 20px;
   margin-bottom: 20px;
-  border-bottom: 1px solid #d9d3c4;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .title {
   margin: 0;
-  font-family: Georgia, serif;
+  font-family: var(--font-heading);
   font-size: 34px;
   font-weight: 600;
+  color: var(--color-text);
 }
 
 .subtitle {
   margin-top: 4px;
-  color: #8a877e;
+  color: var(--color-muted);
   font-size: 14px;
 }
 
@@ -55,26 +59,28 @@ body {
   flex-direction: column;
   text-align: right;
   font-size: 12px;
+  color: var(--color-label);
 }
 
 .roleInfo span {
-  color: #99958a;
+  color: var(--color-faint);
   margin-top: 3px;
 }
 
 .roleBadge {
-  background: #c76543;
-  color: white;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
   padding: 9px 18px;
   font-size: 13px;
   font-weight: 600;
+  border-radius: var(--radius-field);
 }
 
 /* Tabs */
 
 .tabs {
   display: flex;
-  border-bottom: 1px solid #d9d3c4;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .tab {
@@ -82,18 +88,19 @@ body {
   padding: 13px 20px;
   border: none;
   background: transparent;
-  color: #77736a;
+  color: var(--color-muted);
   font-size: 14px;
   white-space: nowrap;
   cursor: pointer;
+  transition: color 0.15s ease;
 }
 
 .tab:hover {
-  color: #3f5033;
+  color: var(--color-primary);
 }
 
 .activeTab {
-  color: #3f5033;
+  color: var(--color-primary);
   font-weight: 600;
 }
 
@@ -104,7 +111,7 @@ body {
   left: 0;
   width: 100%;
   height: 3px;
-  background: #4b5d3b;
+  background: var(--color-primary);
 }
 
 /* Tab header */
@@ -118,16 +125,20 @@ body {
 
 .tabHeader p {
   margin: 0;
-  color: #77736a;
+  color: var(--color-muted);
   font-size: 14px;
 }
 
 .viewAll {
   border: none;
   background: transparent;
-  color: #bd5d3e;
+  color: var(--color-accent);
   cursor: pointer;
   font-size: 14px;
+}
+
+.viewAll:hover {
+  color: var(--color-accent-hover);
 }
 
 /* Task list */
@@ -140,7 +151,7 @@ body {
   gap: 14px;
   overflow-y: auto;
   padding-right: 8px;
-  scrollbar-color: #b8b09f transparent;
+  scrollbar-color: var(--color-border) transparent;
   scrollbar-width: thin;
 }
 
@@ -153,8 +164,8 @@ body {
 }
 
 .taskList::-webkit-scrollbar-thumb {
-  border-radius: 4px;
-  background: #b8b09f;
+  border-radius: var(--radius-pill);
+  background: var(--color-border);
 }
 
 /* Task card */
@@ -164,8 +175,10 @@ body {
   align-items: center;
   gap: 20px;
   padding: 12px;
-  background: white;
-  border: 1px solid #ded8ca;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
 }
 
 /* Pictures */
@@ -185,7 +198,8 @@ body {
   padding: 0;
   border: none;
   overflow: hidden;
-  background: #ece4d4;
+  background: var(--color-border-soft);
+  border-radius: var(--radius-field);
   flex-shrink: 0;
   cursor: pointer;
 }
@@ -194,7 +208,7 @@ body {
   width: 100%;
   height: 100%;
   object-fit: cover;
-  transition: transform 0.25s;
+  transition: transform 0.25s ease;
 }
 
 .pictureButton:hover img {
@@ -207,8 +221,9 @@ body {
   bottom: 5px;
   padding: 3px 7px;
   background: rgba(0, 0, 0, 0.65);
-  color: white;
+  color: var(--color-surface-alt);
   font-size: 11px;
+  border-radius: 4px;
 }
 
 /* Task information */
@@ -226,55 +241,57 @@ body {
 
 .roomTitle h2 {
   margin: 0;
-  font-family: Georgia, serif;
+  font-family: var(--font-heading);
   font-size: 21px;
+  color: var(--color-text);
 }
 
 .taskInfo > p {
   margin: 7px 0 0;
-  color: #77736a;
+  color: var(--color-muted);
   font-size: 14px;
 }
 
 .taskInfo small {
   display: block;
   margin-top: 4px;
-  color: #aaa59a;
+  color: var(--color-faint);
   font-size: 12px;
 }
 
-/* Status */
+/* Status Badges */
 
 .statusBadge {
   display: inline-block;
-  padding: 5px 9px;
+  padding: 5px 10px;
   font-size: 11px;
   font-weight: 600;
+  border-radius: var(--radius-pill);
 }
 
 .awaiting {
-  background: #eee8d9;
-  color: #746d5d;
+  background: var(--color-status-active);
+  color: var(--color-status-active-text);
 }
 
 .pending {
-  background: #f3ead8;
-  color: #806b42;
+  background: var(--color-status-instay);
+  color: var(--color-status-instay-text);
 }
 
 .inProgress {
-  background: #e2eaf0;
-  color: #496579;
+  background: var(--color-border-soft);
+  color: var(--color-label);
 }
 
 .approved {
-  background: #e3eadc;
-  color: #4d6242;
+  background: var(--color-status-success);
+  color: var(--color-status-success-text);
 }
 
 .rejected {
-  background: #f8e4dc;
-  color: #a84e34;
+  background: var(--color-status-cancelled);
+  color: var(--color-status-cancelled-text);
 }
 
 /* Comment */
@@ -282,17 +299,19 @@ body {
 .comment {
   margin-top: 10px;
   padding: 8px 12px;
-  border-left: 2px solid #c76543;
-  background: #f8f3e8;
+  border-left: 3px solid var(--color-accent);
+  background: var(--color-surface);
+  border-radius: 0 var(--radius-field) var(--radius-field) 0;
 }
 
 .comment strong {
   font-size: 12px;
+  color: var(--color-label);
 }
 
 .comment p {
   margin: 3px 0 0;
-  color: #77736a;
+  color: var(--color-muted);
   font-size: 13px;
 }
 
@@ -308,37 +327,43 @@ body {
 .actions button {
   padding: 9px 18px;
   font-size: 13px;
+  font-weight: 500;
   cursor: pointer;
+  border-radius: var(--radius-field);
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
 }
 
 .commentButton {
-  border: 1px solid #ddd6c8;
-  background: white;
-  color: #555149;
+  border: 1px solid var(--color-border-input);
+  background: var(--color-surface-alt);
+  color: var(--color-label);
 }
 
 .commentButton:hover {
-  background: #f6f2e9;
+  background: var(--color-surface);
 }
 
 .rejectButton {
-  border: 1px solid #d77d61;
-  background: white;
-  color: #c45e3d;
+  border: 1px solid var(--color-accent);
+  background: var(--color-surface-alt);
+  color: var(--color-accent);
 }
 
 .rejectButton:hover {
-  background: #fff3ee;
+  background: var(--color-status-cancelled);
 }
 
 .approveButton {
-  border: 1px solid #a8b499;
-  background: #a8b499;
-  color: white;
+  border: 1px solid var(--color-primary);
+  background: var(--color-primary);
+  color: var(--color-on-accent);
 }
 
 .approveButton:hover {
-  background: #899b7c;
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
 }
 
 /* Empty state */
@@ -346,19 +371,21 @@ body {
 .emptyState {
   padding: 60px 20px;
   text-align: center;
-  border: 1px dashed #d8d1c1;
-  background: #faf7ef;
+  border: 1px dashed var(--color-border);
+  background: var(--color-surface);
+  border-radius: var(--radius-card);
 }
 
 .emptyState h2 {
   margin: 0;
-  font-family: Georgia, serif;
+  font-family: var(--font-heading);
   font-size: 21px;
+  color: var(--color-text);
 }
 
 .emptyState p {
   margin-top: 8px;
-  color: #89857b;
+  color: var(--color-muted);
   font-size: 14px;
 }
 
@@ -367,7 +394,7 @@ body {
 .modalOverlay {
   position: fixed;
   inset: 0;
-  z-index: 50;
+  z-index: var(--z-modal-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -379,12 +406,15 @@ body {
   width: 100%;
   max-width: 500px;
   padding: 26px;
-  background: #fffdf8;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-dropdown);
 }
 
 .modalLabel {
   margin: 0;
-  color: #8b877d;
+  color: var(--color-faint);
   font-size: 11px;
   font-weight: 600;
   letter-spacing: 1px;
@@ -392,12 +422,13 @@ body {
 
 .reviewModal h2 {
   margin: 5px 0 0;
-  font-family: Georgia, serif;
+  font-family: var(--font-heading);
   font-size: 25px;
+  color: var(--color-text);
 }
 
 .modalDescription {
-  color: #77736a;
+  color: var(--color-muted);
   font-size: 14px;
   line-height: 1.5;
 }
@@ -407,10 +438,11 @@ body {
   margin-bottom: 7px;
   font-size: 14px;
   font-weight: 600;
+  color: var(--color-label);
 }
 
 .textareaLabel span {
-  color: #99958a;
+  color: var(--color-faint);
   font-weight: normal;
 }
 
@@ -419,14 +451,23 @@ body {
   min-height: 120px;
   padding: 12px;
   resize: vertical;
-  border: 1px solid #d9d3c4;
+  border: 1px solid var(--color-border-input);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  border-radius: var(--radius-field);
   outline: none;
-  font-family: inherit;
+  font-family: var(--font-body);
   font-size: 14px;
 }
 
 .textarea:focus {
-  border-color: #687a5b;
+  border-color: var(--color-primary);
+}
+
+.reviewError {
+  margin: 8px 0 0;
+  color: var(--color-accent);
+  font-size: 13px;
 }
 
 .modalActions {
@@ -442,23 +483,38 @@ body {
   padding: 10px 18px;
   border: none;
   font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--radius-field);
   cursor: pointer;
+  transition: background-color 0.15s ease;
 }
 
 .cancelButton {
-  border: 1px solid #d9d3c4;
-  background: white;
-  color: #555149;
+  border: 1px solid var(--color-border-input);
+  background: var(--color-surface-alt);
+  color: var(--color-label);
+}
+
+.cancelButton:hover {
+  background: var(--color-surface);
 }
 
 .modalApprove {
-  background: #718264;
-  color: white;
+  background: var(--color-primary);
+  color: var(--color-on-accent);
+}
+
+.modalApprove:hover {
+  background: var(--color-primary-hover);
 }
 
 .modalReject {
-  background: #c76543;
-  color: white;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+}
+
+.modalReject:hover {
+  background: var(--color-accent-hover);
 }
 
 /* Image modal */
@@ -466,12 +522,12 @@ body {
 .imageOverlay {
   position: fixed;
   inset: 0;
-  z-index: 60;
+  z-index: var(--z-modal-overlay);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  background: rgba(0, 0, 0, 0.8);
+  background: rgba(0, 0, 0, 0.82);
 }
 
 .imageContainer {
@@ -485,7 +541,7 @@ body {
   max-width: 90vw;
   max-height: 85vh;
   object-fit: contain;
-  transition: transform 0.2s;
+  transition: transform 0.2s ease;
 }
 
 .closeImage {
@@ -495,10 +551,15 @@ body {
   width: 40px;
   height: 40px;
   border: none;
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
   font-size: 28px;
+  border-radius: var(--radius-field);
   cursor: pointer;
+}
+
+.closeImage:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 .zoomControls {
@@ -510,7 +571,8 @@ body {
   gap: 5px;
   padding: 5px;
   transform: translateX(-50%);
-  background: rgba(0, 0, 0, 0.65);
+  background: rgba(0, 0, 0, 0.75);
+  border-radius: var(--radius-field);
 }
 
 .zoomControls button {
@@ -518,8 +580,9 @@ body {
   height: 40px;
   border: none;
   background: transparent;
-  color: white;
+  color: #ffffff;
   font-size: 20px;
+  border-radius: var(--radius-field);
   cursor: pointer;
 }
 
@@ -530,13 +593,11 @@ body {
 .zoomControls span {
   min-width: 50px;
   text-align: center;
-  color: white;
+  color: #ffffff;
   font-size: 12px;
 }
 
-/* -------------------------------------------------------------------------- */
-/* Responsive                                                                 */
-/* -------------------------------------------------------------------------- */
+/* Responsive */
 
 @media (max-width: 900px) {
   .taskCard {
@@ -582,12 +643,12 @@ body {
     font-size: 28px;
   }
 
-  .receptionist {
+  .role {
     width: 100%;
     justify-content: space-between;
   }
 
-  .receptionistInfo {
+  .roleInfo {
     text-align: left;
   }
 

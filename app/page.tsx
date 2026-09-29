@@ -28,18 +28,34 @@ export default function Home() {
           body: JSON.stringify({ email, password }),
         });
 
-        const data = await response.json();
+        let data: { message?: string; user?: any } = {};
+
+        try {
+          data = await response.json();
+        } catch {
+          // Keep the HTTP status as the fallback if the API returns no JSON.
+        }
 
         if (!response.ok) {
-          throw new Error(data.message || "An error occurred");
+          throw new Error(
+            data.message ||
+              `Login failed, Invalid Credentials (${response.status})`,
+          );
+        }
+
+        if (!data.user) {
+          throw new Error("Login failed: user information was not returned.");
         }
 
         setUser(data.user);
-        const role = data.user.role;
         Router.push("/Pages/Dashboard");
       }
     } catch (error) {
-      setError("An error occurred");
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Unable to sign in. Please try again.",
+      );
     } finally {
       setIsSubmitting(false);
     }
@@ -50,7 +66,7 @@ export default function Home() {
       <div className={styles.container}>
         <section className={styles.leftPanel}>
           <div className={styles.brand}>
-            <div className={styles.logo}>H</div>
+            <div className={styles.logo}><img src="/favicon.ico" alt="HotelFlow Logo" /></div>
 
             <h1>HotelFlow</h1>
             <p></p>
@@ -89,6 +105,7 @@ export default function Home() {
                   placeholder="Enter your email or username"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  maxLength={40}
                 />
               </div>
 
@@ -101,10 +118,29 @@ export default function Home() {
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  maxLength={20}
                 />
               </div>
-              <button type="submit" className={styles.signInButton}>
-                Sign in
+              {error && (
+                <div className={styles.loginError} role="alert">
+                  {error}
+                </div>
+              )}
+
+              <button
+                type="submit"
+                className={styles.signInButton}
+                disabled={isSubmitting}
+                aria-busy={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <span className={styles.spinner} aria-hidden="true" />
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign in"
+                )}
               </button>
 
               <p className={styles.redirectText}>

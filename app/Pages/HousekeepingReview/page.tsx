@@ -4,12 +4,7 @@ import { useEffect, useState } from "react";
 import styles from "./HousekeepingReview.module.css";
 import { useAuth } from "@/components/Auth/AuthProvider";
 
-type Status =
-  | "active"
-  | "awaiting"
-  | "approved"
-  | "pending"
-  | "in-progress";
+type Status = "active" | "awaiting" | "approved" | "pending" | "in-progress";
 
 type HousekeepingTask = {
   id: string;
@@ -62,9 +57,7 @@ function loadHousekeepingTasks() {
 
 function mapApiTask(task: ApiHousekeepingTask): HousekeepingTask {
   const pictures = Array.isArray(task.photos)
-    ? task.photos.filter(
-        (photo): photo is string => typeof photo === "string"
-      )
+    ? task.photos.filter((photo): photo is string => typeof photo === "string")
     : [];
 
   return {
@@ -77,10 +70,10 @@ function mapApiTask(task: ApiHousekeepingTask): HousekeepingTask {
       task.status === "DONE"
         ? "approved"
         : task.status === "IN_REVIEW"
-        ? "awaiting"
-        : task.status === "IN_PROGRESS"
-        ? "in-progress"
-        : "pending",
+          ? "awaiting"
+          : task.status === "IN_PROGRESS"
+            ? "in-progress"
+            : "pending",
     pictures,
     comment: task.notes ?? undefined,
   };
@@ -103,11 +96,11 @@ export default function HousekeepingReviewPage() {
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
   const [zoom, setZoom] = useState(1);
 
-  const [reviewTask, setReviewTask] =
-    useState<HousekeepingTask | null>(null);
+  const [reviewTask, setReviewTask] = useState<HousekeepingTask | null>(null);
 
-  const [reviewAction, setReviewAction] =
-    useState<"approved" | "rejected" | null>(null);
+  const [reviewAction, setReviewAction] = useState<
+    "approved" | "rejected" | null
+  >(null);
 
   const [comment, setComment] = useState("");
 
@@ -120,7 +113,7 @@ export default function HousekeepingReviewPage() {
         setLoadError(
           error instanceof Error
             ? error.message
-            : "Unable to load housekeeping tasks."
+            : "Unable to load housekeeping tasks.",
         );
       } finally {
         setIsLoading(false);
@@ -132,32 +125,31 @@ export default function HousekeepingReviewPage() {
 
   const awaitingTasks = tasks.filter((task) => task.status === "awaiting");
 
-  const approvedTasks = tasks.filter(
-    (task) => task.status === "approved"
-  );
+  const approvedTasks = tasks.filter((task) => task.status === "approved");
 
   const activeTasks = tasks.filter(
-    (task) => task.status === "pending" || task.status === "in-progress"
+    (task) => task.status === "pending" || task.status === "in-progress",
   );
 
   const visibleTasks =
     activeTab === "active"
       ? activeTasks
       : activeTab === "awaiting"
-      ? awaitingTasks
-      : approvedTasks;
+        ? awaitingTasks
+        : approvedTasks;
 
-  function openReview(
-    task: HousekeepingTask,
-    action: "approved" | "rejected"
-  ) {
+  function openReview(task: HousekeepingTask, action: "approved" | "rejected") {
     setReviewError(null);
     setReviewTask(task);
     setReviewAction(action);
     setComment("");
   }
 
-  async function submitReview(taskId: string, action: "approve" | "reject", reviewComment?: string) {
+  async function submitReview(
+    taskId: string,
+    action: "approve" | "reject",
+    reviewComment?: string,
+  ) {
     const request = () =>
       fetch(`/api/v1/housekeeping/tasks/${taskId}/review`, {
         method: "POST",
@@ -181,10 +173,15 @@ export default function HousekeepingReviewPage() {
   async function confirmReview() {
     if (!reviewTask || !reviewAction) return;
 
+    if (reviewAction === "rejected" && comment.trim() === "") {
+      setReviewError("A comment is required before rejecting a room.");
+      return;
+    }
+
     const response = await submitReview(
       reviewTask.id,
       reviewAction === "approved" ? "approve" : "reject",
-      comment.trim() || undefined
+      comment.trim() || undefined,
     );
 
     if (response.status === 409) {
@@ -215,8 +212,8 @@ export default function HousekeepingReviewPage() {
               comment: comment.trim() || task.comment,
               reviewedAt: "Just now",
             }
-          : task
-      )
+          : task,
+      ),
     );
 
     setReviewTask(null);
@@ -239,17 +236,14 @@ export default function HousekeepingReviewPage() {
   return (
     <main className={styles.page}>
       <div className={styles.container}>
-
         {/* Header */}
         <header className={styles.header}>
           <div>
-            <h1 className={styles.title}>
-              Housekeeping review
-            </h1>
+            <h1 className={styles.title}>Housekeeping review</h1>
 
             <p className={styles.subtitle}>
-                {awaitingTasks.length} awaiting -{" "}
-              {approvedTasks.length} done-{activeTasks.length} active
+              {awaitingTasks.length} awaiting - {approvedTasks.length} done -{" "}
+              {activeTasks.length} active
             </p>
           </div>
 
@@ -259,21 +253,15 @@ export default function HousekeepingReviewPage() {
               <span>Currently reviewing rooms</span>
             </div>
 
-            <div className={styles.roleBadge}>
-              {user?.role }
-            </div>
+            <div className={styles.roleBadge}>{user?.role}</div>
           </div>
         </header>
 
         {/* Tabs */}
         <div className={styles.tabs}>
-
-
           <button
             className={`${styles.tab} ${
-              activeTab === "awaiting"
-                ? styles.activeTab
-                : ""
+              activeTab === "awaiting" ? styles.activeTab : ""
             }`}
             onClick={() => setActiveTab("awaiting")}
           >
@@ -282,9 +270,7 @@ export default function HousekeepingReviewPage() {
 
           <button
             className={`${styles.tab} ${
-              activeTab === "approved"
-                ? styles.activeTab
-                : ""
+              activeTab === "approved" ? styles.activeTab : ""
             }`}
             onClick={() => setActiveTab("approved")}
           >
@@ -310,10 +296,8 @@ export default function HousekeepingReviewPage() {
             {activeTab === "awaiting" &&
               "Recently cleaned rooms waiting for approval."}
 
-            {activeTab === "approved" &&
-              "Housekeeping tasks marked as done."}
+            {activeTab === "approved" && "Housekeeping tasks marked as done."}
           </p>
-          {reviewError && <p>{reviewError}</p>}
         </div>
 
         {/* Tasks */}
@@ -331,10 +315,7 @@ export default function HousekeepingReviewPage() {
           ) : visibleTasks.length === 0 ? (
             <div className={styles.emptyState}>
               <h2>No tasks found</h2>
-              <p>
-                There are currently no housekeeping tasks
-                in this category.
-              </p>
+              <p>There are currently no housekeeping tasks in this category.</p>
             </div>
           ) : (
             visibleTasks.map((task) => (
@@ -342,12 +323,8 @@ export default function HousekeepingReviewPage() {
                 key={task.id}
                 task={task}
                 onImageClick={openImage}
-                onApprove={() =>
-                  openReview(task, "approved")
-                }
-                onReject={() =>
-                  openReview(task, "rejected")
-                }
+                onApprove={() => openReview(task, "approved")}
+                onReject={() => openReview(task, "rejected")}
               />
             ))
           )}
@@ -370,6 +347,8 @@ export default function HousekeepingReviewPage() {
           task={reviewTask}
           action={reviewAction}
           comment={comment}
+          reviewError={reviewError}
+          setReviewError={setReviewError}
           setComment={setComment}
           onCancel={() => {
             setReviewTask(null);
@@ -381,7 +360,6 @@ export default function HousekeepingReviewPage() {
     </main>
   );
 }
-
 
 /* -------------------------------------------------------------------------- */
 /* Housekeeping Card                                                          */
@@ -400,7 +378,6 @@ function HousekeepingCard({
 }) {
   return (
     <article className={styles.taskCard}>
-
       {/* Pictures */}
       <div className={styles.pictures}>
         {task.pictures.map((picture, index) => (
@@ -432,15 +409,10 @@ function HousekeepingCard({
         </div>
 
         <p>
-          {task.cleanerName} · {task.cleanedAt} ·{" "}
-          {task.roomType}
+          {task.cleanerName} · {task.cleanedAt} · {task.roomType}
         </p>
 
-        {task.reviewedAt && (
-          <small>
-            Reviewed {task.reviewedAt}
-          </small>
-        )}
+        {task.reviewedAt && <small>Reviewed {task.reviewedAt}</small>}
 
         {task.comment && (
           <div className={styles.comment}>
@@ -454,61 +426,49 @@ function HousekeepingCard({
       <div className={styles.actions}>
         {task.status === "awaiting" ? (
           <>
-            <button
-              className={styles.rejectButton}
-              onClick={onReject}
-            >
+            <button className={styles.rejectButton} onClick={onReject}>
               Reject
             </button>
 
-            <button
-              className={styles.approveButton}
-              onClick={onApprove}
-            >
+            <button className={styles.approveButton} onClick={onApprove}>
               Approve
             </button>
           </>
         ) : (
-          <h1   />
+          <h1 />
         )}
       </div>
     </article>
   );
 }
 
-
 /* -------------------------------------------------------------------------- */
 /* Status Badge                                                               */
 /* -------------------------------------------------------------------------- */
 
-function StatusBadge({
-  status,
-}: {
-  status: Status;
-}) {
+function StatusBadge({ status }: { status: Status }) {
   return (
     <span
       className={`${styles.statusBadge} ${
         status === "approved"
           ? styles.approved
           : status === "pending"
-          ? styles.pending
-          : status === "in-progress"
-          ? styles.inProgress
-          : styles.awaiting
+            ? styles.pending
+            : status === "in-progress"
+              ? styles.inProgress
+              : styles.awaiting
       }`}
     >
       {status === "approved"
         ? "Done"
         : status === "pending"
-        ? "Pending"
-        : status === "in-progress"
-        ? "In progress"
-        : "Awaiting approval"}
+          ? "Pending"
+          : status === "in-progress"
+            ? "In progress"
+            : "Awaiting approval"}
     </span>
   );
 }
-
 
 /* -------------------------------------------------------------------------- */
 /* Review Modal                                                               */
@@ -518,6 +478,8 @@ function ReviewModal({
   task,
   action,
   comment,
+  reviewError,
+  setReviewError,
   setComment,
   onCancel,
   onConfirm,
@@ -525,6 +487,8 @@ function ReviewModal({
   task: HousekeepingTask;
   action: "approved" | "rejected";
   comment: string;
+  reviewError: string | null;
+  setReviewError: (value: string | null) => void;
   setComment: (value: string) => void;
   onCancel: () => void;
   onConfirm: () => void;
@@ -532,21 +496,15 @@ function ReviewModal({
   const approving = action === "approved";
 
   return (
-    <div
-      className={styles.modalOverlay}
-      onMouseDown={onCancel}
-    >
+    <div className={styles.modalOverlay} onMouseDown={onCancel}>
       <div
         className={styles.reviewModal}
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <p className={styles.modalLabel}>
-          HOUSEKEEPING REVIEW
-        </p>
+        <p className={styles.modalLabel}>HOUSEKEEPING REVIEW</p>
 
         <h2>
-          {approving ? "Approve" : "Reject"} Room{" "}
-          {task.roomNumber}
+          {approving ? "Approve" : "Reject"} Room {task.roomNumber}
         </h2>
 
         <p className={styles.modalDescription}>
@@ -557,46 +515,43 @@ function ReviewModal({
 
         <label className={styles.textareaLabel}>
           Comment
-          <span> (optional)</span>
+          <span> {approving ? "(optional)" : "(required)"} </span>
         </label>
 
         <textarea
           value={comment}
-          onChange={(e) => setComment(e.target.value)}
+          onChange={(e) => {
+            if (reviewError) setReviewError(null);
+            setComment(e.target.value);
+          }}
+          required={!approving}
           placeholder={
             approving
               ? "Leave a note for the housekeeper..."
               : "Explain what needs to be corrected..."
           }
           className={styles.textarea}
+          maxLength={250}
         />
 
+        {reviewError && <p className={styles.reviewError}>{reviewError}</p>}
+
         <div className={styles.modalActions}>
-          <button
-            className={styles.cancelButton}
-            onClick={onCancel}
-          >
+          <button className={styles.cancelButton} onClick={onCancel}>
             Cancel
           </button>
 
           <button
-            className={
-              approving
-                ? styles.modalApprove
-                : styles.modalReject
-            }
+            className={approving ? styles.modalApprove : styles.modalReject}
             onClick={onConfirm}
           >
-            {approving
-              ? "Approve room"
-              : "Reject room"}
+            {approving ? "Approve room" : "Reject room"}
           </button>
         </div>
       </div>
     </div>
   );
 }
-
 
 /* -------------------------------------------------------------------------- */
 /* Image Modal                                                                */
@@ -614,14 +569,8 @@ function ImageModal({
   onClose: () => void;
 }) {
   return (
-    <div
-      className={styles.imageOverlay}
-      onMouseDown={onClose}
-    >
-      <button
-        className={styles.closeImage}
-        onClick={onClose}
-      >
+    <div className={styles.imageOverlay} onMouseDown={onClose}>
+      <button className={styles.closeImage} onClick={onClose}>
         ×
       </button>
 
@@ -629,23 +578,11 @@ function ImageModal({
         className={styles.zoomControls}
         onMouseDown={(e) => e.stopPropagation()}
       >
-        <button
-          onClick={() =>
-            setZoom(Math.max(0.5, zoom - 0.25))
-          }
-        >
-          −
-        </button>
+        <button onClick={() => setZoom(Math.max(0.5, zoom - 0.25))}>−</button>
 
         <span>{Math.round(zoom * 100)}%</span>
 
-        <button
-          onClick={() =>
-            setZoom(Math.min(3, zoom + 0.25))
-          }
-        >
-          +
-        </button>
+        <button onClick={() => setZoom(Math.min(3, zoom + 0.25))}>+</button>
       </div>
 
       <div

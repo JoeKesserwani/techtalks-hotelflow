@@ -4,8 +4,8 @@
   background: #f5f1e7;
   color: #2e2a25;
   display: flex;
-  
-}.page {
+}
+.page {
   min-height: 100vh;
   padding: 28px clamp(16px, 4vw, 34px) 48px;
   background: #f5f1e7;
@@ -70,7 +70,9 @@
   flex: 1;
 }
 
-.searchLabel input, .dialog input, .dialog select {
+.searchLabel input,
+.dialog input,
+.dialog select {
   width: 100%;
   border: 1px solid #dcd3c3;
   border-radius: 2px;
@@ -85,12 +87,15 @@
   font-size: 14px;
 }
 
-.searchLabel input:focus, .dialog input:focus, .dialog select:focus {
+.searchLabel input:focus,
+.dialog input:focus,
+.dialog select:focus {
   outline: 2px solid #c9613e;
   outline-offset: 1px;
 }
 
-.addButton, .saveButton {
+.addButton,
+.saveButton {
   border: 0;
   border-radius: 2px;
   background: #c9613e;
@@ -105,19 +110,20 @@
   font-size: 14px;
 }
 
-.addButton:hover, .saveButton:hover {
+.addButton:hover,
+.saveButton:hover {
   background: #b55232;
 }
 
 .tableWrap {
   width: 100%;
-  height: min(560px, calc(100dvh - 190px));
+  height: fit-content;
   min-height: 240px;
   overflow-y: scroll;
   border: 1px solid #f5f1e7;
   border-radius: 6px;
   background: #fffdfa;
-  box-shadow: 0 8px 22px rgba(74, 61, 43, .07);
+  box-shadow: 0 8px 22px rgba(74, 61, 43, 0.07);
   scrollbar-color: #9b907f #eee7da;
   scrollbar-gutter: stable;
   scrollbar-width: thin;
@@ -154,7 +160,7 @@
   color: #807766;
   font-size: 12px;
   font-weight: 600;
-  letter-spacing: .02em;
+  letter-spacing: 0.02em;
   text-align: left;
 }
 
@@ -175,7 +181,8 @@
   min-width: 205px;
 }
 
-.member strong, .member small {
+.member strong,
+.member small {
   display: block;
 }
 
@@ -201,7 +208,8 @@
   font-weight: 700;
 }
 
-.active, .inactive {
+.active,
+.inactive {
   display: inline-block;
   min-width: 67px;
   padding: 4px 9px;
@@ -232,7 +240,8 @@
   text-decoration: underline;
 }
 
-.loading, .empty {
+.loading,
+.empty {
   padding: 28px;
   color: #807766;
   text-align: center;
@@ -240,6 +249,38 @@
 
 .empty {
   font-size: 14px;
+}
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 14px 16px 18px;
+  border-top: 1px solid #eee7da;
+  background: #fffdfa;
+  color: #574e45;
+  font-size: 14px;
+}
+
+.pagination button {
+  border: 1px solid #d9d1c2;
+  border-radius: 2px;
+  background: transparent;
+  color: #3d362f;
+  cursor: pointer;
+  padding: 8px 12px;
+  font-weight: 600;
+}
+
+.pagination button:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
+}
+
+.pagination span {
+  flex: 1;
+  text-align: center;
 }
 
 .message {
@@ -272,7 +313,7 @@
   display: grid;
   place-items: center;
   padding: 20px;
-  background: rgba(35, 37, 29, .48);
+  background: rgba(35, 37, 29, 0.48);
 }
 
 .dialog {
@@ -281,7 +322,7 @@
   overflow-y: auto;
   border-radius: 4px;
   background: #f8f5ed;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, .25);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
 }
 
 .dialogHeader {
@@ -331,7 +372,8 @@
   font-weight: 600;
 }
 
-.dialog input, .dialog select {
+.dialog input,
+.dialog select {
   height: 40px;
   padding: 0 10px;
   font-weight: 400;
@@ -351,7 +393,8 @@
   margin-top: 7px;
 }
 
-.deleteButton, .cancelButton {
+.deleteButton,
+.cancelButton {
   border: 1px solid #cfc4b3;
   border-radius: 2px;
   background: transparent;
@@ -380,39 +423,36 @@
 
 .dialog button:disabled {
   cursor: not-allowed;
-  opacity: .6;
+  opacity: 0.6;
 }
 
 @media (max-width: 768px) {
   .page {
-  padding-top: 72px;
+    padding-top: 72px;
+  }
+
+  .toolbar {
+    flex-direction: column;
+  }
+
+  .addButton {
+    height: 38px;
+  }
+
+  .dialogActions {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dialogActions span {
+    display: none;
+  }
+
+  .deleteButton {
+    grid-column: 1 / -1;
+  }
+
+  .saveButton,
+  .cancelButton {
+    width: 100%;
+  }
 }
-
-.toolbar {
-  flex-direction: column;
-}
-
-.addButton {
-  height: 38px;
-}
-
-.dialogActions {
-  grid-template-columns: 1fr 1fr;
-}
-
-.dialogActions span {
-  display: none;
-}
-
-.deleteButton {
-  grid-column: 1 / -1;
-}
-
-.saveButton, .cancelButton {
-  width: 100%;
-}
-
-
-}
-
-

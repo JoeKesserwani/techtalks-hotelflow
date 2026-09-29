@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import Link from "next/link";
 import styles from "./page.module.css";
 
 type Room = { roomNumber: string };
@@ -97,12 +98,35 @@ export default function GuestDetailPage() {
   return (
     <div className={styles.layout}>
       <main className={styles.main}>
+        <Link href="/Pages/Guests" className={styles.backLink}>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M15 18L9 12L15 6"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+          Back to guests
+        </Link>
+
         <header className={styles.topBar}>
           <div>
             <h2>Guests</h2>
             <p className={styles.breadcrumb}>
               Guests &rarr; {guest ? guest.fullName : "..."}
             </p>
+          </div>
+          <div className={styles.adminBadge}>
+            <span>Admin's name</span>
+            <span className={styles.adminPill}>ADMIN</span>
           </div>
         </header>
 

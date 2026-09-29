@@ -1,9 +1,9 @@
 .layout {
   display: flex;
   min-height: 100vh;
-  background: #f3eee2;
-  font-family: "Segoe UI", system-ui, sans-serif;
-  color: #2e2a22;
+  background: var(--color-bg);
+  font-family: var(--font-body);
+  color: var(--color-text);
 }
 
 .main {
@@ -19,35 +19,15 @@
 }
 
 .topBar h2 {
-  font-family: Georgia, "Times New Roman", serif;
+  font-family: var(--font-heading);
   font-size: 1.6rem;
   margin: 0 0 4px;
 }
 
 .subtitle {
-  color: #8a8577;
+  color: var(--color-muted);
   font-size: 0.85rem;
   margin: 0;
-}
-
-.adminBadge {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.adminBadge > span:first-child {
-  font-size: 0.85rem;
-  color: #4b4636;
-}
-
-.adminPill {
-  background: #c1573c;
-  color: #fdf8ef;
-  padding: 6px 16px;
-  border-radius: 6px;
-  font-size: 0.8rem;
-  font-weight: 600;
 }
 
 .toolbar {
@@ -59,47 +39,116 @@
 .searchInput {
   flex: 1;
   padding: 10px 14px;
-  border: 1px solid #ddd5c3;
-  border-radius: 6px;
-  background: #fdfbf5;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-field);
+  background: var(--color-surface);
   font-size: 0.9rem;
-  color: #2e2a22;
+  color: var(--color-text);
 }
 
 .searchInput::placeholder {
-  color: #a8a292;
+  color: var(--color-faint);
+}
+
+/* --- Filter by status --- */
+
+.filterWrapper {
+  position: relative;
 }
 
 .filterButton {
-  background: #8a8f5c;
-  color: #fdf8ef;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--color-olive);
+  color: var(--color-on-accent);
   border: none;
-  border-radius: 6px;
-  padding: 10px 18px;
+  border-radius: var(--radius-field);
+  padding: 10px 16px;
   font-size: 0.85rem;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.filterCaret {
+  font-size: 0.7rem;
+}
+
+.filterBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-dropdown);
+}
+
+.filterMenu {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  min-width: 180px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-dropdown);
+  list-style: none;
+  margin: 0;
+  padding: 6px;
+  z-index: calc(var(--z-dropdown) + 1);
+}
+
+.filterOption,
+.filterOptionActive {
+  display: block;
+  width: 100%;
+  text-align: left;
+  padding: 9px 12px;
+  border: none;
+  background: none;
+  border-radius: 5px;
+  font-size: 0.85rem;
+  color: var(--color-label);
   cursor: pointer;
 }
 
+.filterOption:hover {
+  background: var(--color-bg);
+}
+
+.filterOptionActive {
+  background: var(--color-primary);
+  color: var(--color-on-accent);
+  font-weight: 600;
+}
+
+/* --- Add button --- */
+
 .addButton {
-  background: #c1573c;
-  color: #fdf8ef;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
   border: none;
-  border-radius: 6px;
+  border-radius: var(--radius-field);
   padding: 10px 18px;
   font-size: 0.85rem;
   font-weight: 600;
   cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 150ms ease;
 }
 
-.filterButton:hover,
-.addButton:hover {
+.filterButton:hover {
   filter: brightness(0.95);
 }
 
+.addButton:hover {
+  background: var(--color-accent-hover);
+}
+
+/* --- Table --- */
+
 .tableCard {
-  background: #fdfbf5;
-  border: 1px solid #e3dcc9;
-  border-radius: 8px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
 }
 
@@ -107,9 +156,9 @@
   display: grid;
   grid-template-columns: 2.2fr 1.6fr 1.8fr 1.4fr;
   padding: 14px 20px;
-  background: #f3eee2;
+  background: var(--color-bg);
   font-size: 0.75rem;
-  color: #8a8577;
+  color: var(--color-muted);
   font-weight: 600;
 }
 
@@ -118,7 +167,7 @@
   grid-template-columns: 2.2fr 1.6fr 1.8fr 1.4fr;
   align-items: center;
   padding: 16px 20px;
-  border-top: 1px solid #eee7d6;
+  border-top: 1px solid var(--color-border-soft);
 }
 
 .guestCell {
@@ -131,7 +180,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  color: #fdf8ef;
+  color: var(--color-on-accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -147,7 +196,7 @@
 
 .contactCell {
   font-size: 0.85rem;
-  color: #6b6653;
+  color: var(--color-label);
 }
 
 .stayCell span {
@@ -159,23 +208,23 @@
 }
 
 .pillActive {
-  background: #e4dcc5;
-  color: #6b6248;
+  background: var(--color-status-active);
+  color: var(--color-status-active-text);
 }
 
 .pillInStay {
-  background: #dcd3b8;
-  color: #5c5540;
+  background: var(--color-status-instay);
+  color: var(--color-status-instay-text);
 }
 
 .pillCancelled {
-  background: #f1d3cb;
-  color: #b14b36;
+  background: var(--color-status-cancelled);
+  color: var(--color-status-cancelled-text);
 }
 
 .pillUpcoming {
-  background: #8b9a6b;
-  color: #fdf8ef;
+  background: var(--color-status-upcoming);
+  color: var(--color-status-upcoming-text);
 }
 
 .actionsCell {
@@ -187,7 +236,7 @@
 .stateRow {
   padding: 24px 20px;
   text-align: center;
-  color: #8a8577;
+  color: var(--color-muted);
   font-size: 0.85rem;
 }
 
@@ -199,11 +248,11 @@
 }
 
 .viewLink {
-  color: #c1573c;
+  color: var(--color-accent);
 }
 
 .bookLink {
-  color: #4c5a3e;
+  color: var(--color-primary);
 }
 
 .viewLink:hover,

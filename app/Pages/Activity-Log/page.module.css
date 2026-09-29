@@ -1,0 +1,313 @@
+.page {
+  padding: 32px 40px 48px;
+  color: var(--color-text);
+}
+
+/* ---------- Header ---------- */
+
+.header h1 {
+  font-size: 1.6rem;
+  font-weight: 500;
+}
+
+.subtitle {
+  margin: 6px 0 0;
+  max-width: 62ch;
+  color: var(--color-muted);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+/* ---------- Toolbar ---------- */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 24px 0 12px;
+}
+
+.searchInput,
+.select {
+  height: 40px;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-field);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.9rem;
+}
+
+.searchInput {
+  flex: 1;
+  min-width: 220px;
+  padding: 0 14px;
+}
+
+.searchInput::placeholder {
+  color: var(--color-faint);
+}
+
+.select {
+  padding: 0 12px;
+  cursor: pointer;
+}
+
+.searchInput:focus-visible,
+.select:focus-visible,
+.resetButton:focus-visible,
+.retryButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+.resetButton,
+.retryButton {
+  height: 40px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-field);
+  background: transparent;
+  color: var(--color-label);
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.resetButton:hover,
+.retryButton:hover {
+  background: var(--color-surface);
+}
+
+/* ---------- Legend ---------- */
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 16px;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
+.legendBar {
+  flex: none;
+  width: 3px;
+  height: 14px;
+  border-radius: 2px;
+  background: var(--color-accent);
+}
+
+/* ---------- Table card ---------- */
+
+.tableCard {
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+}
+
+.tableScroll {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  min-width: 680px;
+  border-collapse: collapse;
+  font-size: 0.9rem;
+  transition: opacity 120ms ease;
+}
+
+.tableRefreshing {
+  opacity: 0.55;
+}
+
+.table thead th {
+  padding: 12px 20px;
+  background: var(--color-bg);
+  color: var(--color-muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-align: left;
+}
+
+.timeCol {
+  width: 90px;
+}
+
+.staffCol {
+  width: 240px;
+}
+
+.table td {
+  padding: 14px 20px;
+  border-top: 1px solid var(--color-border-soft);
+  vertical-align: top;
+}
+
+.table tbody tr:not(.dayRow):hover {
+  background: color-mix(in srgb, var(--color-bg) 55%, transparent);
+}
+
+/* Day divider ("Today", "Yesterday", "Monday 21 September 2026") */
+.dayRow th {
+  padding: 10px 20px;
+  border-top: 1px solid var(--color-border-soft);
+  background: var(--color-bg);
+  color: var(--color-label);
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.table tbody tr:first-child.dayRow th {
+  border-top: 0;
+}
+
+/* Rows a manager should glance at */
+.rowNotable td:first-child {
+  box-shadow: inset 3px 0 0 var(--color-accent);
+}
+
+/* ---------- Cells ---------- */
+
+.timeCell {
+  color: var(--color-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.staff {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.avatar {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  color: var(--color-on-accent);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.avatarPrimary {
+  background: var(--color-primary);
+}
+
+.avatarAccent {
+  background: var(--color-accent);
+}
+
+.avatarOlive {
+  background: var(--color-olive);
+}
+
+.staffName {
+  font-weight: 600;
+}
+
+.staffRole {
+  margin-top: 1px;
+  color: var(--color-muted);
+  font-size: 0.75rem;
+}
+
+.activity {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.tag {
+  flex: none;
+  min-width: 108px;
+  margin-top: 1px;
+  padding: 3px 10px;
+  border-radius: var(--radius-pill);
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.tag_reservation {
+  background: color-mix(in srgb, var(--color-primary) 14%, transparent);
+  color: var(--color-primary);
+}
+
+.tag_guest {
+  background: color-mix(in srgb, var(--color-accent) 14%, transparent);
+  color: var(--color-accent-hover);
+}
+
+.tag_room {
+  background: color-mix(in srgb, var(--color-olive) 24%, transparent);
+  color: var(--color-status-instay-text);
+}
+
+.tag_housekeeping {
+  background: var(--color-status-success);
+  color: var(--color-status-success-text);
+}
+
+.tag_staff {
+  background: var(--color-status-instay);
+  color: var(--color-status-instay-text);
+}
+
+.tag_other {
+  background: var(--color-status-active);
+  color: var(--color-status-active-text);
+}
+
+.summary {
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.detail {
+  margin-top: 3px;
+  color: var(--color-muted);
+  font-size: 0.8rem;
+}
+
+/* ---------- Loading / empty / error ---------- */
+
+.stateBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 40px 20px;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+  text-align: center;
+}
+
+.stateBox p {
+  margin: 0;
+}
+
+/* ---------- Small screens ---------- */
+
+@media (max-width: 768px) {
+  .page {
+    padding: 24px 16px 40px;
+  }
+
+  .searchInput {
+    flex-basis: 100%;
+  }
+
+  .select {
+    flex: 1;
+  }
+}

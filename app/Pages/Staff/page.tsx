@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Role } from "@/app/generated/prisma/enums";
 import styles from "./page.module.css";
 import { useAuth } from "@/components/Auth/AuthProvider";
+import Pagination from "@/components/Pagination";
 
 type StaffMember = {
   id: string;
@@ -21,7 +22,7 @@ type StaffForm = {
   role: Role;
 };
 
-const roleOptions = Object.values(Role);
+const roleOptions = Object.values(Role).filter((role) => role !== Role.ADMIN);
 const emptyForm: StaffForm = {
   fullName: "",
   email: "",
@@ -48,8 +49,10 @@ export default function StaffPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [mode, setMode] = useState<"create" | "edit" | null>(null);
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
   const [form, setForm] = useState<StaffForm>(emptyForm);
-  const {user} = useAuth();
+  const { user } = useAuth();
+
   async function loadStaff() {
     setIsLoading(true);
     setError(null);
@@ -117,6 +120,19 @@ export default function StaffPage() {
       : staff;
   }, [query, staff]);
 
+  const pageSize = 5;
+  const totalPages = Math.max(1, Math.ceil(filteredStaff.length / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+
+  const paginatedStaff = useMemo(() => {
+    if (filteredStaff.length <= pageSize) {
+      return filteredStaff;
+    }
+
+    const startIndex = (safeCurrentPage - 1) * pageSize;
+    return filteredStaff.slice(startIndex, startIndex + pageSize);
+  }, [filteredStaff, pageSize, safeCurrentPage]);
+
   function closeDialog() {
     if (!isSaving) {
       setMode(null);
@@ -151,6 +167,7 @@ export default function StaffPage() {
   ) {
     setForm((current) => ({ ...current, [key]: value }));
   }
+
   async function saveStaff(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError(null);
@@ -237,6 +254,7 @@ export default function StaffPage() {
       setIsSaving(false);
     }
   }
+
   return (
     <main className={styles.page}>
       <header className={styles.header}>
@@ -248,15 +266,13 @@ export default function StaffPage() {
           </p>
         </div>
         <div className={styles.role}>
-            <div className={styles.roleInfo}>
-              <strong>{user?.fullName}</strong>
-              <span>Currently reviewing rooms</span>
-            </div>
-
-            <div className={styles.roleBadge}>
-              {user?.role }
-            </div>
+          <div className={styles.roleInfo}>
+            <strong>{user?.fullName}</strong>
+            <span>Currently reviewing rooms</span>
           </div>
+
+          <div className={styles.roleBadge}>{user?.role}</div>
+        </div>
       </header>
 
       <section className={styles.toolbar} aria-label="Staff controls">
@@ -266,7 +282,11 @@ export default function StaffPage() {
             type="search"
             placeholder="Search staff by name, email or Role"
             value={query}
-            onChange={(event) => setQuery(event.target.value)}
+            onChange={(event) => {
+              setQuery(event.target.value);
+              setCurrentPage(1);
+            }}
+            maxLength={30}
           />
         </label>
         <button
@@ -288,65 +308,77 @@ export default function StaffPage() {
       ) : isLoading ? (
         <p className={styles.loading}>Loading staff…</p>
       ) : (
-        <div className={styles.tableWrap}>
-          <table className={styles.table}>
-            <thead>
-              <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Role</th>
-                <th scope="col">Status</th>
-                <th scope="col">Added</th>
-                <th scope="col">
-                  <span className="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {filteredStaff.map((member) => (
-                <tr key={member.id}>
-                  <td>
-                    <div className={styles.member}>
-                      <span className={styles.avatar} aria-hidden="true">
-                        {member.fullName.charAt(0).toUpperCase()}
-                      </span>
-                      <span>
-                        <strong>{member.fullName}</strong>
-                        <small>{member.email}</small>
-                      </span>
-                    </div>
-                  </td>
-                  <td>{formatRole(member.role)}</td>
-                  <td>
-                    <span
-                      className={
-                        member.isActive ? styles.active : styles.inactive
-                      }
-                    >
-                      {member.isActive ? "Active" : "Inactive"}
-                    </span>
-                  </td>
-                  <td>{formatDate(member.createdAt)}</td>
-                  <td>
-                    <button
-                      type="button"
-                      className={styles.editButton}
-                      onClick={() => openEditDialog(member)}
-                    >
-                      Edit
-                    </button>
-                  </td>
-                </tr>
-              ))}
-              {filteredStaff.length === 0 && (
+        <>
+          <div className={styles.tableWrap}>
+            <table className={styles.table}>
+              <thead>
                 <tr>
-                  <td className={styles.empty} colSpan={5}>
-                    No staff members match your search.
-                  </td>
+                  <th scope="col">Name</th>
+                  <th scope="col">Role</th>
+                  <th scope="col">Status</th>
+                  <th scope="col">Added</th>
+                  <th scope="col">
+                    <span className="sr-only">Actions</span>
+                  </th>
                 </tr>
-              )}
-            </tbody>
-          </table>
-        </div>
+              </thead>
+              <tbody>
+                {paginatedStaff.map((member) => (
+                  <tr key={member.id}>
+                    <td>
+                      <div className={styles.member}>
+                        <span className={styles.avatar} aria-hidden="true">
+                          {member.fullName.charAt(0).toUpperCase()}
+                        </span>
+                        <span>
+                          <strong>{member.fullName}</strong>
+                          <small>{member.email}</small>
+                        </span>
+                      </div>
+                    </td>
+                    <td>{formatRole(member.role)}</td>
+                    <td>
+                      <span
+                        className={
+                          member.isActive ? styles.active : styles.inactive
+                        }
+                      >
+                        {member.isActive ? "Active" : "Inactive"}
+                      </span>
+                    </td>
+                    <td>{formatDate(member.createdAt)}</td>
+                    <td>
+                      <button
+                        type="button"
+                        className={styles.editButton}
+                        onClick={() => openEditDialog(member)}
+                      >
+                        Edit
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+                {filteredStaff.length === 0 && (
+                  <tr>
+                    <td className={styles.empty} colSpan={5}>
+                      No staff members match your search.
+                    </td>
+                  </tr>
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          {filteredStaff.length > 0 && (
+            <Pagination
+              currentPage={safeCurrentPage}
+              totalPages={totalPages}
+              totalItems={filteredStaff.length}
+              itemsPerPage={pageSize}
+              onPageChange={setCurrentPage}
+            />
+          )}
+        </>
       )}
 
       {mode && (
@@ -389,6 +421,7 @@ export default function StaffPage() {
                 <input
                   required
                   value={form.fullName}
+                  maxLength={30}
                   onChange={(event) =>
                     updateForm("fullName", event.target.value)
                   }
@@ -399,6 +432,10 @@ export default function StaffPage() {
                 <input
                   required
                   type="email"
+                  autoComplete="off"
+                  data-lpignore="true"
+                  data-1pignore="true"
+                  maxLength={40}
                   value={form.email}
                   onChange={(event) => updateForm("email", event.target.value)}
                 />
@@ -408,8 +445,12 @@ export default function StaffPage() {
                 <input
                   required={mode === "create"}
                   minLength={8}
+                  maxLength={20}
                   type="password"
                   value={form.password}
+                  autoComplete="off"
+                  data-lpignore="true"
+                  data-1pignore="true"
                   onChange={(event) =>
                     updateForm("password", event.target.value)
                   }
