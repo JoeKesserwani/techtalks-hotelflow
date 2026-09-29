@@ -1,7 +1,9 @@
 .page {
   display: flex;
   min-height: 100vh;
-  background: #f5f1e8;
+  background: var(--color-bg);
+  font-family: var(--font-body);
+  color: var(--color-text);
 }
 
 .content {
@@ -14,19 +16,20 @@
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
-  border-bottom: 1px solid #ddd6c8;
+  border-bottom: 1px solid var(--color-border);
   padding-bottom: 15px;
 }
 
 .title h1 {
   margin: 0;
+  font-family: var(--font-heading);
   font-size: 28px;
   font-weight: 500;
 }
 
 .title p {
   margin: 3px 0 0;
-  color: #777;
+  color: var(--color-muted);
   font-size: 14px;
 }
 
@@ -39,9 +42,11 @@
 }
 
 .userRole {
-  background: #c96b3c;
-  color: white;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
   padding: 4px 10px;
+  border-radius: var(--radius-field);
+  font-weight: 600;
 }
 
 .toolbar {
@@ -53,28 +58,49 @@
 
 .search {
   flex: 1;
-  padding: 10px;
-  border: 1px solid #ddd6c8;
-  background: white;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-field);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 14px;
+}
+
+.search::placeholder {
+  color: var(--color-faint);
 }
 
 .filter {
-  padding: 10px;
-  border: none;
-  background: #e5ddcb;
-  color: #666;
-}
-
-.newButton {
   padding: 10px 14px;
-  border: none;
-  background: #c96b3c;
-  color: white;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-field);
+  background: var(--color-status-active);
+  color: var(--color-status-active-text);
+  font-size: 14px;
   cursor: pointer;
 }
 
+.newButton {
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--radius-field);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.newButton:hover {
+  background: var(--color-accent-hover);
+}
+
 .tableContainer {
-  background: white;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
   overflow-x: auto;
 }
 
@@ -85,16 +111,17 @@
 
 .table th {
   text-align: left;
-  padding: 9px;
-  background: #e5ddcb;
-  color: #777;
+  padding: 12px 16px;
+  background: var(--color-bg);
+  color: var(--color-muted);
   font-size: 13px;
-  font-weight: 500;
+  font-weight: 600;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .table td {
-  padding: 10px 9px;
-  border-bottom: 1px solid #ddd6c8;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border-soft);
   font-size: 14px;
 }
 
@@ -105,221 +132,115 @@
 }
 
 .guest small {
-  color: #777;
+  color: var(--color-muted);
 }
 
 .editButton {
   border: none;
   background: transparent;
-  color: #d47a54;
+  color: var(--color-accent);
+  font-weight: 600;
   cursor: pointer;
 }
+
+.editButton:hover {
+  text-decoration: underline;
+}
+
+.deleteButton {
+  border: none;
+  background: transparent;
+  color: var(--color-status-cancelled-text);
+  font-weight: 600;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.deleteButton:hover {
+  text-decoration: underline;
+}
+
+/* --- Status pills --- */
 
 .status {
   display: inline-block;
-  padding: 4px 9px;
+  padding: 4px 10px;
+  border-radius: 5px;
   font-size: 12px;
+  font-weight: 600;
 }
 
 .checkedOut {
-  background: #b8c6a8;
+  background: var(--color-status-success);
+  color: var(--color-status-success-text);
 }
 
 .inStay {
-  background: #ddd4c0;
+  background: var(--color-status-instay);
+  color: var(--color-status-instay-text);
 }
 
 .cancelled {
-  background: #dfa083;
+  background: var(--color-status-cancelled);
+  color: var(--color-status-cancelled-text);
 }
 
 .upcoming {
-  background: #9aaa89;
+  background: var(--color-status-upcoming);
+  color: var(--color-status-upcoming-text);
 }
 
-@media (max-width: 900px) {
-  .toolbar {
-    flex-wrap: wrap;
-  }
+/* --- State messages --- */
 
-  .search {
-    flex-basis: 100%;
-  }
-
-  .userInfo {
-    display: none;
-  }
-}
 .error {
   margin: 14px 0;
   padding: 10px 14px;
-  background: #dfa083;
-  color: #5a2414;
-  font-size: 14px;
-}
-
-.empty {
-  text-align: center;
-  padding: 40px !important;
-  color: #777;
-}
-
-.overlay {
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 20px;
-  z-index: 1000;
-}
-
-.modal {
-  width: min(650px, 100%);
-  max-height: 90vh;
-  overflow-y: auto;
-  background: #f5f1e8;
-  padding: 24px;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-}
-
-.modalHeader {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 20px;
-}
-
-.modalHeader h2 {
-  margin: 0;
-  font-size: 22px;
-  font-weight: 500;
-}
-
-.closeButton {
-  border: none;
-  background: transparent;
-  font-size: 28px;
-  cursor: pointer;
-  color: #777;
-}
-
-.modal form {
-  display: flex;
-  flex-direction: column;
-  gap: 14px;
-}
-
-.modal label {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  font-size: 13px;
-  color: #555;
-}
-
-.modal input,
-.modal select {
-  padding: 10px;
-  border: 1px solid #d7cfbf;
-  background: white;
-  font-size: 14px;
-}
-
-.formGrid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 14px;
-}
-
-.modalActions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  margin-top: 8px;
-}
-
-.cancelButton {
-  padding: 10px 16px;
-  border: 1px solid #d7cfbf;
-  background: white;
-  cursor: pointer;
-}
-
-.saveButton {
-  padding: 10px 16px;
-  border: none;
-  background: #c96b3c;
-  color: white;
-  cursor: pointer;
-}
-
-.saveButton:hover,
-.newButton:hover {
-  opacity: 0.9;
-}
-
-@media (max-width: 700px) {
-  .formGrid {
-    grid-template-columns: 1fr;
-  }
-
-  .modal {
-    padding: 18px;
-  }
-}
-.error {
-  margin: 12px 0;
-  padding: 10px 14px;
-  background: #f3d1c2;
-  color: #7a2f18;
+  border-radius: var(--radius-field);
+  background: var(--color-status-cancelled);
+  color: var(--color-status-cancelled-text);
   font-size: 14px;
 }
 
 .empty {
   text-align: center;
   padding: 40px 20px !important;
-  color: #777;
+  color: var(--color-muted);
 }
 
-.deleteButton {
-  border: none;
-  background: transparent;
-  color: #a94442;
-  cursor: pointer;
-  margin-left: 10px;
-}
+/* --- Modal & Overlay --- */
 
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.35);
+  background: rgba(46, 42, 34, 0.45);
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px;
-  z-index: 1000;
+  z-index: var(--z-modal-overlay);
 }
 
 .modal {
   width: min(700px, 100%);
   max-height: 90vh;
   overflow-y: auto;
-  background: white;
-  padding: 24px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  padding: 24px 28px;
+  box-shadow: var(--shadow-dropdown);
 }
 
 .modalHeader {
   display: flex;
-  align-items: center;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
 }
 
 .modalHeader h2 {
   margin: 0;
+  font-family: var(--font-heading);
   font-size: 22px;
   font-weight: 500;
 }
@@ -328,14 +249,19 @@
   border: none;
   background: transparent;
   font-size: 28px;
+  line-height: 1;
   cursor: pointer;
-  color: #777;
+  color: var(--color-muted);
+}
+
+.closeButton:hover {
+  color: var(--color-text);
 }
 
 .modal form {
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  gap: 16px;
 }
 
 .formGrid {
@@ -349,44 +275,75 @@
   flex-direction: column;
   gap: 6px;
   font-size: 13px;
-  color: #555;
+  color: var(--color-label);
+  font-weight: 500;
 }
 
 .modal input,
 .modal select {
-  padding: 10px;
-  border: 1px solid #ddd6c8;
-  background: white;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-field);
+  background: var(--color-surface-alt);
   font-size: 14px;
+  color: var(--color-text);
+  font-family: inherit;
 }
 
 .modal input:read-only {
-  background: #f5f1e8;
+  background: var(--color-bg);
+  color: var(--color-muted);
 }
 
 .modalActions {
   display: flex;
   justify-content: flex-end;
   gap: 10px;
-  border-top: 1px solid #ddd6c8;
+  border-top: 1px solid var(--color-border-soft);
   padding-top: 16px;
-}
-
-.cancelButton,
-.saveButton {
-  padding: 10px 16px;
-  border: none;
-  cursor: pointer;
+  margin-top: 8px;
 }
 
 .cancelButton {
-  background: #e5ddcb;
-  color: #555;
+  padding: 10px 16px;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-field);
+  background: var(--color-surface);
+  color: var(--color-label);
+  font-size: 14px;
+  cursor: pointer;
 }
 
 .saveButton {
-  background: #c96b3c;
-  color: white;
+  padding: 10px 16px;
+  border: none;
+  border-radius: var(--radius-field);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+
+.saveButton:hover {
+  background: var(--color-accent-hover);
+}
+
+/* --- Media queries --- */
+
+@media (max-width: 900px) {
+  .toolbar {
+    flex-wrap: wrap;
+  }
+
+  .search {
+    flex-basis: 100%;
+  }
+
+  .userInfo {
+    display: none;
+  }
 }
 
 @media (max-width: 700px) {

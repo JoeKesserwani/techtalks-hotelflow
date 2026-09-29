@@ -6,7 +6,9 @@ export default async function GuestsLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const session = await requireAuth({ roles: ["ADMIN", "RECEPTIONIST","MANAGER"] });
+  const session = await requireAuth({
+    roles: ["ADMIN", "RECEPTIONIST", "MANAGER"],
+  });
 
   if (!session) {
     redirect("/");
