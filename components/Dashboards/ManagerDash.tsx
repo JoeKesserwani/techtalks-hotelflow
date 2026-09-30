@@ -102,15 +102,24 @@ const ManagerDash = () => {
 
   // Fetch real dashboard data from the backend when the dashboard loads
   React.useEffect(() => {
+    if (!user) return;
+
+    const controller = new AbortController();
+
     const fetchStats = async () => {
       try {
-        const response = await fetch("/api/v1/Dashboard/stats");
+        const response = await fetch("/api/v1/Dashboard/stats", {
+          signal: controller.signal,
+        });
+
+        if (response.status === 401) return;
 
         if (!response.ok) {
           throw new Error("Failed to fetch dashboard stats");
         }
 
         const data = await response.json();
+        if (controller.signal.aborted) return;
 
         setOccupancy(data.occupancy ?? null);
         setArrivals(data.arrivals ?? null);
@@ -119,12 +128,15 @@ const ManagerDash = () => {
         setHousekeepingReview(data.housekeepingReview ?? []);
         setRooms(data.rooms ?? []);
       } catch (error) {
+        if (controller.signal.aborted) return;
         console.error("Failed to load dashboard stats:", error);
       }
     };
 
     fetchStats();
-  }, []);
+
+    return () => controller.abort();
+  }, [user]);
 
   // Modal Action Handlers
   const handleApprove = async () => {
