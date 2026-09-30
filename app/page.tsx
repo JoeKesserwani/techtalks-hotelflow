@@ -66,7 +66,7 @@ export default function Home() {
       <div className={styles.container}>
         <section className={styles.leftPanel}>
           <div className={styles.brand}>
-            <div className={styles.logo}>H</div>
+            <div className={styles.logo}><img src="/favicon.ico" alt="HotelFlow Logo" /></div>
 
             <h1>HotelFlow</h1>
             <p></p>
@@ -105,6 +105,7 @@ export default function Home() {
                   placeholder="Enter your email or username"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  maxLength={40}
                 />
               </div>
 
@@ -117,6 +118,7 @@ export default function Home() {
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  maxLength={20}
                 />
               </div>
               {error && (
