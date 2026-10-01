@@ -1,7 +1,12 @@
-
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
 import { useSearchParams } from "next/navigation";
 import Pagination from "@/components/Pagination";
 import styles from "./page.module.css";
@@ -62,7 +67,7 @@ type FormData = {
   paymentStatus: string;
 };
 
-const ITEMS_PER_PAGE = 5;
+const ITEMS_PER_PAGE = 6;
 
 /*
  * ================================
@@ -82,15 +87,12 @@ const ITEMS_PER_PAGE = 5;
  * 2026-09-24
  */
 const getTodayString = () => {
-  return new Intl.DateTimeFormat(
-    "en-CA",
-    {
-      timeZone: "Asia/Beirut",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    }
-  ).format(new Date());
+  return new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Beirut",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  }).format(new Date());
 };
 
 /*
@@ -102,19 +104,11 @@ const calculateNights = (checkInDate: string, checkOutDate: string) => {
     return 0;
   }
 
-  const [
-    checkInYear,
-    checkInMonth,
-    checkInDay,
-  ] = checkInDate
+  const [checkInYear, checkInMonth, checkInDay] = checkInDate
     .split("-")
     .map(Number);
 
-  const [
-    checkOutYear,
-    checkOutMonth,
-    checkOutDay,
-  ] = checkOutDate
+  const [checkOutYear, checkOutMonth, checkOutDay] = checkOutDate
     .split("-")
     .map(Number);
 
@@ -124,17 +118,9 @@ const calculateNights = (checkInDate: string, checkOutDate: string) => {
    * The actual reservation dates remain
    * YYYY-MM-DD date-only values.
    */
-  const checkIn = Date.UTC(
-    checkInYear,
-    checkInMonth - 1,
-    checkInDay
-  );
+  const checkIn = Date.UTC(checkInYear, checkInMonth - 1, checkInDay);
 
-  const checkOut = Date.UTC(
-    checkOutYear,
-    checkOutMonth - 1,
-    checkOutDay
-  );
+  const checkOut = Date.UTC(checkOutYear, checkOutMonth - 1, checkOutDay);
 
   const difference = checkOut - checkIn;
 
@@ -155,27 +141,16 @@ const calculateNights = (checkInDate: string, checkOutDate: string) => {
  * because it can move the date one day
  * backward depending on timezone.
  */
-const formatDate = (
-  dateString: string
-) => {
+const formatDate = (dateString: string) => {
   if (!dateString) {
     return "-";
   }
 
-  const dateOnly =
-    dateString.split("T")[0];
+  const dateOnly = dateString.split("T")[0];
 
-  const [
-    year,
-    month,
-    day,
-  ] = dateOnly.split("-");
+  const [year, month, day] = dateOnly.split("-");
 
-  if (
-    !year ||
-    !month ||
-    !day
-  ) {
+  if (!year || !month || !day) {
     return dateString;
   }
 
@@ -185,9 +160,7 @@ const formatDate = (
 /*
  * FORMAT PRICE
  */
-const formatPrice = (
-  value: string | number
-) => {
+const formatPrice = (value: string | number) => {
   const number = Number(value);
 
   if (Number.isNaN(number)) {
@@ -203,9 +176,7 @@ const formatPrice = (
  * ================================
  */
 
-const getRoomStatusLabel = (
-  status: string
-) => {
+const getRoomStatusLabel = (status: string) => {
   switch (status) {
     case "AVAILABLE":
       return "Available";
@@ -240,18 +211,13 @@ const getRoomStatusLabel = (
  * but it is NO LONGER used to block
  * future reservations.
  */
-const isRoomCurrentlyUnavailable = (
-  room: Room
-) => {
+const isRoomCurrentlyUnavailable = (room: Room) => {
   return (
     room.status === "OCCUPIED" ||
     room.status === "CLEANING" ||
-    room.status ===
-      "NEEDS_CLEANING" ||
-    room.status ===
-      "OUT_OF_SERVICE" ||
-    room.status ===
-      "MAINTENANCE"
+    room.status === "NEEDS_CLEANING" ||
+    room.status === "OUT_OF_SERVICE" ||
+    room.status === "MAINTENANCE"
   );
 };
 
@@ -261,9 +227,7 @@ const isRoomCurrentlyUnavailable = (
  * ================================
  */
 
-const getStatusLabel = (
-  status: string
-) => {
+const getStatusLabel = (status: string) => {
   switch (status) {
     case "BOOKED":
       return "Upcoming";
@@ -285,9 +249,7 @@ const getStatusLabel = (
   }
 };
 
-const getStatusClass = (
-  status: string
-) => {
+const getStatusClass = (status: string) => {
   switch (status) {
     case "BOOKED":
       return styles.upcoming;
@@ -313,12 +275,8 @@ const getStatusClass = (
  * ================================
  */
 
-const readApiResponse =
-  async (
-    response: Response
-  ) => {
-    const text =
-      await response.text();
+const readApiResponse = async (response: Response) => {
+  const text = await response.text();
 
   try {
     return JSON.parse(text);
@@ -368,8 +326,7 @@ export default function ReservationsPage() {
   /*
    * TODAY
    */
-  const today =
-    getTodayString();
+  const today = getTodayString();
 
   const searchParams = useSearchParams();
   const presetGuestId = searchParams.get("guestId");
@@ -395,9 +352,7 @@ export default function ReservationsPage() {
       const guestsData = await readApiResponse(guestsResponse);
       const roomsData = await readApiResponse(roomsResponse);
 
-      if (
-        !reservationsResponse.ok
-      ) {
+      if (!reservationsResponse.ok) {
         throw new Error(
           reservationsData?.error ||
             reservationsData?.message ||
@@ -405,42 +360,32 @@ export default function ReservationsPage() {
         );
       }
 
-      if (
-        !guestsResponse.ok
-      ) {
+      if (!guestsResponse.ok) {
         throw new Error(
           guestsData?.error || guestsData?.message || "Failed to load guests",
         );
       }
 
-      if (
-        !roomsResponse.ok
-      ) {
+      if (!roomsResponse.ok) {
         throw new Error(
           roomsData?.error || roomsData?.message || "Failed to load rooms",
         );
       }
 
       setReservations(
-        Array.isArray(
-          reservationsData
-        )
+        Array.isArray(reservationsData)
           ? reservationsData
           : reservationsData?.data || reservationsData?.reservations || [],
       );
 
       setGuests(
-        Array.isArray(
-          guestsData
-        )
+        Array.isArray(guestsData)
           ? guestsData
           : guestsData?.data || guestsData?.guests || [],
       );
 
       setRooms(
-        Array.isArray(
-          roomsData
-        )
+        Array.isArray(roomsData)
           ? roomsData
           : roomsData?.data || roomsData?.rooms || [],
       );
@@ -619,9 +564,7 @@ export default function ReservationsPage() {
     if (saving) return;
 
     setShowModal(false);
-    setEditingReservation(
-      null
-    );
+    setEditingReservation(null);
 
     resetForm();
     setError("");
@@ -903,7 +846,9 @@ export default function ReservationsPage() {
       resetForm();
     } catch (err) {
       console.error(err);
-      setError(err instanceof Error ? err.message : "Failed to save reservation");
+      setError(
+        err instanceof Error ? err.message : "Failed to save reservation",
+      );
     } finally {
       setSaving(false);
     }
@@ -924,43 +869,19 @@ export default function ReservationsPage() {
    */
 
   return (
-    <div
-      className={
-        styles.page
-      }
-    >
-      <main
-        className={
-          styles.content
-        }
-      >
+    <div className={styles.page}>
+      <main className={styles.content}>
         {/* HEADER */}
 
-        <header
-          className={
-            styles.header
-          }
-        >
-          <div
-            className={
-              styles.title
-            }
-          >
-            <h1>
-              Reservations
-            </h1>
+        <header className={styles.header}>
+          <div className={styles.title}>
+            <h1>Reservations</h1>
 
             <p>{reservations.length} reservations this month</p>
           </div>
 
-          <div
-            className={
-              styles.userInfo
-            }
-          >
-            <span>
-              Receptionist
-            </span>
+          <div className={styles.userInfo}>
+            <span>Receptionist</span>
 
             <span className={styles.userRole}>Receptionist</span>
           </div>
@@ -968,15 +889,9 @@ export default function ReservationsPage() {
 
         {/* TOOLBAR */}
 
-        <div
-          className={
-            styles.toolbar
-          }
-        >
+        <div className={styles.toolbar}>
           <input
-            className={
-              styles.search
-            }
+            className={styles.search}
             type="text"
             placeholder="Search by guest's name, ID, room number"
             value={search}
@@ -987,9 +902,7 @@ export default function ReservationsPage() {
           />
 
           <select
-            className={
-              styles.filter
-            }
+            className={styles.filter}
             value={filter}
             onChange={(event) => {
               setFilter(event.target.value);
@@ -1024,49 +937,30 @@ export default function ReservationsPage() {
         ) : (
           /* TABLE */
           <>
-          <div className={styles.tableContainer}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th>
-                    Guest
-                  </th>
+            <div className={styles.tableContainer}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th>Guest</th>
 
-                  <th>
-                    Room
-                  </th>
+                    <th>Room</th>
 
-                  <th>
-                    Check-in
-                  </th>
+                    <th>Check-in</th>
 
-                  <th>
-                    Check-out
-                  </th>
+                    <th>Check-out</th>
 
-                  <th>
-                    Status
-                  </th>
+                    <th>Status</th>
 
-                  <th>
-                    Payment
-                  </th>
+                    <th>Payment</th>
 
-                  <th>
-                    Total
-                  </th>
+                    <th>Total</th>
 
-                  <th>
-                    Action
-                  </th>
-                </tr>
-              </thead>
+                    <th>Action</th>
+                  </tr>
+                </thead>
 
-              <tbody>
-                {filteredReservations.map(
-                  (
-                    reservation
-                  ) => {
+                <tbody>
+                  {filteredReservations.map((reservation) => {
                     /*
                      * Check-in button should
                      * ONLY appear when the
@@ -1074,134 +968,77 @@ export default function ReservationsPage() {
                      * date is today.
                      */
                     const reservationCheckIn =
-                      reservation.checkInDate.split(
-                        "T"
-                      )[0];
+                      reservation.checkInDate.split("T")[0];
 
                     const canCheckInToday =
-                      reservationCheckIn ===
-                        today &&
-                      reservation.status ===
-                        "BOOKED";
+                      reservationCheckIn === today &&
+                      reservation.status === "BOOKED";
 
                     return (
-                      <tr
-                        key={
-                          reservation.id
-                        }
-                      >
+                      <tr key={reservation.id}>
                         {/* GUEST */}
 
                         <td>
-                          <div
-                            className={
-                              styles.guest
-                            }
-                          >
+                          <div className={styles.guest}>
                             <strong>
-                              {reservation
-                                .guest
-                                ?.fullName ||
-                                "Unknown guest"}
+                              {reservation.guest?.fullName || "Unknown guest"}
                             </strong>
 
-                            {reservation
-                              .guest
-                              ?.phone && (
-                              <small>
-                                {
-                                  reservation
-                                    .guest
-                                    .phone
-                                }
-                              </small>
+                            {reservation.guest?.phone && (
+                              <small>{reservation.guest.phone}</small>
                             )}
                           </div>
                         </td>
 
                         {/* ROOM */}
 
-                        <td>
-                          Room{" "}
-                          {reservation
-                            .room
-                            ?.roomNumber ||
-                            "-"}
-                        </td>
+                        <td>Room {reservation.room?.roomNumber || "-"}</td>
 
                         {/* CHECK-IN */}
 
-                        <td>
-                          {formatDate(
-                            reservation.checkInDate
-                          )}
-                        </td>
+                        <td>{formatDate(reservation.checkInDate)}</td>
 
                         {/* CHECK-OUT */}
 
-                        <td>
-                          {formatDate(
-                            reservation.checkOutDate
-                          )}
-                        </td>
+                        <td>{formatDate(reservation.checkOutDate)}</td>
 
                         {/* STATUS */}
 
                         <td>
                           <span
                             className={`${styles.status} ${getStatusClass(
-                              reservation.status
+                              reservation.status,
                             )}`}
                           >
-                            {getStatusLabel(
-                              reservation.status
-                            )}
+                            {getStatusLabel(reservation.status)}
                           </span>
                         </td>
 
                         {/* PAYMENT */}
 
-                        <td>
-                          {
-                            reservation.paymentStatus
-                          }
-                        </td>
+                        <td>{reservation.paymentStatus}</td>
 
                         {/* TOTAL */}
 
-                        <td>
-                          $
-                          {formatPrice(
-                            reservation.totalPrice
-                          )}
-                        </td>
+                        <td>${formatPrice(reservation.totalPrice)}</td>
 
                         {/* ACTIONS */}
 
                         <td>
                           <div
                             style={{
-                              display:
-                                "flex",
+                              display: "flex",
                               gap: "8px",
-                              alignItems:
-                                "center",
-                              flexWrap:
-                                "wrap",
+                              alignItems: "center",
+                              flexWrap: "wrap",
                             }}
                           >
                             {/* CHECK IN */}
 
                             {canCheckInToday && (
                               <button
-                                className={
-                                  styles.editButton
-                                }
-                                onClick={() =>
-                                  handleCheckIn(
-                                    reservation.id
-                                  )
-                                }
+                                className={styles.editButton}
+                                onClick={() => handleCheckIn(reservation.id)}
                               >
                                 Check in
                               </button>
@@ -1209,17 +1046,10 @@ export default function ReservationsPage() {
 
                             {/* CHECK OUT */}
 
-                            {reservation.status ===
-                              "CHECKED_IN" && (
+                            {reservation.status === "CHECKED_IN" && (
                               <button
-                                className={
-                                  styles.editButton
-                                }
-                                onClick={() =>
-                                  handleCheckOut(
-                                    reservation.id
-                                  )
-                                }
+                                className={styles.editButton}
+                                onClick={() => handleCheckOut(reservation.id)}
                               >
                                 Check out
                               </button>
@@ -1228,14 +1058,8 @@ export default function ReservationsPage() {
                             {/* EDIT */}
 
                             <button
-                              className={
-                                styles.editButton
-                              }
-                              onClick={() =>
-                                openEditReservation(
-                                  reservation
-                                )
-                              }
+                              className={styles.editButton}
+                              onClick={() => openEditReservation(reservation)}
                             >
                               Edit
                             </button>
@@ -1243,14 +1067,8 @@ export default function ReservationsPage() {
                             {/* DELETE */}
 
                             <button
-                              className={
-                                styles.editButton
-                              }
-                              onClick={() =>
-                                handleDelete(
-                                  reservation.id
-                                )
-                              }
+                              className={styles.editButton}
+                              onClick={() => handleDelete(reservation.id)}
                             >
                               Delete
                             </button>
@@ -1258,14 +1076,11 @@ export default function ReservationsPage() {
                         </td>
                       </tr>
                     );
-                  }
-                )}
-              </tbody>
-            </table>
-          </div>
-        )
-
-            {/* REUSABLE PAGINATION COMPONENT */}
+                  })}
+                </tbody>
+              </table>
+            </div>
+            ){/* REUSABLE PAGINATION COMPONENT */}
             <Pagination
               currentPage={activePage}
               totalPages={totalPages}
