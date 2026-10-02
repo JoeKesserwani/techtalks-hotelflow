@@ -5,7 +5,7 @@ import Pagination from "../../../components/Pagination";
 import { describeActivity, type ActivityLogItem } from "./describeActivity";
 import styles from "./page.module.css";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 4;
 
 const CATEGORY_OPTIONS = [
   { value: "", label: "All activity" },
