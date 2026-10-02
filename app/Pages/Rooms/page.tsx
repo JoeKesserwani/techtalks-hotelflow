@@ -2,7 +2,6 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Sidebar from "@/components/Navbars/navbar";
 import Pagination from "@/components/Pagination";
 import styles from "./rooms.module.css";
 import { useAuth } from "@/components/Auth/AuthProvider";
@@ -743,7 +742,6 @@ const Page = () => {
                     onChange={(event) => setNewFloor(event.target.value)}
                     placeholder="e.g. 1"
                     maxLength={2}
-                    
                   />
                 </div>
 
@@ -841,9 +839,7 @@ const Page = () => {
                   id="roomNumber"
                   type="text"
                   value={roomNumber}
-                  onChange={(event) =>
-                    setRoomNumber(event.target.value)
-                  }
+                  onChange={(event) => setRoomNumber(event.target.value)}
                   maxLength={10}
                 />
               </div>
@@ -884,9 +880,7 @@ const Page = () => {
                     min="1"
                     max="20"
                     value={floor}
-                    onChange={(event) =>
-                      setFloor(event.target.value)
-                    }
+                    onChange={(event) => setFloor(event.target.value)}
                     maxLength={2}
                   />
                 </div>
@@ -900,9 +894,7 @@ const Page = () => {
                     min="1"
                     max="10"
                     value={capacity}
-                    onChange={(event) =>
-                      setCapacity(event.target.value)
-                    }
+                    onChange={(event) => setCapacity(event.target.value)}
                     maxLength={2}
                   />
                 </div>
@@ -918,9 +910,7 @@ const Page = () => {
                   step="1"
                   max="9999"
                   value={basePrice}
-                  onChange={(event) =>
-                    setBasePrice(event.target.value)
-                  }
+                  onChange={(event) => setBasePrice(event.target.value)}
                   maxLength={4}
                 />
 

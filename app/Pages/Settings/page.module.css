@@ -1,0 +1,168 @@
+/* Hotel settings — replaces the hard-coded Tailwind grays / #F5F0E4 / #C1633B */
+
+.page {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 32px 40px 56px;
+  color: var(--color-text);
+}
+
+.header {
+  margin-bottom: 24px;
+}
+.header h1 {
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.subtitle {
+  margin: 6px 0 0;
+  font-size: 14px;
+  color: var(--color-muted);
+}
+
+.stateScreen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  font-size: 14px;
+  color: var(--color-muted);
+}
+.stateScreenError {
+  color: var(--color-status-cancelled-text);
+}
+
+/* ---------- Cards ---------- */
+.card {
+  margin-bottom: 20px;
+  padding: 24px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+.cardTitle {
+  margin: 0 0 18px;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+/* ---------- Form ---------- */
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 16px;
+  min-width: 0;
+}
+.field:last-child {
+  margin-bottom: 0;
+}
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+.grid .field {
+  margin-bottom: 0;
+}
+.card > .grid:last-child {
+  margin-bottom: 0;
+}
+
+.label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-label);
+}
+
+.input,
+.selectInput {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--color-text);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-field);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
+}
+.selectInput {
+  cursor: pointer;
+}
+.input:focus-visible,
+.selectInput:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(76, 90, 62, 0.15);
+}
+
+/* ---------- Actions ---------- */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.saveButton {
+  height: 40px;
+  padding: 0 22px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  border: 0;
+  border-radius: var(--radius-field);
+  cursor: pointer;
+  transition:
+    background 0.15s,
+    opacity 0.15s;
+}
+.saveButton:hover:not(:disabled) {
+  background: var(--color-accent-hover);
+}
+.saveButton:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.saveButton:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.savedMessage,
+.errorMessage {
+  padding: 4px 12px;
+  font-size: 13px;
+  font-weight: 500;
+  border-radius: var(--radius-pill);
+}
+.savedMessage {
+  color: var(--color-status-success-text);
+  background: var(--color-status-success);
+}
+.errorMessage {
+  color: var(--color-status-cancelled-text);
+  background: var(--color-status-cancelled);
+}
+
+@media (max-width: 600px) {
+  .page {
+    padding: 20px 16px 40px;
+  }
+  .card {
+    padding: 18px;
+  }
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
