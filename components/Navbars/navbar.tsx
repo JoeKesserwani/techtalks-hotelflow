@@ -7,8 +7,9 @@ import { useAuth } from "@/components/Auth/AuthProvider";
 import styles from "./navbar.module.css";
 
 const AdminNavigation = [
-  { name: "Dashboard", href:"/Pages/Dashboard" },
+  { name: "Dashboard", href: "/Pages/Dashboard" },
   { name: "Housekeeping review", href: "/Pages/HousekeepingReview" },
+  { name: "Reservations History", href: "/Pages/Reservations-History" },
   { name: "Reservations", href: "/Pages/Reservations" },
   { name: "Guests", href: "/Pages/Guests" },
   { name: "Rooms setup", href: "/Pages/Rooms" },
@@ -20,6 +21,7 @@ const AdminNavigation = [
 const ManagerNavigation = [
   { name: "Dashboard", href: "/Pages/Dashboard" },
   { name: "Housekeeping review", href: "/Pages/HousekeepingReview" },
+  { name: "Reservations History", href: "/Pages/Reservations-History" },
   { name: "Reservations", href: "/Pages/Reservations" },
   { name: "Guests", href: "/Pages/Guests" },
   { name: "Rooms setup", href: "/Pages/Rooms" },
@@ -30,6 +32,7 @@ const ManagerNavigation = [
 const ReceptionistNavigation = [
   { name: "Dashboard", href: "/Pages/Dashboard" },
   { name: "Housekeeping review", href: "/Pages/HousekeepingReview" },
+  { name: "Reservations History", href: "/Pages/Reservations-History" },
   { name: "Reservations", href: "/Pages/Reservations" },
   { name: "Guests", href: "/Pages/Guests" },
   { name: "Rooms setup", href: "/Pages/Rooms" },
@@ -89,42 +92,45 @@ export default function Sidebar() {
       )}
 
       <aside className={`${styles.sidebar} ${isOpen ? styles.open : ""}`}>
-      <div className={styles.hotelHeader}>
-        <h1>HotelFlow</h1>
-        <p>{hotel?.name ?? (hotelLoading ? "Loading hotel..." : "")}{" "}{hotel?.address ?? (hotelLoading ? "Loading address..." : "")}</p>
-      </div>
+        <div className={styles.hotelHeader}>
+          <h1>HotelFlow</h1>
+          <p>
+            {hotel?.name ?? (hotelLoading ? "Loading hotel..." : "")}{" "}
+            {hotel?.address ?? (hotelLoading ? "Loading address..." : "")}
+          </p>
+        </div>
 
-      <nav className={styles.navigation}>
-        {navigation.map((item) => {
-          const isActive = pathname === item.href;
+        <nav className={styles.navigation}>
+          {navigation.map((item) => {
+            const isActive = pathname === item.href;
 
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`${styles.navItem} ${isActive ? styles.active : ""}`}
-              onClick={() => setIsOpen(false)}
-            >
-              {item.name}
-            </Link>
-          );
-        })}
-      </nav>
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`${styles.navItem} ${isActive ? styles.active : ""}`}
+                onClick={() => setIsOpen(false)}
+              >
+                {item.name}
+              </Link>
+            );
+          })}
+        </nav>
 
-      {/* User section */}
-      <div className={styles.userSection}>
-        <p>Signed in as</p>
-        <strong>{user?.fullName ?? "Loading..."}</strong>
-        {logoutError && <p>{logoutError}</p>}
-      </div>
-      <button
-        type="button"
-        className={styles.logoutButton}
-        onClick={handleLogout}
-        disabled={isLoggingOut}
-      >
-        {isLoggingOut ? "Logging out..." : "Logout"}
-      </button>
+        {/* User section */}
+        <div className={styles.userSection}>
+          <p>Signed in as</p>
+          <strong>{user?.fullName ?? "Loading..."}</strong>
+          {logoutError && <p>{logoutError}</p>}
+        </div>
+        <button
+          type="button"
+          className={styles.logoutButton}
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+        >
+          {isLoggingOut ? "Logging out..." : "Logout"}
+        </button>
       </aside>
     </>
   );
