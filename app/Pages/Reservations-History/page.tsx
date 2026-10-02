@@ -1080,7 +1080,7 @@ export default function ReservationsPage() {
                 </tbody>
               </table>
             </div>
-            ){/* REUSABLE PAGINATION COMPONENT */}
+            {/* REUSABLE PAGINATION COMPONENT */}
             <Pagination
               currentPage={activePage}
               totalPages={totalPages}
