@@ -21,8 +21,9 @@ model Hotel {
   phone             String?
   auditLogs         AuditLog[]
   guests            Guest[]
-  reservations      Reservation[]
   housekeepingTasks HousekeepingTask[]
+  notifications     notifications[]
+  reservations      Reservation[]
   users             User[]
 
   @@map("hotels")
@@ -40,10 +41,12 @@ model User {
   updatedAt           DateTime           @updatedAt @map("updated_at")
   auditLogs           AuditLog[]
   housekeepingTasks   HousekeepingTask[] @relation("AssignedTo")
+  notifications       notifications[]
   createdReservations Reservation[]      @relation("CreatedBy")
   sessions            Session[]
   hotel               Hotel              @relation(fields: [hotelId], references: [id])
 
+  @@index([hotelId], map: "users_hotel_id_fkey")
   @@map("users")
 }
 
@@ -55,6 +58,7 @@ model Session {
   createdAt        DateTime @default(now()) @map("created_at")
   user             User     @relation(fields: [userId], references: [id])
 
+  @@index([userId], map: "sessions_user_id_fkey")
   @@map("sessions")
 }
 
@@ -69,8 +73,8 @@ model Room {
   updatedAt         DateTime           @updatedAt @map("updated_at")
   floor             Int                @default(1)
   capacity          Int                @default(1)
-  reservations      Reservation[]
   housekeepingTasks HousekeepingTask[]
+  reservations      Reservation[]
 
   @@unique([hotelId, roomNumber])
   @@map("rooms")
@@ -89,6 +93,7 @@ model Guest {
   hotel          Hotel         @relation(fields: [hotelId], references: [id])
   reservations   Reservation[]
 
+  @@index([hotelId], map: "guests_hotel_id_fkey")
   @@map("guests")
 }
 
@@ -112,6 +117,9 @@ model Reservation {
   room            Room              @relation(fields: [roomId], references: [id])
 
   @@index([roomId, checkInDate, checkOutDate])
+  @@index([createdByUserId], map: "reservations_created_by_user_id_fkey")
+  @@index([guestId], map: "reservations_guest_id_fkey")
+  @@index([hotelId], map: "reservations_hotel_id_fkey")
   @@map("reservations")
 }
 
@@ -149,7 +157,28 @@ model AuditLog {
   hotel        Hotel    @relation(fields: [hotelId], references: [id])
   user         User?    @relation(fields: [userId], references: [id])
 
+  @@index([hotelId], map: "audit_logs_hotel_id_fkey")
+  @@index([userId], map: "audit_logs_user_id_fkey")
   @@map("audit_logs")
+}
+
+model notifications {
+  id         String             @id @db.Char(36)
+  hotel_id   String             @db.Char(36)
+  user_id    String             @db.Char(36)
+  title      String             @db.VarChar(150)
+  message    String             @db.Text
+  type       notifications_type
+  task_id    String?            @db.Char(36)
+  is_read    Boolean            @default(false)
+  read_at    DateTime?          @db.DateTime(0)
+  created_at DateTime           @default(now()) @db.DateTime(0)
+  hotels     Hotel              @relation(fields: [hotel_id], references: [id], onDelete: Cascade)
+  users      User               @relation(fields: [user_id], references: [id], onDelete: Cascade)
+
+  @@index([hotel_id, created_at])
+  @@index([task_id])
+  @@index([user_id, is_read, created_at])
 }
 
 enum TaskStatus {
@@ -188,4 +217,10 @@ enum PaymentStatus {
   UNPAID
   PARTIAL
   PAID
+}
+
+enum notifications_type {
+  TASK_ASSIGNED
+  TASK_APPROVED
+  TASK_REJECTED
 }
