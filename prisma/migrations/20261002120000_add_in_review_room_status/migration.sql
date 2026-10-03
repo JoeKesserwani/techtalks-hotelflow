@@ -1,0 +1,10 @@
+ALTER TABLE `rooms`
+  MODIFY `status` ENUM(
+    'AVAILABLE',
+    'RESERVED',
+    'OCCUPIED',
+    'IN_REVIEW',
+    'NEEDS_CLEANING',
+    'CLEANING',
+    'OUT_OF_SERVICE'
+  ) NOT NULL DEFAULT 'AVAILABLE';

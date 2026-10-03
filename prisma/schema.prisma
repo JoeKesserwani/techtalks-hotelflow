@@ -24,6 +24,7 @@ model Hotel {
   reservations      Reservation[]
   housekeepingTasks HousekeepingTask[]
   users             User[]
+  notifications     Notification[]
 
   @@map("hotels")
 }
@@ -43,6 +44,7 @@ model User {
   createdReservations Reservation[]      @relation("CreatedBy")
   sessions            Session[]
   hotel               Hotel              @relation(fields: [hotelId], references: [id])
+  notifications       Notification[]
 
   @@map("users")
 }
@@ -150,6 +152,36 @@ model AuditLog {
   user         User?    @relation(fields: [userId], references: [id])
 
   @@map("audit_logs")
+}
+
+model Notification {
+  id      String @id @default(uuid()) @db.Char(36)
+  hotelId String @map("hotel_id") @db.Char(36)
+  userId  String @map("user_id") @db.Char(36)
+
+  title   String           @db.VarChar(150)
+  message String           @db.Text
+  type    NotificationType
+
+  taskId String? @map("task_id") @db.Char(36)
+
+  isRead    Boolean   @default(false) @map("is_read")
+  readAt    DateTime? @map("read_at") @db.DateTime(0)
+  createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(0)
+
+  hotel Hotel @relation(fields: [hotelId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, isRead, createdAt])
+  @@index([taskId])
+  @@index([hotelId, createdAt])
+  @@map("notifications")
+}
+
+enum NotificationType {
+  TASK_ASSIGNED
+  TASK_APPROVED
+  TASK_REJECTED
 }
 
 enum TaskStatus {
