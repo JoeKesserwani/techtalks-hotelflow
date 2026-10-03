@@ -1,0 +1,1453 @@
+
+
+.page {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-body);
+}
+
+.container {
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  flex: 1;
+  height: 100dvh;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* =========================================================
+   HEADER
+========================================================= */
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 24px;
+  padding-bottom: 20px;
+  margin-bottom: 24px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.eyebrow {
+  margin: 0 0 5px;
+  color: var(--color-accent);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.title {
+  margin: 0;
+  font-family: var(--font-heading, "Fraunces", serif);
+  font-size: 34px;
+  line-height: 1.15;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.subtitle {
+  max-width: 650px;
+  margin: 7px 0 0;
+  color: var(--color-muted);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   ROLE / TOPBAR
+========================================================= */
+
+.role {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.roleInfo {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.roleInfo strong {
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.roleInfo span {
+  color: var(--color-faint);
+  font-size: 11px;
+}
+
+.roleBadge {
+  padding: 9px 18px;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+  border-radius: var(--radius-field);
+}
+
+/* =========================================================
+   HISTORY CONTENT
+========================================================= */
+
+.historyContent {
+  min-height: 0;
+  flex: 1;
+  overflow-y: auto;
+  padding-right: 8px;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+/* =========================================================
+   HISTORY SECTION
+========================================================= */
+
+.historySection {
+  position: relative;
+  margin-bottom: 34px;
+  padding: 22px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+}
+
+/* =========================================================
+   AWAITING APPROVAL SECTION
+========================================================= */
+
+.awaitingSection {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(169, 124, 80, 0.055),
+      rgba(255, 255, 255, 0.96) 45%
+    );
+  border-color: rgba(169, 124, 80, 0.28);
+}
+
+.awaitingSection::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 22px;
+  right: 22px;
+  height: 2px;
+  background: var(--color-accent);
+  border-radius: 0 0 var(--radius-pill) var(--radius-pill);
+}
+
+/* =========================================================
+   COMPLETED SECTION
+========================================================= */
+
+.completedSection {
+  background: var(--color-surface);
+}
+
+/* =========================================================
+   SECTION HEADER
+========================================================= */
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+.sectionHeading {
+  min-width: 0;
+}
+
+.sectionTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.sectionTitleRow h2 {
+  margin: 0;
+  font-family: var(--font-heading, "Fraunces", serif);
+  font-size: 21px;
+  line-height: 1.2;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.sectionHeading p {
+  max-width: 650px;
+  margin: 6px 0 0 34px;
+  color: var(--color-muted);
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+/* =========================================================
+   SECTION INDICATOR
+========================================================= */
+
+.sectionIndicator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex-shrink: 0;
+  font-size: 14px;
+  font-weight: 600;
+  border-radius: 50%;
+}
+
+.awaitingIndicator {
+  background: rgba(169, 124, 80, 0.13);
+  color: var(--color-accent);
+  border: 1px solid rgba(169, 124, 80, 0.25);
+}
+
+.completedIndicator {
+  background: var(--color-status-success);
+  color: var(--color-status-success-text);
+  border: 1px solid rgba(46, 101, 80, 0.12);
+}
+
+/* =========================================================
+   SECTION COUNT
+========================================================= */
+
+.totalCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 60px;
+  flex-shrink: 0;
+  padding: 6px 11px;
+  font-size: 11px;
+  font-weight: 600;
+  white-space: nowrap;
+  border-radius: var(--radius-pill);
+}
+
+.awaitingCount {
+  background: rgba(169, 124, 80, 0.11);
+  border: 1px solid rgba(169, 124, 80, 0.24);
+  color: var(--color-accent);
+}
+
+.completedCount {
+  background: var(--color-status-success);
+  border: 1px solid rgba(46, 101, 80, 0.12);
+  color: var(--color-status-success-text);
+}
+
+/* =========================================================
+   AWAITING ICON
+========================================================= */
+
+.awaitingIcon {
+  width: 10px;
+  height: 10px;
+  border: 2px solid rgba(169, 124, 80, 0.28);
+  border-top-color: var(--color-accent);
+  border-right-color: var(--color-accent);
+  border-radius: 50%;
+  animation: awaitingSpin 1s linear infinite;
+}
+
+@keyframes awaitingSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   HISTORY LIST
+========================================================= */
+
+.historyList {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+  min-width: 0;
+}
+
+.dateSection {
+  min-width: 0;
+}
+
+.dateHeader {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 11px;
+}
+
+.dateTitle {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  flex-shrink: 0;
+}
+
+.dateTitle h3 {
+  margin: 0;
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.7px;
+  text-transform: uppercase;
+}
+
+.dateTitle span {
+  min-width: 22px;
+  padding: 3px 7px;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  color: var(--color-muted);
+  font-size: 10px;
+  line-height: 1.2;
+  text-align: center;
+  border-radius: var(--radius-pill);
+}
+
+.dateLine {
+  width: 100%;
+  height: 1px;
+  background: var(--color-border);
+}
+
+.taskList {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+}
+
+/* =========================================================
+   TASK CARD
+========================================================= */
+
+.taskCard {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  min-width: 0;
+  gap: 20px;
+  padding: 13px 15px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease,
+    transform 0.15s ease;
+}
+
+.taskCard:hover {
+  border-color: var(--color-border-input);
+  box-shadow: 0 5px 16px rgba(31, 42, 46, 0.07);
+  transform: translateY(-1px);
+}
+
+/* =========================================================
+   ROOM INFORMATION
+========================================================= */
+
+.roomInfo {
+  width: 175px;
+  min-width: 150px;
+  flex: 0 1 175px;
+  overflow: hidden;
+}
+
+.fieldLabel {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--color-faint);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 0.9px;
+  white-space: nowrap;
+}
+
+.roomTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.roomTitle h2 {
+  min-width: 0;
+  margin: 0;
+  font-family: var(--font-heading, "Fraunces", serif);
+  font-size: 20px;
+  line-height: 1.1;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.roomInfo > p {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+  font-size: 11px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================================================
+   INFORMATION BLOCKS
+========================================================= */
+
+.taskInfoBlock {
+  min-width: 0;
+  flex: 1 1 120px;
+  overflow: hidden;
+}
+
+.timeBlock {
+  min-width: 0;
+  flex: 1.2 1 155px;
+}
+
+.photoInfo {
+  min-width: 55px;
+  flex: 0 1 70px;
+}
+
+.strongText {
+  min-width: 0;
+  margin: 0;
+  color: var(--color-label);
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.taskInfoBlock small {
+  display: block;
+  margin-top: 3px;
+  color: var(--color-faint);
+  font-size: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* =========================================================
+   STATUS
+========================================================= */
+
+.statusBlock {
+  min-width: 0;
+  flex: 0 0 auto;
+}
+
+.statusBadge {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  padding: 4px 8px;
+  font-size: 9px;
+  line-height: 1.2;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  border-radius: var(--radius-pill);
+}
+
+.awaiting {
+  background: var(--color-surface-alt);
+  color: var(--color-label);
+}
+
+.approved {
+  background: var(--color-status-success);
+  color: var(--color-status-success-text);
+}
+
+/* =========================================================
+   ACTION
+========================================================= */
+
+.actions {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  flex: 0 0 auto;
+}
+
+.detailsButton {
+  padding: 7px 13px;
+  background: transparent;
+  border: 1px solid var(--color-border-input);
+  color: var(--color-label);
+  font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
+  border-radius: var(--radius-field);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.detailsButton:hover {
+  background: var(--color-surface-alt);
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+/* =========================================================
+   SECTION EMPTY STATE
+========================================================= */
+
+.sectionEmptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 18px 24px;
+  text-align: center;
+  background: rgba(255, 255, 255, 0.65);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.sectionEmptyState h3 {
+  margin: 0;
+  font-family: var(--font-heading, "Fraunces", serif);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.sectionEmptyState p {
+  max-width: 320px;
+  margin: 6px 0 0;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.awaitingEmptyState {
+  background:
+    linear-gradient(
+      135deg,
+      rgba(169, 124, 80, 0.07),
+      rgba(239, 236, 228, 0.42)
+    );
+  border-color: rgba(169, 124, 80, 0.22);
+}
+
+.awaitingEmptyState .emptyIcon {
+  background: rgba(169, 124, 80, 0.10);
+  border: 1px solid rgba(169, 124, 80, 0.20);
+  color: var(--color-accent);
+}
+
+.completedEmptyState {
+  background: rgba(239, 236, 228, 0.45);
+  border-color: var(--color-border);
+}
+
+.completedEmptyState .emptyIcon {
+  background: var(--color-status-success);
+  border: 1px solid rgba(46, 101, 80, 0.12);
+  color: var(--color-status-success-text);
+}
+
+/* =========================================================
+   EMPTY STATE
+========================================================= */
+
+.emptyState {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 24px;
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.emptyIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 42px;
+  height: 42px;
+  margin-bottom: 14px;
+  background: var(--color-status-success);
+  color: var(--color-status-success-text);
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 50%;
+}
+
+.emptyState h2 {
+  margin: 0;
+  font-family: var(--font-heading, "Fraunces", serif);
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.emptyState p {
+  margin: 7px 0 0;
+  color: var(--color-muted);
+  font-size: 13px;
+}
+
+.emptyWaitingIcon {
+  display: block;
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(169, 124, 80, 0.20);
+  border-top-color: var(--color-accent);
+  border-right-color: var(--color-accent);
+  border-radius: 50%;
+  animation: emptyWaitingSpin 1.1s ease-in-out infinite;
+}
+
+@keyframes emptyWaitingSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================================
+   MODAL OVERLAY
+========================================================= */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-modal-overlay);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(31, 42, 46, 0.48);
+  backdrop-filter: blur(3px);
+}
+
+/* =========================================================
+   DETAILS MODAL
+========================================================= */
+
+.detailsModal {
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+  padding: 26px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-dropdown);
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-input) transparent;
+}
+
+.detailsModal::-webkit-scrollbar {
+  width: 7px;
+}
+
+.detailsModal::-webkit-scrollbar-track {
+  margin: 10px 0;
+  background: transparent;
+}
+
+.detailsModal::-webkit-scrollbar-thumb {
+  background: var(--color-border-input);
+  border: 2px solid var(--color-surface);
+  border-radius: var(--radius-pill);
+}
+
+.detailsModal::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+}
+
+/* =========================================================
+   MODAL HEADER
+========================================================= */
+
+.modalHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.modalLabel {
+  margin: 0;
+  color: var(--color-accent);
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.modalHeader h2 {
+  margin: 5px 0 0;
+  font-family: var(--font-heading, "Fraunces", serif);
+  font-size: 25px;
+  line-height: 1.2;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.modalSubtitle {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+.closeButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  flex-shrink: 0;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  color: var(--color-label);
+  font-size: 20px;
+  line-height: 1;
+  border-radius: var(--radius-field);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.closeButton:hover {
+  background: var(--color-border-soft);
+  border-color: var(--color-border-input);
+}
+
+/* =========================================================
+   DETAIL SECTIONS
+========================================================= */
+
+.detailSection,
+.inspectionSection,
+.photosSection {
+  margin-top: 22px;
+}
+
+.sectionTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.sectionTitle h3 {
+  margin: 0;
+  font-family: var(--font-heading, "Fraunces", serif);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.sectionTitle span {
+  color: var(--color-muted);
+  font-size: 11px;
+}
+
+.detailList {
+  border-top: 1px solid var(--color-border);
+}
+
+.detailRow {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.detailRow span {
+  color: var(--color-muted);
+  font-size: 12px;
+}
+
+.detailRow strong {
+  color: var(--color-label);
+  font-size: 12px;
+  font-weight: 500;
+  text-align: right;
+}
+
+/* =========================================================
+   INSPECTION
+========================================================= */
+
+.inspectionSection {
+  padding: 16px;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+}
+
+.inspectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 15px;
+  margin-bottom: 10px;
+}
+
+.inspectionHeader h3 {
+  margin: 4px 0 0;
+  font-family: var(--font-heading, "Fraunces", serif);
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+/* =========================================================
+   REVIEW TIMELINE
+========================================================= */
+
+.reviewTimeline {
+  display: flex;
+  flex-direction: column;
+}
+
+.reviewEvent {
+  display: flex;
+  gap: 12px;
+}
+
+.reviewMarker {
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.reviewMarkerApproved {
+  background: var(--color-status-success-text);
+}
+
+.reviewContent {
+  min-width: 0;
+  flex: 1;
+}
+
+.reviewEventHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.reviewEventHeader strong {
+  display: block;
+  color: var(--color-label);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.reviewEventHeader span {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-muted);
+  font-size: 11px;
+}
+
+.reviewEventHeader small {
+  flex-shrink: 0;
+  color: var(--color-faint);
+  font-size: 10px;
+}
+
+.noReview {
+  padding: 12px;
+  color: var(--color-muted);
+  font-size: 12px;
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-field);
+}
+
+/* =========================================================
+   REVIEW COMMENT
+========================================================= */
+
+.comment {
+  margin-top: 14px;
+  padding: 10px 12px;
+  background: var(--color-surface);
+  border-left: 3px solid var(--color-accent);
+  border-radius:
+    0
+    var(--radius-field)
+    var(--radius-field)
+    0;
+}
+
+.comment strong {
+  color: var(--color-label);
+  font-size: 10px;
+  font-weight: 600;
+}
+
+.comment p {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   NOTES
+========================================================= */
+
+.notesSection {
+  margin-top: 22px;
+  padding: 13px;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-field);
+}
+
+.notesSection > p:last-child {
+  margin: 6px 0 0;
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+/* =========================================================
+   PHOTOS
+========================================================= */
+
+.noPhotos {
+  padding: 25px 15px;
+  background: var(--color-surface-alt);
+  border: 1px dashed var(--color-border);
+  color: var(--color-muted);
+  font-size: 12px;
+  text-align: center;
+  border-radius: var(--radius-field);
+}
+
+.photoGrid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.photoPlaceholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 120px;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  color: var(--color-muted);
+  font-size: 11px;
+  border-radius: var(--radius-field);
+}
+
+/* =========================================================
+   MODAL CLOSE
+========================================================= */
+
+.closeModalButton {
+  width: 100%;
+  margin-top: 22px;
+  padding: 11px 18px;
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  color: var(--color-on-accent);
+  font-size: 12px;
+  font-weight: 500;
+  border-radius: var(--radius-field);
+  cursor: pointer;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.closeModalButton:hover {
+  background: var(--color-primary-hover);
+  border-color: var(--color-primary-hover);
+}
+/* =========================================================
+   PAGINATION
+========================================================= */
+
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 16px;
+  padding: 12px 18px;
+  border-top: 1px solid var(--line);
+  background: var(--card);
+}
+
+.paginationInfo {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+
+.paginationControls {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.paginationButton {
+  min-width: 32px;
+  height: 32px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 0 9px;
+
+  border: 1px solid var(--line);
+  border-radius: 8px;
+
+  background: var(--card);
+  color: var(--ink);
+
+  font: 700 12.5px system-ui, sans-serif;
+
+  cursor: pointer;
+
+  transition:
+    background 0.2s ease,
+    border-color 0.2s ease,
+    color 0.2s ease;
+}
+
+.paginationButton:hover:not(:disabled) {
+  background: var(--chip);
+}
+
+.paginationButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.paginationActive {
+  background: var(--clay);
+  border-color: var(--clay);
+  color: #fff;
+}
+
+.paginationActive:hover {
+  background: var(--clay-dark);
+  border-color: var(--clay-dark);
+}
+
+
+/* =========================================================
+   PAGINATION — MOBILE
+========================================================= */
+
+@media (max-width: 420px) {
+  .pagination {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .paginationInfo {
+    text-align: center;
+  }
+
+  .paginationControls {
+    justify-content: center;
+  }
+
+  .paginationButton {
+    min-width: 34px;
+    height: 34px;
+  }
+}
+
+
+/* =========================================================
+   RESPONSIVE — LARGE TABLET
+========================================================= */
+
+@media (max-width: 1100px) {
+  .taskCard {
+    gap: 14px;
+    padding: 12px 14px;
+  }
+
+  .roomInfo {
+    width: 150px;
+    min-width: 130px;
+    flex-basis: 150px;
+  }
+
+  .taskInfoBlock {
+    flex-basis: 105px;
+  }
+
+  .timeBlock {
+    flex-basis: 130px;
+  }
+
+  .photoInfo {
+    min-width: 45px;
+  }
+
+  .detailsButton {
+    padding: 7px 11px;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE — TABLET
+========================================================= */
+
+@media (max-width: 900px) {
+  .taskCard {
+    gap: 12px;
+  }
+
+  .roomInfo {
+    width: 130px;
+    min-width: 115px;
+    flex-basis: 130px;
+  }
+
+  .taskInfoBlock {
+    flex-basis: 95px;
+  }
+
+  .timeBlock {
+    flex-basis: 115px;
+  }
+
+  .photoInfo {
+    min-width: 40px;
+  }
+
+  .strongText {
+    font-size: 11px;
+  }
+
+  .taskInfoBlock small {
+    font-size: 9px;
+  }
+
+  .detailsButton {
+    padding: 7px 10px;
+    font-size: 10px;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE — MOBILE
+========================================================= */
+
+@media (max-width: 768px) {
+  .container {
+    height: auto;
+    padding: 80px 24px 32px;
+  }
+
+  .header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .role {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .roleInfo {
+    align-items: flex-start;
+  }
+
+  .historySection {
+    padding: 18px;
+    margin-bottom: 28px;
+  }
+
+  .awaitingSection::before {
+    left: 18px;
+    right: 18px;
+  }
+
+  .sectionHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .sectionHeading {
+    width: 100%;
+  }
+
+  .sectionHeading p {
+    margin-left: 34px;
+  }
+
+  .totalCount {
+    align-self: flex-start;
+  }
+
+  .taskCard {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 13px;
+    padding: 15px;
+  }
+
+  .roomInfo,
+  .taskInfoBlock,
+  .timeBlock,
+  .photoInfo,
+  .statusBlock {
+    width: 100%;
+    min-width: 0;
+    flex: none;
+  }
+
+  .roomTitle h2 {
+    font-size: 20px;
+  }
+
+  .strongText {
+    font-size: 12px;
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .taskInfoBlock small {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+
+  .actions {
+    width: 100%;
+    margin-left: 0;
+    flex: none;
+  }
+
+  .detailsButton {
+    width: 100%;
+    padding: 9px 13px;
+    font-size: 11px;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE — SMALL MOBILE
+========================================================= */
+
+@media (max-width: 500px) {
+  .container {
+    padding: 24px 16px;
+  }
+
+  .header {
+    margin-bottom: 20px;
+  }
+
+  .title {
+    font-size: 27px;
+  }
+
+  .subtitle {
+    font-size: 13px;
+  }
+
+  .roleInfo span {
+    display: none;
+  }
+
+  .roleInfo strong {
+    font-size: 12px;
+  }
+
+  .roleBadge {
+    padding: 8px 12px;
+    font-size: 10px;
+  }
+
+  .historySection {
+    padding: 15px;
+    margin-bottom: 24px;
+  }
+
+  .awaitingSection::before {
+    left: 15px;
+    right: 15px;
+  }
+
+  .sectionTitleRow h2 {
+    font-size: 19px;
+  }
+
+  .sectionHeading p {
+    margin-left: 0;
+    margin-top: 8px;
+    font-size: 12px;
+  }
+
+  .sectionIndicator {
+    width: 22px;
+    height: 22px;
+    font-size: 13px;
+  }
+
+  .sectionEmptyState {
+    padding: 34px 18px;
+  }
+
+  .dateTitle h3 {
+    font-size: 10px;
+  }
+
+  .dateTitle span {
+    padding: 3px 6px;
+  }
+
+  .taskCard {
+    gap: 12px;
+    padding: 14px;
+  }
+
+  .roomTitle h2 {
+    font-size: 19px;
+  }
+
+  .fieldLabel {
+    font-size: 8px;
+  }
+
+  .strongText {
+    font-size: 11px;
+  }
+
+  .taskInfoBlock small {
+    font-size: 10px;
+  }
+
+  .detailsModal {
+    max-height: 92vh;
+    padding: 20px;
+  }
+
+  .detailRow {
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  .detailRow strong {
+    text-align: left;
+  }
+
+  .inspectionHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .photoGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* =========================================================
+   RESPONSIVE — VERY SMALL MOBILE
+========================================================= */
+
+@media (max-width: 360px) {
+  .container {
+    padding: 20px 12px;
+  }
+
+  .title {
+    font-size: 25px;
+  }
+
+  .roleBadge {
+    padding: 7px 10px;
+  }
+
+  .historySection {
+    padding: 13px;
+  }
+
+  .awaitingSection::before {
+    left: 13px;
+    right: 13px;
+  }
+
+  .sectionTitleRow h2 {
+    font-size: 18px;
+  }
+
+  .sectionHeading p {
+    font-size: 11px;
+  }
+
+  .taskCard {
+    padding: 13px;
+  }
+
+  .detailsModal {
+    padding: 17px;
+  }
+
+  .roomTitle h2 {
+    font-size: 18px;
+  }
+
+  .detailsButton {
+    padding: 8px 10px;
+  }
+}

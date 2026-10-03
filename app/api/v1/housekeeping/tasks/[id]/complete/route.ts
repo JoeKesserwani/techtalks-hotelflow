@@ -43,7 +43,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         },
       });
 
-      await tx.room.update({ where: { id: task.roomId }, data: { status: 'AVAILABLE' } });
+      await tx.room.update({ where: { id: task.roomId }, data: { status: 'IN_REVIEW' } });
 
       await writeAuditLog(tx, {
         hotelId: user.hotelId,

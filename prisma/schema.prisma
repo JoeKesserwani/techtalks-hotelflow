@@ -22,7 +22,6 @@ model Hotel {
   auditLogs         AuditLog[]
   guests            Guest[]
   housekeepingTasks HousekeepingTask[]
-  notifications     notifications[]
   reservations      Reservation[]
   users             User[]
   notifications     Notification[]
@@ -42,7 +41,6 @@ model User {
   updatedAt           DateTime           @updatedAt @map("updated_at")
   auditLogs           AuditLog[]
   housekeepingTasks   HousekeepingTask[] @relation("AssignedTo")
-  notifications       notifications[]
   createdReservations Reservation[]      @relation("CreatedBy")
   sessions            Session[]
   hotel               Hotel              @relation(fields: [hotelId], references: [id])
@@ -232,8 +230,4 @@ enum PaymentStatus {
   PAID
 }
 
-enum notifications_type {
-  TASK_ASSIGNED
-  TASK_APPROVED
-  TASK_REJECTED
-}
+
