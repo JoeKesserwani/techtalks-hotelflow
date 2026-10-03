@@ -53,9 +53,34 @@ function getNotificationCategory(type: ApiNotification["type"]): NotificationIte
   return "Reminder";
 }
 
-function formatNotificationDate(value: string) {
+function getNotificationDateKey(value: string | Date) {
+  const date = value instanceof Date ? value : new Date(value);
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+
+  return `${year}-${month}-${day}`;
+}
+
+function formatNotificationGroupLabel(value: string) {
+  const date = new Date(value);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  if (getNotificationDateKey(date) === getNotificationDateKey(today)) {
+    return "Today";
+  }
+
+  if (getNotificationDateKey(date) === getNotificationDateKey(yesterday)) {
+    return "Yesterday";
+  }
+
+  return new Intl.DateTimeFormat("en-US", { dateStyle: "long" }).format(date);
+}
+
+function formatNotificationTime(value: string) {
   return new Intl.DateTimeFormat("en-US", {
-    dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
 }
@@ -119,6 +144,25 @@ export default function HousekeepingNotificationsPage() {
 
     return notifications;
   }, [activeTab, notifications]);
+
+  const notificationGroups = useMemo(() => {
+    const groups = new Map<string, NotificationItem[]>();
+
+    for (const notification of visibleNotifications) {
+      const dateKey = getNotificationDateKey(notification.createdAt);
+      const group = groups.get(dateKey) ?? [];
+      group.push(notification);
+      groups.set(dateKey, group);
+    }
+
+    return [...groups.entries()]
+      .sort(([dateA], [dateB]) => dateB.localeCompare(dateA))
+      .map(([dateKey, items]) => ({
+        dateKey,
+        label: formatNotificationGroupLabel(items[0].createdAt),
+        notifications: items,
+      }));
+  }, [visibleNotifications]);
 
   useEffect(() => {
     if (!selectedTaskId) {
@@ -258,55 +302,62 @@ export default function HousekeepingNotificationsPage() {
               <p>There are no notifications in this view.</p>
             </div>
           ) : (
-            visibleNotifications.map((notification) => (
-              <article
-                key={notification.id}
-                className={`${styles.taskCard} ${styles[notification.tone]} ${!notification.isRead ? styles.unread : ""}`}
-              >
-                <div className={styles.taskInfo}>
-                  <div className={styles.notificationHeader}>
-                    <h2>{notification.title}</h2>
-                    <span
-                      className={`${styles.statusBadge} ${styles[notification.tone]} ${
-                        notification.isRead ? styles.readBadge : styles.unreadBadge
-                      }`}
+            notificationGroups.map((group) => (
+              <div key={group.dateKey} className={styles.dateGroup}>
+                <h2 className={styles.dateHeading}>{group.label}</h2>
+                <div className={styles.dateGroupNotifications}>
+                  {group.notifications.map((notification) => (
+                    <article
+                      key={notification.id}
+                      className={`${styles.taskCard} ${styles[notification.tone]} ${!notification.isRead ? styles.unread : ""}`}
                     >
-                      {notification.isRead ? "Read" : "New"}
-                    </span>
-                  </div>
+                      <div className={styles.taskInfo}>
+                        <div className={styles.notificationHeader}>
+                          <h2>{notification.title}</h2>
+                          <span
+                            className={`${styles.statusBadge} ${styles[notification.tone]} ${
+                              notification.isRead ? styles.readBadge : styles.unreadBadge
+                            }`}
+                          >
+                            {notification.isRead ? "Read" : "New"}
+                          </span>
+                        </div>
 
-                  <p>{notification.message}</p>
-                  <small>
-                    {notification.category} · {formatNotificationDate(notification.createdAt)}
-                  </small>
+                        <p>{notification.message}</p>
+                        <small>
+                          {notification.category} · {formatNotificationTime(notification.createdAt)}
+                        </small>
 
-                  {notification.detail && (
-                    <div className={styles.comment}>
-                      <strong>Details</strong>
-                      <p>{notification.detail}</p>
-                    </div>
-                  )}
+                        {notification.detail && (
+                          <div className={styles.comment}>
+                            <strong>Details</strong>
+                            <p>{notification.detail}</p>
+                          </div>
+                        )}
+                      </div>
+
+                      <div className={styles.actions}>
+                        {!notification.isRead && (
+                          <button
+                            type="button"
+                            className={styles.primaryButton}
+                            onClick={() => markAsRead(notification.id)}
+                          >
+                            Mark as read
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          className={styles.secondaryButton}
+                          onClick={() => handleViewTask(notification)}
+                        >
+                          View task
+                        </button>
+                      </div>
+                    </article>
+                  ))}
                 </div>
-
-                <div className={styles.actions}>
-                  {!notification.isRead && (
-                    <button
-                      type="button"
-                      className={styles.primaryButton}
-                      onClick={() => markAsRead(notification.id)}
-                    >
-                      Mark as read
-                    </button>
-                  )}
-                  <button
-                    type="button"
-                    className={styles.secondaryButton}
-                    onClick={() => handleViewTask(notification)}
-                  >
-                    View task
-                  </button>
-                </div>
-              </article>
+              </div>
             ))
           )}
         </section>
