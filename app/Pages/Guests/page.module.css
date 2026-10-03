@@ -1,149 +1,165 @@
+/* Guests — uses tokens from globals.css only */
+
 .layout {
-  display: flex;
   min-height: 100vh;
   background: var(--color-bg);
-  font-family: var(--font-body);
-  color: var(--color-text);
 }
-
 .main {
-  flex: 1;
-  padding: 32px 40px;
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 32px 40px 48px;
+  color: var(--color-text);
 }
 
 .topBar {
   display: flex;
-  align-items: flex-start;
+  align-items: flex-end;
   justify-content: space-between;
   margin-bottom: 24px;
 }
-
 .topBar h2 {
-  font-family: var(--font-heading);
-  font-size: 1.6rem;
-  margin: 0 0 4px;
+  font-size: 28px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
 }
-
 .subtitle {
+  margin: 6px 0 0;
+  font-size: 14px;
   color: var(--color-muted);
-  font-size: 0.85rem;
-  margin: 0;
 }
 
+/* ---------- Toolbar ---------- */
 .toolbar {
   display: flex;
-  gap: 12px;
-  margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
 }
 
 .searchInput {
-  flex: 1;
-  padding: 10px 14px;
+  flex: 1 1 280px;
+  min-width: 200px;
+  height: 40px;
+  padding: 0 12px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--color-text);
+  background: var(--color-surface-alt);
   border: 1px solid var(--color-border-input);
   border-radius: var(--radius-field);
-  background: var(--color-surface);
-  font-size: 0.9rem;
-  color: var(--color-text);
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
-
 .searchInput::placeholder {
   color: var(--color-faint);
 }
+.searchInput:focus-visible,
+.filterButton:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px rgba(76, 90, 62, 0.15);
+}
 
-/* --- Filter by status --- */
-
+/* Filter dropdown */
 .filterWrapper {
   position: relative;
 }
-
 .filterButton {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  background: var(--color-olive);
-  color: var(--color-on-accent);
-  border: none;
+  gap: 10px;
+  height: 40px;
+  padding: 0 14px;
+  font: inherit;
+  font-size: 14px;
+  color: var(--color-label);
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border-input);
   border-radius: var(--radius-field);
-  padding: 10px 16px;
-  font-size: 0.85rem;
   cursor: pointer;
-  white-space: nowrap;
+  transition:
+    border-color 0.15s,
+    box-shadow 0.15s;
 }
-
+.filterButton:hover {
+  border-color: var(--color-olive);
+}
 .filterCaret {
-  font-size: 0.7rem;
+  font-size: 11px;
+  color: var(--color-muted);
 }
 
 .filterBackdrop {
   position: fixed;
   inset: 0;
-  z-index: var(--z-dropdown);
+  z-index: calc(var(--z-dropdown) - 1);
+  background: transparent;
 }
-
 .filterMenu {
   position: absolute;
   top: calc(100% + 6px);
   left: 0;
-  min-width: 180px;
-  background: var(--color-surface);
+  z-index: var(--z-dropdown);
+  min-width: 100%;
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  background: var(--color-surface-alt);
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-dropdown);
-  list-style: none;
-  margin: 0;
-  padding: 6px;
-  z-index: calc(var(--z-dropdown) + 1);
 }
 
 .filterOption,
 .filterOptionActive {
   display: block;
   width: 100%;
+  padding: 8px 12px;
+  font: inherit;
+  font-size: 14px;
   text-align: left;
-  padding: 9px 12px;
-  border: none;
-  background: none;
-  border-radius: 5px;
-  font-size: 0.85rem;
-  color: var(--color-label);
+  white-space: nowrap;
+  color: var(--color-text);
+  background: transparent;
+  border: 0;
+  border-radius: var(--radius-field);
   cursor: pointer;
 }
-
 .filterOption:hover {
   background: var(--color-bg);
 }
-
 .filterOptionActive {
-  background: var(--color-primary);
-  color: var(--color-on-accent);
   font-weight: 600;
+  color: var(--color-primary);
+  background: var(--color-status-success);
 }
-
-/* --- Add button --- */
 
 .addButton {
-  background: var(--color-accent);
-  color: var(--color-on-accent);
-  border: none;
-  border-radius: var(--radius-field);
-  padding: 10px 18px;
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
+  height: 40px;
+  margin-left: auto;
+  padding: 0 18px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 500;
   white-space: nowrap;
-  transition: background-color 150ms ease;
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  border: 0;
+  border-radius: var(--radius-field);
+  cursor: pointer;
+  transition: background 0.15s;
 }
-
-.filterButton:hover {
-  filter: brightness(0.95);
-}
-
 .addButton:hover {
   background: var(--color-accent-hover);
 }
+.addButton:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
 
-/* --- Table --- */
-
+/* ---------- Table (grid-based) ---------- */
 .tableCard {
   background: var(--color-surface);
   border: 1px solid var(--color-border);
@@ -152,110 +168,192 @@
   overflow: hidden;
 }
 
-.tableHeaderRow {
+.tableHeaderRow,
+.tableRow {
   display: grid;
-  grid-template-columns: 2.2fr 1.6fr 1.8fr 1.4fr;
-  padding: 14px 20px;
-  background: var(--color-bg);
-  font-size: 0.75rem;
-  color: var(--color-muted);
+  grid-template-columns: minmax(180px, 2fr) minmax(140px, 1.5fr) minmax(
+      170px,
+      1.6fr
+    ) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 0 20px;
+}
+
+.tableHeaderRow {
+  height: 44px;
+  font-size: 11px;
   font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-muted);
+  border-bottom: 1px solid var(--color-border);
 }
 
 .tableRow {
-  display: grid;
-  grid-template-columns: 2.2fr 1.6fr 1.8fr 1.4fr;
-  align-items: center;
-  padding: 16px 20px;
-  border-top: 1px solid var(--color-border-soft);
+  min-height: 68px;
+  padding-top: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--color-border-soft);
+  transition: background 0.12s;
+}
+.tableRow:last-of-type {
+  border-bottom: 0;
+}
+.tableRow:hover {
+  background: var(--color-bg);
+}
+
+.stateRow {
+  padding: 48px 20px;
+  font-size: 14px;
+  text-align: center;
+  color: var(--color-muted);
 }
 
 .guestCell {
   display: flex;
   align-items: center;
   gap: 12px;
+  min-width: 0;
 }
-
 .avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  color: var(--color-on-accent);
-  display: flex;
+  flex: none;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  width: 38px;
+  height: 38px;
+  font-size: 13px;
   font-weight: 600;
-  flex-shrink: 0;
+  color: var(--color-on-accent);
+  border-radius: var(--radius-pill);
 }
-
 .guestName {
-  font-weight: 600;
-  font-size: 0.9rem;
+  overflow: hidden;
+  font-size: 14.5px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
-
 .contactCell {
-  font-size: 0.85rem;
-  color: var(--color-label);
+  overflow: hidden;
+  font-size: 13.5px;
+  color: var(--color-muted);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.stayCell {
+  min-width: 0;
 }
 
-.stayCell span {
-  display: inline-block;
-  padding: 5px 12px;
-  border-radius: 5px;
-  font-size: 0.78rem;
-  font-weight: 600;
-}
-
-.pillActive {
-  background: var(--color-status-active);
-  color: var(--color-status-active-text);
-}
-
-.pillInStay {
-  background: var(--color-status-instay);
-  color: var(--color-status-instay-text);
-}
-
+/* Status pills */
+.pillActive,
+.pillInStay,
+.pillUpcoming,
 .pillCancelled {
-  background: var(--color-status-cancelled);
-  color: var(--color-status-cancelled-text);
+  display: inline-block;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1.4;
+  white-space: nowrap;
+  border-radius: var(--radius-pill);
 }
-
+.pillActive {
+  color: var(--color-status-active-text);
+  background: var(--color-status-active);
+}
+.pillInStay {
+  color: var(--color-status-instay-text);
+  background: var(--color-status-instay);
+}
 .pillUpcoming {
-  background: var(--color-status-upcoming);
   color: var(--color-status-upcoming-text);
+  background: var(--color-status-upcoming);
+}
+.pillCancelled {
+  color: var(--color-status-cancelled-text);
+  background: var(--color-status-cancelled);
 }
 
+/* Row actions */
 .actionsCell {
   display: flex;
+  align-items: center;
   justify-content: flex-end;
-  gap: 16px;
+  gap: 8px;
 }
-
-.stateRow {
-  padding: 24px 20px;
-  text-align: center;
-  color: var(--color-muted);
-  font-size: 0.85rem;
-}
-
 .viewLink,
 .bookLink {
-  font-size: 0.85rem;
-  font-weight: 600;
+  padding: 7px 14px;
+  font-size: 13px;
+  font-weight: 500;
   text-decoration: none;
+  white-space: nowrap;
+  border-radius: var(--radius-field);
+  transition:
+    background 0.15s,
+    color 0.15s,
+    border-color 0.15s;
 }
-
 .viewLink {
-  color: var(--color-accent);
+  color: var(--color-label);
+  border: 1px solid var(--color-border-input);
+  background: var(--color-surface-alt);
 }
-
+.viewLink:hover {
+  border-color: var(--color-olive);
+  background: var(--color-bg);
+}
 .bookLink {
-  color: var(--color-primary);
+  color: var(--color-on-accent);
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+}
+.bookLink:hover {
+  background: var(--color-primary-hover);
+}
+.viewLink:focus-visible,
+.bookLink:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
-.viewLink:hover,
-.bookLink:hover {
-  text-decoration: underline;
+/* ---------- Responsive ---------- */
+@media (max-width: 860px) {
+  .main {
+    padding: 20px 16px 32px;
+  }
+  .addButton {
+    margin-left: 0;
+  }
+  .tableHeaderRow {
+    display: none;
+  }
+  .tableRow {
+    grid-template-columns: 1fr;
+    gap: 8px;
+    padding: 16px;
+  }
+  .actionsCell {
+    justify-content: flex-start;
+    margin-top: 4px;
+  }
+}
+@media (max-width: 560px) {
+  .toolbar > * {
+    flex: 1 1 100%;
+  }
+  .filterButton,
+  .addButton {
+    width: 100%;
+    justify-content: space-between;
+  }
+  .addButton {
+    justify-content: center;
+  }
+  .filterMenu {
+    width: 100%;
+  }
 }
