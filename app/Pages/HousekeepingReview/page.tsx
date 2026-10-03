@@ -209,13 +209,13 @@ export default function HousekeepingReviewPage() {
           ? {
               ...task,
               status: reviewAction === "approved" ? "approved" : "pending",
-              comment: comment.trim() || task.comment,
-              reviewedAt: "Just now",
+              notes: comment.trim() || task.comment,
+              completed_at: "Just now",
             }
           : task,
       ),
     );
-
+    
     setReviewTask(null);
     setReviewAction(null);
     setComment("");
