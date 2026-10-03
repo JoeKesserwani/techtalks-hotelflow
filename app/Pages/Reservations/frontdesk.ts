@@ -171,9 +171,11 @@ export const findRoomConflict = (
   roomId: string,
   inD: string,
   outD: string,
+  ignoreId?: string,
 ) =>
   all.find(
     (r) =>
+      r.id !== ignoreId &&
       r.roomId === roomId &&
       ACTIVE.includes(r.status) &&
       overlaps(r, inD, outD),
