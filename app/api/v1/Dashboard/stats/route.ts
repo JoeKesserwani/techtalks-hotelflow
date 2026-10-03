@@ -5,7 +5,7 @@ import { requireAuth } from "@/lib/middleware/requireAuth";
 export async function GET() {
   try {
     const authUser = await requireAuth({
-      roles: ["ADMIN","MANAGER"],
+      roles: ["ADMIN", "MANAGER"],
     });
 
     if (!authUser) {
@@ -25,16 +25,18 @@ export async function GET() {
       day: "2-digit",
     }).format(now);
 
-    const startOfToday = new Date(`${lebanonDate}T00:00:00`);
+    const startOfToday = new Date(`${lebanonDate}T00:00:00.000Z`);
 
     const startOfTomorrow = new Date(startOfToday);
-    startOfTomorrow.setDate(startOfTomorrow.getDate() + 1);
+    startOfTomorrow.setUTCDate(startOfTomorrow.getUTCDate() + 1);
 
     const startOfDayAfterTomorrow = new Date(startOfTomorrow);
-    startOfDayAfterTomorrow.setDate(startOfDayAfterTomorrow.getDate() + 1);
+    startOfDayAfterTomorrow.setUTCDate(
+      startOfDayAfterTomorrow.getUTCDate() + 1,
+    );
 
     const startOfYesterday = new Date(startOfToday);
-    startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+    startOfYesterday.setUTCDate(startOfYesterday.getUTCDate() - 1);
 
     // -------------------------
     // Dashboard database queries
@@ -42,16 +44,16 @@ export async function GET() {
 
     // These queries are independent from each other,
     // so run them in parallel instead of one after another.
-   const dashboardStart = performance.now();
+    const dashboardStart = performance.now();
 
-const [
-  totalRooms,
-  occupiedRooms,
-  arrivals,
-  departures,
-  awaitingApproval,
-  housekeepingReview,
-  allRooms,
+    const [
+      totalRooms,
+      occupiedRooms,
+      arrivals,
+      departures,
+      awaitingApproval,
+      housekeepingReview,
+      allRooms,
     ] = await Promise.all([
       // -------------------------
       // Total Rooms
@@ -129,9 +131,9 @@ const [
           assignedTo: true,
         },
         orderBy: {
-  completedAt: "desc",
-},
-take: 3,
+          completedAt: "desc",
+        },
+        take: 3,
       }),
 
       // -------------------------
@@ -179,9 +181,9 @@ take: 3,
         },
       }),
     ]);
-console.log(
-  `Dashboard DB queries: ${(performance.now() - dashboardStart).toFixed(0)}ms`
-);
+    console.log(
+      `Dashboard DB queries: ${(performance.now() - dashboardStart).toFixed(0)}ms`,
+    );
     // -------------------------
     // Occupancy
     // -------------------------
