@@ -17,6 +17,15 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "HotelFlow",
   description: "HotelFlow is a platform that helps hotels manage their operations efficiently and effectively. It provides tools for booking management, guest communication, and staff coordination, all in one easy-to-use interface.",
+  manifest: "/manifest.webmanifest",
+  icons: {
+    apple: [{ url: "/icon-180.png", sizes: "180x180", type: "image/png" }],
+  },
+  appleWebApp: {
+    capable: true,
+    title: "HotelFlow",
+    statusBarStyle: "default",
+  },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

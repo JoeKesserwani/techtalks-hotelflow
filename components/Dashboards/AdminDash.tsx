@@ -4,6 +4,7 @@ import React from "react";
 import styles from "./AdminDash.module.css";
 import { useAuth } from "../Auth/AuthProvider";
 import { useRouter } from "next/navigation";
+import Header from "../Header/Header";
 
 type RoomStatus =
   | "AVAILABLE"
@@ -21,6 +22,7 @@ interface Room {
   updatedAt: string;
   status: RoomStatus;
 }
+
 const getRoomStatusLabel = (status: RoomStatus) => {
   switch (status) {
     case "AVAILABLE":
@@ -66,114 +68,308 @@ const AdminDash = () => {
   const { user } = useAuth();
   const router = useRouter();
 
-  // Dashboard statistics fetched from the backend API
+  // --------------------------------------------------
+  // DASHBOARD STATISTICS
+  // --------------------------------------------------
+
   const [occupancy, setOccupancy] = React.useState<number | null>(null);
   const [arrivals, setArrivals] = React.useState<number | null>(null);
   const [departures, setDepartures] = React.useState<number | null>(null);
-  const [awaitingApproval, setAwaitingApproval] = React.useState<number | null>(
-    null,
-  );
+  const [awaitingApproval, setAwaitingApproval] =
+    React.useState<number | null>(null);
 
-  // Stores the rooms returned from the dashboard API
+  // --------------------------------------------------
+  // ROOMS
+  // --------------------------------------------------
+
   const [rooms, setRooms] = React.useState<Room[]>([]);
 
-  // Stores housekeeping tasks waiting for manager approval
+  // --------------------------------------------------
+  // HOUSEKEEPING REVIEW
+  // --------------------------------------------------
+
   const [housekeepingReview, setHousekeepingReview] = React.useState<
     HousekeepingTask[]
   >([]);
 
-  // Stores the housekeeping task currently selected by the manager
   const [selectedTask, setSelectedTask] =
     React.useState<HousekeepingTask | null>(null);
 
-  // Form input states for modal actions
+  // --------------------------------------------------
+  // MODAL FORM STATES
+  // --------------------------------------------------
+
   const [commentText, setCommentText] = React.useState("");
   const [rejectionReason, setRejectionReason] = React.useState("");
 
-  // Controls which housekeeping action popup is currently displayed
+  // Prevent duplicate approve/reject requests
+  const [isUpdatingTask, setIsUpdatingTask] = React.useState(false);
+
+  // Error shown inside approve/reject modal
+  const [taskActionError, setTaskActionError] =
+    React.useState<string | null>(null);
+
+  // --------------------------------------------------
+  // MODAL STATE
+  // --------------------------------------------------
+
   const [activeModal, setActiveModal] = React.useState<
     "photo" | "comment" | "reject" | "approve" | "success" | null
   >(null);
 
-  // Stores the type of result shown after an action is completed
   const [resultType, setResultType] = React.useState<
     "approved" | "rejected" | "comment" | null
   >(null);
 
-  // Fetch real dashboard data from the backend when the dashboard loads
-  React.useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const response = await fetch("/api/v1/Dashboard/stats");
+  // --------------------------------------------------
+  // FETCH DASHBOARD DATA
+  // --------------------------------------------------
 
-        if (!response.ok) {
-          throw new Error("Failed to fetch dashboard stats");
-        }
+  const fetchStats = React.useCallback(async () => {
+    try {
+      const response = await fetch("/api/v1/Dashboard/stats");
 
-        const data = await response.json();
-
-        setOccupancy(data.occupancy ?? null);
-        setArrivals(data.arrivals ?? null);
-        setDepartures(data.departures ?? null);
-        setAwaitingApproval(data.awaitingApproval ?? null);
-        setHousekeepingReview(data.housekeepingReview ?? []);
-        setRooms(data.rooms ?? []);
-      } catch (error) {
-        console.error("Failed to load dashboard stats:", error);
+      if (!response.ok) {
+        throw new Error("Failed to fetch dashboard stats");
       }
-    };
 
-    fetchStats();
+      const data = await response.json();
+
+      setOccupancy(data.occupancy ?? null);
+      setArrivals(data.arrivals ?? null);
+      setDepartures(data.departures ?? null);
+      setAwaitingApproval(data.awaitingApproval ?? null);
+      setHousekeepingReview(data.housekeepingReview ?? []);
+      setRooms(data.rooms ?? []);
+    } catch (error) {
+      console.error("Failed to load dashboard stats:", error);
+    }
   }, []);
 
-  // Modal Action Handlers
-  const handleApprove = async () => {
-    if (!selectedTask) return;
-    // Optional: Call API to approve task here
+  React.useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
-    // Filter approved task out of list locally
-    setHousekeepingReview((prev) =>
-      prev.filter((t) => t.id !== selectedTask.id),
-    );
-    setResultType("approved");
-    setActiveModal("success");
+  // --------------------------------------------------
+  // APPROVE HOUSEKEEPING TASK
+  // --------------------------------------------------
+
+  const handleApprove = async () => {
+    if (!selectedTask || isUpdatingTask) return;
+
+    setIsUpdatingTask(true);
+    setTaskActionError(null);
+
+    try {
+      let response = await fetch(
+        `/api/v1/housekeeping/tasks/${selectedTask.id}/review`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "approve",
+          }),
+        },
+      );
+
+      // Refresh access token if necessary
+      if (response.status === 401) {
+        const refreshResponse = await fetch("/api/v1/auth/refresh", {
+          method: "POST",
+        });
+
+        if (refreshResponse.ok) {
+          response = await fetch(
+            `/api/v1/housekeeping/tasks/${selectedTask.id}/review`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                action: "approve",
+              }),
+            },
+          );
+        }
+      }
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ?? "Unable to approve housekeeping task.",
+        );
+      }
+
+      // Remove the approved task immediately from the current list.
+      setHousekeepingReview((prev) =>
+        prev.filter((task) => task.id !== selectedTask.id),
+      );
+
+      // Update the approval counter immediately.
+      setAwaitingApproval((prev) =>
+        prev !== null ? Math.max(0, prev - 1) : prev,
+      );
+
+      // IMPORTANT:
+      // Reload data from the database so the room status is updated.
+      //
+      // Backend:
+      // Task IN_REVIEW -> DONE
+      // Room IN_REVIEW -> AVAILABLE
+      await fetchStats();
+
+      setResultType("approved");
+      setActiveModal("success");
+    } catch (error) {
+      setTaskActionError(
+        error instanceof Error
+          ? error.message
+          : "Unable to approve housekeeping task.",
+      );
+    } finally {
+      setIsUpdatingTask(false);
+    }
   };
+
+  // --------------------------------------------------
+  // REJECT HOUSEKEEPING TASK
+  // --------------------------------------------------
 
   const handleReject = async () => {
-    if (!selectedTask) return;
-    // Optional: Call API with rejectionReason here
+    if (!selectedTask || isUpdatingTask) return;
 
-    // Filter rejected task out of list locally
-    setHousekeepingReview((prev) =>
-      prev.filter((t) => t.id !== selectedTask.id),
-    );
-    setResultType("rejected");
-    setActiveModal("success");
+    const reason = rejectionReason.trim();
+
+    if (!reason) {
+      setTaskActionError("A reason is required before rejecting a task.");
+      return;
+    }
+
+    setIsUpdatingTask(true);
+    setTaskActionError(null);
+
+    try {
+      let response = await fetch(
+        `/api/v1/housekeeping/tasks/${selectedTask.id}/review`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            action: "reject",
+            comment: reason,
+          }),
+        },
+      );
+
+      // Refresh access token if necessary
+      if (response.status === 401) {
+        const refreshResponse = await fetch("/api/v1/auth/refresh", {
+          method: "POST",
+        });
+
+        if (refreshResponse.ok) {
+          response = await fetch(
+            `/api/v1/housekeeping/tasks/${selectedTask.id}/review`,
+            {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                action: "reject",
+                comment: reason,
+              }),
+            },
+          );
+        }
+      }
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(
+          data.error ?? "Unable to reject housekeeping task.",
+        );
+      }
+
+      // Remove the rejected task from the review list.
+      setHousekeepingReview((prev) =>
+        prev.filter((task) => task.id !== selectedTask.id),
+      );
+
+      // Update the approval counter immediately.
+      setAwaitingApproval((prev) =>
+        prev !== null ? Math.max(0, prev - 1) : prev,
+      );
+
+      // IMPORTANT:
+      // Reload data from the database so the room status is updated.
+      //
+      // Backend:
+      // Task IN_REVIEW -> PENDING
+      // Room IN_REVIEW -> NEEDS_CLEANING
+      await fetchStats();
+
+      setResultType("rejected");
+      setActiveModal("success");
+    } catch (error) {
+      setTaskActionError(
+        error instanceof Error
+          ? error.message
+          : "Unable to reject housekeeping task.",
+      );
+    } finally {
+      setIsUpdatingTask(false);
+    }
   };
+
+  // --------------------------------------------------
+  // SEND COMMENT
+  // --------------------------------------------------
 
   const handleSendComment = async () => {
     if (!selectedTask) return;
-    // Optional: Call API with commentText here
+
+    // Optional: connect this to a comments API later.
 
     setResultType("comment");
     setActiveModal("success");
   };
 
+  // --------------------------------------------------
+  // RESET MODAL
+  // --------------------------------------------------
+
   const resetModalState = () => {
+    if (isUpdatingTask) return;
+
     setActiveModal(null);
     setSelectedTask(null);
     setResultType(null);
     setCommentText("");
     setRejectionReason("");
+    setTaskActionError(null);
   };
+
+  // --------------------------------------------------
+  // RENDER
+  // --------------------------------------------------
 
   return (
     <div className={styles.dashboard}>
       <main className={styles.main}>
         {/* HEADER */}
-        <header className={styles.header}>
+       {/* <header className={styles.header}>
           <div>
-            <h1 className={styles.title}>Hello, {user?.fullName}!</h1>
+            <h1 className={styles.title}>
+              Hello, {user?.fullName}!
+            </h1>
 
             <p className={styles.date} suppressHydrationWarning>
               {new Date().toLocaleDateString("en-US", {
@@ -186,46 +382,86 @@ const AdminDash = () => {
           </div>
 
           <div className={styles.user}>
-            <span className={styles.roleBadge}>{user?.role}</span>
+            <span className={styles.roleBadge}>
+              {user?.role}
+            </span>
           </div>
-        </header>
-
+        </header>*/}
+        <Header
+          title={`Hello, ${user?.fullName}!`}
+          subtitle={new Date().toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+          userSubtitle={""}
+        />
         {/* DASHBOARD STATISTICS */}
         <section className={styles.statsGrid}>
           <article className={styles.statCard}>
             <strong className={styles.statValue}>
               {occupancy !== null ? `${occupancy}%` : "--"}
             </strong>
-            <p className={styles.statLabel}>OCCUPANCY</p>
+
+            <p className={styles.statLabel}>
+              OCCUPANCY
+            </p>
           </article>
 
           <article className={styles.statCard}>
             <strong className={styles.statValue}>
               {arrivals !== null ? arrivals : "--"}
             </strong>
-            <p className={styles.statLabel}>ARRIVALS TODAY</p>
+
+            <p className={styles.statLabel}>
+              ARRIVALS TODAY
+            </p>
           </article>
 
           <article className={styles.statCard}>
             <strong className={styles.statValue}>
               {departures !== null ? departures : "--"}
             </strong>
-            <p className={styles.statLabel}>DEPARTURES TODAY</p>
+
+            <p className={styles.statLabel}>
+              DEPARTURES TODAY
+            </p>
           </article>
 
           <article className={styles.statCard}>
-            <strong className={`${styles.statValue} ${styles.awaitingValue}`}>
-              {awaitingApproval !== null ? awaitingApproval : "--"}
+            <strong
+              className={`${styles.statValue} ${styles.awaitingValue}`}
+            >
+              {awaitingApproval !== null
+                ? awaitingApproval
+                : "--"}
             </strong>
-            <p className={styles.statLabel}>AWAITING APPROVAL</p>
+
+            <p className={styles.statLabel}>
+              AWAITING APPROVAL
+            </p>
           </article>
         </section>
 
-        {/* HOUSEKEEPING REVIEW */}
+        {/* ==================================================
+            HOUSEKEEPING REVIEW
+        ================================================== */}
+
         <section className={styles.housekeepingSection}>
           <div className={styles.sectionHeader}>
-            <h2>Housekeeping — awaiting approval</h2>
-            <button className={styles.viewAll}>View all</button>
+            <h2>
+              Housekeeping — awaiting approval
+            </h2>
+
+            <button
+              className={styles.viewAll}
+              onClick={() =>
+                router.push("/Pages/HousekeepingReview")
+              }
+            >
+              View all
+            </button>
           </div>
 
           <div className={styles.housekeepingList}>
@@ -235,27 +471,37 @@ const AdminDash = () => {
               </div>
             ) : (
               housekeepingReview.map((task) => (
-                <article key={task.id} className={styles.housekeepingCard}>
-                  {/* Photo */}
+                <article
+                  key={task.id}
+                  className={styles.housekeepingCard}
+                >
+                  {/* PHOTO */}
+
                   <button
                     className={styles.photo}
                     onClick={() => {
                       setSelectedTask(task);
+                      setTaskActionError(null);
                       setActiveModal("photo");
                     }}
                   >
                     Photo
                   </button>
 
-                  {/* Room information */}
+                  {/* ROOM INFORMATION */}
+
                   <div className={styles.roomInfo}>
-                    <h3>Room {task.room?.roomNumber}</h3>
+                    <h3>
+                      Room {task.room?.roomNumber}
+                    </h3>
 
                     <p>
                       {task.assignedTo?.fullName}
                       {" • "}
                       {task.completedAt
-                        ? new Date(task.completedAt).toLocaleTimeString([], {
+                        ? new Date(
+                            task.completedAt,
+                          ).toLocaleTimeString([], {
                             hour: "2-digit",
                             minute: "2-digit",
                           })
@@ -265,22 +511,15 @@ const AdminDash = () => {
                     </p>
                   </div>
 
-                  {/* Actions */}
-                  <div className={styles.actions}>
-                    <button
-                      className={styles.commentButton}
-                      onClick={() => {
-                        setSelectedTask(task);
-                        setActiveModal("comment");
-                      }}
-                    >
-                      Comment
-                    </button>
+                  {/* ACTIONS */}
 
+                  <div className={styles.actions}>
                     <button
                       className={styles.rejectButton}
                       onClick={() => {
                         setSelectedTask(task);
+                        setTaskActionError(null);
+                        setRejectionReason("");
                         setActiveModal("reject");
                       }}
                     >
@@ -291,6 +530,7 @@ const AdminDash = () => {
                       className={styles.approveButton}
                       onClick={() => {
                         setSelectedTask(task);
+                        setTaskActionError(null);
                         setActiveModal("approve");
                       }}
                     >
@@ -303,21 +543,49 @@ const AdminDash = () => {
           </div>
         </section>
 
-        {/* HOUSEKEEPING ACTION MODALS */}
+        {/* ==================================================
+            HOUSEKEEPING ACTION MODALS
+        ================================================== */}
+
         {activeModal && selectedTask && (
-          <div className={styles.modalOverlay} onClick={resetModalState}>
-            <div className={styles.modal} onClick={(e) => e.stopPropagation()}>
-              <button className={styles.modalClose} onClick={resetModalState}>
+          <div
+            className={styles.modalOverlay}
+            onClick={resetModalState}
+          >
+            <div
+              className={styles.modal}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Close button */}
+
+              <button
+                className={styles.modalClose}
+                onClick={resetModalState}
+                disabled={isUpdatingTask}
+              >
                 ×
               </button>
 
+              {/* Modal title */}
+
               <h2>
-                {activeModal === "photo" && "Housekeeping Photo"}
-                {activeModal === "comment" && "Add Comment"}
-                {activeModal === "reject" && "Reject Task"}
-                {activeModal === "approve" && "Approve Task"}
-                {activeModal === "success" && "Status Updated"}
+                {activeModal === "photo" &&
+                  "Housekeeping Photo"}
+
+                {activeModal === "comment" &&
+                  "Add Comment"}
+
+                {activeModal === "reject" &&
+                  "Reject Task"}
+
+                {activeModal === "approve" &&
+                  "Approve Task"}
+
+                {activeModal === "success" &&
+                  "Status Updated"}
               </h2>
+
+              {/* Room information */}
 
               {activeModal !== "success" && (
                 <p className={styles.modalRoom}>
@@ -326,7 +594,10 @@ const AdminDash = () => {
                 </p>
               )}
 
-              {/* Photo Modal */}
+              {/* ==================================================
+                  PHOTO MODAL
+              ================================================== */}
+
               {activeModal === "photo" && (
                 <div className={styles.modalPhoto}>
                   {selectedTask.photoUrl ? (
@@ -340,14 +611,19 @@ const AdminDash = () => {
                 </div>
               )}
 
-              {/* Comment Modal */}
+              {/* ==================================================
+                  COMMENT MODAL
+              ================================================== */}
+
               {activeModal === "comment" && (
                 <>
                   <textarea
                     className={styles.modalTextarea}
                     placeholder="Write your comment..."
                     value={commentText}
-                    onChange={(e) => setCommentText(e.target.value)}
+                    onChange={(e) =>
+                      setCommentText(e.target.value)
+                    }
                   />
 
                   <button
@@ -359,46 +635,79 @@ const AdminDash = () => {
                 </>
               )}
 
-              {/* Reject Modal */}
+              {/* ==================================================
+                  REJECT MODAL
+              ================================================== */}
+
               {activeModal === "reject" && (
                 <>
                   <p className={styles.modalText}>
-                    Are you sure you want to reject this housekeeping task?
+                    Are you sure you want to reject this
+                    housekeeping task?
                   </p>
 
                   <textarea
                     className={styles.modalTextarea}
                     placeholder="Reason for rejection..."
                     value={rejectionReason}
-                    onChange={(e) => setRejectionReason(e.target.value)}
+                    onChange={(e) => {
+                      setRejectionReason(e.target.value);
+                      setTaskActionError(null);
+                    }}
+                    disabled={isUpdatingTask}
                   />
+
+                  {taskActionError && (
+                    <p className={styles.errorMessage}>
+                      {taskActionError}
+                    </p>
+                  )}
 
                   <button
                     className={styles.modalRejectButton}
                     onClick={handleReject}
+                    disabled={isUpdatingTask}
                   >
-                    Reject Task
+                    {isUpdatingTask
+                      ? "Rejecting..."
+                      : "Reject Task"}
                   </button>
                 </>
               )}
 
-              {/* Approve Modal */}
+              {/* ==================================================
+                  APPROVE MODAL
+              ================================================== */}
+
               {activeModal === "approve" && (
                 <>
                   <p className={styles.modalText}>
-                    Are you sure you want to approve this housekeeping task?
+                    Are you sure you want to approve this
+                    housekeeping task?
                   </p>
+
+                  {taskActionError && (
+                    <p className={styles.errorMessage}>
+                      {taskActionError}
+                    </p>
+                  )}
 
                   <button
                     className={styles.modalApproveButton}
                     onClick={handleApprove}
+                    disabled={isUpdatingTask}
                   >
-                    Approve Task
+                    {isUpdatingTask
+                      ? "Approving..."
+                      : "Approve Task"}
                   </button>
                 </>
               )}
 
-              {/* Success Screen Modal */}
+              {/* ==================================================
+                  SUCCESS MODAL
+              ================================================== */}
+
               {activeModal === "success" && (
                 <>
                   <div
@@ -410,7 +719,9 @@ const AdminDash = () => {
                           : styles.commentIcon
                     }`}
                   >
-                    {resultType === "rejected" ? "×" : "✓"}
+                    {resultType === "rejected"
+                      ? "×"
+                      : "✓"}
                   </div>
 
                   <h3
@@ -453,13 +764,21 @@ const AdminDash = () => {
           </div>
         )}
 
-        {/* ROOM STATUS */}
+        {/* ==================================================
+            ROOM STATUS
+        ================================================== */}
+
         <section className={styles.roomStatusSection}>
           <div className={styles.sectionHeader}>
-            <h2>Room Status — All floors</h2>
+            <h2>
+              Room Status — All floors
+            </h2>
+
             <button
               className={styles.viewAll}
-              onClick={() => router.push("/Pages/Rooms")}
+              onClick={() =>
+                router.push("/Pages/Rooms")
+              }
             >
               View all
             </button>
@@ -505,37 +824,55 @@ const AdminDash = () => {
                   key={room.id}
                   className={`${styles.roomStatusCard} ${statusClass}`}
                 >
-                  <strong>{room.roomNumber}</strong>
+                  <strong>
+                    {room.roomNumber}
+                  </strong>
 
-                  <span>{getRoomStatusLabel(room.status)}</span>
+                  <span>
+                    {getRoomStatusLabel(room.status)}
+                  </span>
                 </div>
               );
             })}
           </div>
 
+          {/* ==================================================
+              ROOM STATUS LEGEND
+          ================================================== */}
+
           <div className={styles.roomStatusLegend}>
             <div>
-              <span className={`${styles.legendDot} ${styles.availableDot}`} />
+              <span
+                className={`${styles.legendDot} ${styles.availableDot}`}
+              />
               Available
             </div>
 
             <div>
-              <span className={`${styles.legendDot} ${styles.reservedDot}`} />
+              <span
+                className={`${styles.legendDot} ${styles.reservedDot}`}
+              />
               Reserved
             </div>
 
             <div>
-              <span className={`${styles.legendDot} ${styles.occupiedDot}`} />
+              <span
+                className={`${styles.legendDot} ${styles.occupiedDot}`}
+              />
               Occupied
             </div>
 
             <div>
-              <span className={`${styles.legendDot} ${styles.cleaningDot}`} />
+              <span
+                className={`${styles.legendDot} ${styles.cleaningDot}`}
+              />
               Needs cleaning
             </div>
 
             <div>
-              <span className={`${styles.legendDot} ${styles.approvalDot}`} />
+              <span
+                className={`${styles.legendDot} ${styles.approvalDot}`}
+              />
               In review
             </div>
 
@@ -543,7 +880,7 @@ const AdminDash = () => {
               <span
                 className={`${styles.legendDot} ${styles.cleaningProgressDot}`}
               />
-              Cleaning 
+              Cleaning
             </div>
 
             <div>

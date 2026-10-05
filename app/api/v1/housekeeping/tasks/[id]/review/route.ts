@@ -4,6 +4,7 @@ import { prisma } from '../../../../../../../lib/db';
 import { requireAuth } from '../../../../../../../lib/middleware/requireAuth';
 import { writeAuditLog } from '../../../../../../../lib/services/audit.service';
 import { ApiError, handleRouteError } from '../../../../../../../lib/api/errors';
+import { createNotification } from '@/lib/notifications';
 
 const reviewHousekeepingTaskSchema = z.object({
   action: z.enum(['approve', 'reject']),
@@ -28,6 +29,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     if (task.status !== 'IN_REVIEW') {
       throw new ApiError('Only tasks awaiting review can be reviewed', 409);
     }
+
+    const room = await prisma.room.findFirst({
+      where: { id: task.roomId, hotelId: user.hotelId },
+      select: { roomNumber: true },
+    });
 
     const isApproved = parsed.data.action === 'approve';
     const updated = await prisma.$transaction(async (tx) => {
@@ -70,6 +76,21 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         entityType: 'housekeeping_task',
         metadata: { taskId: id, roomId: task.roomId, comment: parsed.data.comment ?? null },
       });
+
+      const comment = parsed.data.comment?.trim();
+      await createNotification(
+        {
+          hotelId: task.hotelId,
+          userId: task.assignedToUserId,
+          title: isApproved ? 'Cleaning task approved' : 'Cleaning task rejected',
+          message: isApproved
+            ? `Your cleaning task for Room ${room?.roomNumber ?? task.roomId} has been approved.`
+            : `Your cleaning task for Room ${room?.roomNumber ?? task.roomId} was rejected.`,
+          type: isApproved ? 'TASK_APPROVED' : 'TASK_REJECTED',
+          taskId: task.id,
+        },
+        tx,
+      );
 
       return result;
     });

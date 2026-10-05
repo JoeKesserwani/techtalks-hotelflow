@@ -3,6 +3,7 @@ import { requireAuth } from '../../../../../lib/middleware/requireAuth';
 import { createHousekeepingTaskSchema } from '../../../../../lib/validators/housekeeping';
 import { writeAuditLog } from '../../../../../lib/services/audit.service';
 import { ApiError, handleRouteError } from '../../../../../lib/api/errors';
+import { createNotification } from '@/lib/notifications';
 
 export async function GET() {
   try {
@@ -73,7 +74,14 @@ export async function POST(req: Request) {
           status: 'PENDING',
         },
       });
-
+      await createNotification({
+        hotelId: user.hotelId,
+        userId: assignedToUserId,
+        title: "New housekeeping task",
+        message: `You have been assigned to clean Room ${room.roomNumber}.`,
+        type: "TASK_ASSIGNED",
+        taskId: created.id,
+      }, tx);
       await writeAuditLog(tx, {
         hotelId: user.hotelId,
         userId: user.userId,
@@ -81,10 +89,10 @@ export async function POST(req: Request) {
         entityType: 'housekeeping_task',
         metadata: { taskId: created.id, roomId, assignedToUserId },
       });
-
+        
       return created;
     });
-
+    
     return Response.json(task, { status: 201 });
   } catch (err) {
     return handleRouteError(err);

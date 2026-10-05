@@ -21,9 +21,9 @@ export async function POST(req: Request) {
     const { email, password } = parsed.data;
 
     const user = await prisma.user.findUnique({ where: { email } });
-//     console.log("Login email:", email);
-// console.log("User found:", !!user);
-// console.log("User active:", user?.isActive);
+    //     console.log("Login email:", email);
+    // console.log("User found:", !!user);
+    // console.log("User active:", user?.isActive);
     if (!user || !user.isActive) {
       throw new ApiError("Invalid credentials", 401);
     }

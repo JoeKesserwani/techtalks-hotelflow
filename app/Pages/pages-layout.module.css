@@ -7,3 +7,34 @@
   min-width: 0;
   flex: 1;
 }
+
+.loading {
+  display: grid;
+  min-height: 100vh;
+  place-content: center;
+  justify-items: center;
+  gap: 12px;
+  color: #475569;
+  font-size: 0.95rem;
+}
+
+.loadingSpinner {
+  width: 32px;
+  aspect-ratio: 1;
+  border: 3px solid #dbe3e7;
+  border-top-color: #16827b;
+  border-radius: 50%;
+  animation: loadingSpin 0.8s linear infinite;
+}
+
+@keyframes loadingSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loadingSpinner {
+    animation-duration: 2s;
+  }
+}

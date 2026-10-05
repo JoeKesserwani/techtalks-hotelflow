@@ -7,8 +7,9 @@ import { useAuth } from "@/components/Auth/AuthProvider";
 import styles from "./navbar.module.css";
 
 const AdminNavigation = [
-  { name: "Dashboard", href:"/Pages/Dashboard" },
+  { name: "Dashboard", href: "/Pages/Dashboard" },
   { name: "Housekeeping review", href: "/Pages/HousekeepingReview" },
+  { name: "Reservations History", href: "/Pages/Reservations-History" },
   { name: "Reservations", href: "/Pages/Reservations" },
   { name: "Guests", href: "/Pages/Guests" },
   { name: "Rooms setup", href: "/Pages/Rooms" },
@@ -20,6 +21,7 @@ const AdminNavigation = [
 const ManagerNavigation = [
   { name: "Dashboard", href: "/Pages/Dashboard" },
   { name: "Housekeeping review", href: "/Pages/HousekeepingReview" },
+  { name: "Reservations History", href: "/Pages/Reservations-History" },
   { name: "Reservations", href: "/Pages/Reservations" },
   { name: "Guests", href: "/Pages/Guests" },
   { name: "Rooms setup", href: "/Pages/Rooms" },
@@ -30,21 +32,29 @@ const ManagerNavigation = [
 const ReceptionistNavigation = [
   { name: "Dashboard", href: "/Pages/Dashboard" },
   { name: "Housekeeping review", href: "/Pages/HousekeepingReview" },
+  { name: "Reservations History", href: "/Pages/Reservations-History" },
   { name: "Reservations", href: "/Pages/Reservations" },
   { name: "Guests", href: "/Pages/Guests" },
   { name: "Rooms setup", href: "/Pages/Rooms" },
 ];
 
+const HousekeepingNavigation = [
+  { name: "Dashboard", href: "/Pages/Dashboard" },
+  { name: "History", href: "/Pages/Housekeeping-History" },
+  { name: "Notifications", href: "/Pages/Housekeeping-Notifications" },
+]
+
 const navigationByRole = {
   ADMIN: AdminNavigation,
   MANAGER: ManagerNavigation,
   RECEPTIONIST: ReceptionistNavigation,
+  HOUSEKEEPING: HousekeepingNavigation,
 } as const;
 
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, setUser } = useAuth();
+  const { user, setUser, hotel, hotelLoading } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   const [logoutError, setLogoutError] = useState<string | null>(null);
@@ -89,42 +99,49 @@ export default function Sidebar() {
       )}
 
       <aside className={`${styles.sidebar} ${isOpen ? styles.open : ""}`}>
-      <div className={styles.hotelHeader}>
-        <h1>HotelFlow</h1>
-        <p>Hotel Name - location</p>
-      </div>
+        <div className={styles.hotelHeader}>
+          <h1>HotelFlow</h1>
+          <p>
+            {hotel?.name ?? (hotelLoading ? "Loading hotel..." : "")}{" "}
+            {hotel?.address ?? (hotelLoading ? "Loading address..." : "")}
+          </p>
+        </div>
 
-      <nav className={styles.navigation}>
-        {navigation.map((item) => {
-          const isActive = pathname === item.href;
+        <nav className={styles.navigation}>
+          {navigation.map((item) => {
+            const currentPath = pathname?.replace(/\/+$/, "") || "/";
+            const itemPath = item.href.replace(/\/+$/, "") || "/";
+            const isActive =
+              currentPath === itemPath ||
+              currentPath.startsWith(`${itemPath}/`);
 
-          return (
-            <Link
-              key={item.name}
-              href={item.href}
-              className={`${styles.navItem} ${isActive ? styles.active : ""}`}
-              onClick={() => setIsOpen(false)}
-            >
-              {item.name}
-            </Link>
-          );
-        })}
-      </nav>
+            return (
+              <Link
+                key={item.name}
+                href={item.href}
+                className={`${styles.navItem} ${isActive ? styles.active : ""}`}
+                onClick={() => setIsOpen(false)}
+              >
+                {item.name}
+              </Link>
+            );
+          })}
+        </nav>
 
-      {/* User section */}
-      <div className={styles.userSection}>
-        <p>Signed in as</p>
-        <strong>{user?.fullName ?? "Loading..."}</strong>
-        {logoutError && <p>{logoutError}</p>}
-      </div>
-      <button
-        type="button"
-        className={styles.logoutButton}
-        onClick={handleLogout}
-        disabled={isLoggingOut}
-      >
-        {isLoggingOut ? "Logging out..." : "Logout"}
-      </button>
+        {/* User section */}
+        <div className={styles.userSection}>
+          <p>Signed in as</p>
+          <strong>{user?.fullName ?? "Loading..."}</strong>
+          {logoutError && <p>{logoutError}</p>}
+        </div>
+        <button
+          type="button"
+          className={styles.logoutButton}
+          onClick={handleLogout}
+          disabled={isLoggingOut}
+        >
+          {isLoggingOut ? "Logging out..." : "Logout"}
+        </button>
       </aside>
     </>
   );

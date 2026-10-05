@@ -22,7 +22,7 @@ function toSafeUser(user: {
 
 export async function GET() {
   try {
-    const user = await requireAuth({ roles: ['ADMIN', 'MANAGER'] });
+    const user = await requireAuth({ roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'] });
     if (!user) throw new ApiError('Unauthorized', 401);
 
     const users = await prisma.user.findMany({

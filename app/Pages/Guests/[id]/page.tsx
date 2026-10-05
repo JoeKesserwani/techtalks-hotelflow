@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import styles from "./page.module.css";
+import Header from "@/components/Header/Header";
 
 type Room = { roomNumber: string };
 type Reservation = {
@@ -52,9 +53,13 @@ function statusLabel(status: Reservation["status"]) {
   }
 }
 
-function statusPillClass(status: Reservation["status"], styles: Record<string, string>) {
+function statusPillClass(
+  status: Reservation["status"],
+  styles: Record<string, string>,
+) {
   if (status === "CHECKED_IN") return styles.pillInStay;
-  if (status === "CANCELLED" || status === "NO_SHOW") return styles.pillCancelled;
+  if (status === "CANCELLED" || status === "NO_SHOW")
+    return styles.pillCancelled;
   return styles.pillCompleted;
 }
 
@@ -112,20 +117,11 @@ export default function GuestDetailPage() {
           </svg>
           Back to guests
         </Link>
-
-        <header className={styles.topBar}>
-          <div>
-            <h2>Guests</h2>
-            <p className={styles.breadcrumb}>
-              Guests &rarr; {guest ? guest.fullName : "..."}
-            </p>
-          </div>
-          <div className={styles.adminBadge}>
-            <span>Admin's name</span>
-            <span className={styles.adminPill}>ADMIN</span>
-          </div>
-        </header>
-
+        {Header({
+          title: "Guests",
+          subtitle: `Guests \u2192 `+ `${guest ? guest.fullName : "Loading..."}`,
+          userSubtitle: "Checking guests",
+        })}
         {isLoading && <p className={styles.stateText}>Loading guest...</p>}
         {!isLoading && error && <p className={styles.stateText}>{error}</p>}
 
@@ -133,11 +129,14 @@ export default function GuestDetailPage() {
           <>
             <section className={styles.profileCard}>
               <div className={styles.profileHeader}>
-                <span className={styles.avatar}>{initials(guest.fullName)}</span>
+                <span className={styles.avatar}>
+                  {initials(guest.fullName)}
+                </span>
                 <div>
                   <h3>{guest.fullName}</h3>
                   <p className={styles.contactLine}>
-                    {guest.phone ?? "No phone on file"} · {guest.email ?? "No email on file"}
+                    {guest.phone ?? "No phone on file"} ·{" "}
+                    {guest.email ?? "No email on file"}
                   </p>
                 </div>
               </div>
@@ -151,7 +150,9 @@ export default function GuestDetailPage() {
                 </div>
                 <div>
                   <span className={styles.detailLabel}>Note</span>
-                  <span className={styles.detailValue}>{guest.note ?? "—"}</span>
+                  <span className={styles.detailValue}>
+                    {guest.note ?? "—"}
+                  </span>
                 </div>
               </div>
             </section>

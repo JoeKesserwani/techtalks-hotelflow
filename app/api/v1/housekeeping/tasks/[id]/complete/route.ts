@@ -3,6 +3,7 @@ import { requireAuth } from '../../../../../../../lib/middleware/requireAuth';
 import { writeAuditLog } from '../../../../../../../lib/services/audit.service';
 import { completeHousekeepingTaskSchema } from '../../../../../../../lib/validators/housekeeping';
 import { ApiError, handleRouteError } from '../../../../../../../lib/api/errors';
+import { createNotification } from '@/lib/notifications';
 
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -27,6 +28,11 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
       throw new ApiError(`Cannot complete a task with status ${task.status}`, 409);
     }
 
+    const room = await prisma.room.findFirst({
+      where: { id: task.roomId, hotelId: user.hotelId },
+      select: { roomNumber: true },
+    });
+
     const updated = await prisma.$transaction(async (tx) => {
       const result = await tx.housekeepingTask.update({
         where: { id },
@@ -37,7 +43,7 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         },
       });
 
-      await tx.room.update({ where: { id: task.roomId }, data: { status: 'AVAILABLE' } });
+      await tx.room.update({ where: { id: task.roomId }, data: { status: 'IN_REVIEW' } });
 
       await writeAuditLog(tx, {
         hotelId: user.hotelId,
@@ -46,7 +52,17 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         entityType: 'housekeeping_task',
         metadata: { taskId: id, roomId: task.roomId, photoCount: parsed.data.photos?.length ?? 0 },
       });
-
+      await createNotification(
+      {
+        hotelId: task.hotelId,
+        userId: task.assignedToUserId,
+        title: "Cleaning task approved",
+        message: `Your cleaning task for Room ${room?.roomNumber ?? task.roomId} has been approved.`,
+        type: "TASK_APPROVED",
+        taskId: task.id,
+      },
+      tx
+      );
       return result;
     });
 
