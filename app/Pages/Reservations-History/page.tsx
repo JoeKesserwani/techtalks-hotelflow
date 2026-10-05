@@ -7,7 +7,6 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { useSearchParams } from "next/navigation";
 import Pagination from "@/components/Pagination";
 import styles from "./page.module.css";
 import Header from "@/components/Header/Header";
@@ -18,721 +17,364 @@ import Header from "@/components/Header/Header";
  * ================================
  */
 
-type Guest = {
-  id: string;
-  fullName: string;
-  phone?: string | null;
-};
-
-type Room = {
-  id: string;
-  hotelId: string;
-  roomNumber: string;
-  roomType: string;
-  basePrice: string | number;
-  status: string;
-};
+type Guest = { id: string; fullName: string; phone?: string | null };
+type Room = { id: string; roomNumber: string; roomType?: string | null };
 
 type Reservation = {
   id: string;
-  hotelId: string;
   roomId: string;
   guestId: string;
-  createdByUserId: string;
-
   checkInDate: string;
   checkOutDate: string;
-
   status: string;
-
   pricePerNight: string | number;
   totalPrice: string | number;
-
   paymentStatus: string;
-
-  guest: Guest;
-  room: Room;
+  guest?: Guest;
+  room?: Room;
 };
 
-type FormData = {
-  guestId: string;
-  roomId: string;
+type Period = "all" | "this_month" | "last_30" | "this_year" | "custom";
+type PayFilter = "all" | "PAID" | "PARTIAL" | "UNPAID";
+type SortKey = "newest" | "oldest" | "highest" | "guest";
+type PayKind = "PAID" | "PARTIAL" | "UNPAID";
 
-  checkInDate: string;
-  checkOutDate: string;
-
-  pricePerNight: string;
-  totalPrice: string;
-
-  status: string;
-  paymentStatus: string;
-};
-
-const ITEMS_PER_PAGE = 6;
+const ITEMS_PER_PAGE = 8;
 
 /*
  * ================================
- * DATE HELPERS
+ * HELPERS
  * ================================
+ *
+ * Reservation dates are calendar dates (UTC-midnight in the database). They are
+ * handled as "YYYY-MM-DD" strings and never through the browser's local timezone.
  */
 
-/*
- * Get today's calendar date in Beirut.
- *
- * Returns:
- *
- * YYYY-MM-DD
- *
- * Example:
- *
- * 2026-09-24
- */
-const getTodayString = () => {
-  return new Intl.DateTimeFormat("en-CA", {
+const DAY_MS = 86_400_000;
+
+const getTodayString = () =>
+  new Intl.DateTimeFormat("en-CA", {
     timeZone: "Asia/Beirut",
     year: "numeric",
     month: "2-digit",
     day: "2-digit",
   }).format(new Date());
-};
 
-/*
- * Calculate number of nights without
- * using the browser's local timezone.
- */
-const calculateNights = (checkInDate: string, checkOutDate: string) => {
-  if (!checkInDate || !checkOutDate) {
-    return 0;
-  }
+const dayOnly = (value: string) => String(value ?? "").slice(0, 10);
+const toUtc = (day: string) => new Date(`${day}T00:00:00.000Z`);
+const shiftDay = (day: string, delta: number) =>
+  new Date(toUtc(day).getTime() + delta * DAY_MS).toISOString().slice(0, 10);
 
-  const [checkInYear, checkInMonth, checkInDay] = checkInDate
-    .split("-")
-    .map(Number);
-
-  const [checkOutYear, checkOutMonth, checkOutDay] = checkOutDate
-    .split("-")
-    .map(Number);
-
-  /*
-   * UTC is used only for arithmetic.
-   *
-   * The actual reservation dates remain
-   * YYYY-MM-DD date-only values.
-   */
-  const checkIn = Date.UTC(checkInYear, checkInMonth - 1, checkInDay);
-
-  const checkOut = Date.UTC(checkOutYear, checkOutMonth - 1, checkOutDay);
-
-  const difference = checkOut - checkIn;
-
-  const nights = Math.ceil(difference / (1000 * 60 * 60 * 24));
-
-  return nights > 0 ? nights : 0;
-};
-
-/*
- * Format a database reservation date.
- *
- * IMPORTANT:
- *
- * Do NOT use:
- *
- * new Date(dateString)
- *
- * because it can move the date one day
- * backward depending on timezone.
- */
-const formatDate = (dateString: string) => {
-  if (!dateString) {
-    return "-";
-  }
-
-  const dateOnly = dateString.split("T")[0];
-
-  const [year, month, day] = dateOnly.split("-");
-
-  if (!year || !month || !day) {
-    return dateString;
-  }
-
-  return `${month}/${day}/${year}`;
-};
-
-/*
- * FORMAT PRICE
- */
-const formatPrice = (value: string | number) => {
-  const number = Number(value);
-
-  if (Number.isNaN(number)) {
-    return "0.00";
-  }
-
-  return number.toFixed(2);
-};
-
-/*
- * ================================
- * ROOM STATUS
- * ================================
- */
-
-const getRoomStatusLabel = (status: string) => {
-  switch (status) {
-    case "AVAILABLE":
-      return "Available";
-
-    case "RESERVED":
-      return "Reserved";
-
-    case "OCCUPIED":
-      return "Occupied";
-
-    case "NEEDS_CLEANING":
-      return "Needs cleaning";
-
-    case "CLEANING":
-      return "Cleaning";
-
-    case "OUT_OF_SERVICE":
-      return "Out of service";
-
-    case "MAINTENANCE":
-      return "Maintenance";
-
-    default:
-      return status;
-  }
-};
-
-/*
- * IMPORTANT:
- *
- * This function is kept for display/labels,
- * but it is NO LONGER used to block
- * future reservations.
- */
-const isRoomCurrentlyUnavailable = (room: Room) => {
-  return (
-    room.status === "OCCUPIED" ||
-    room.status === "CLEANING" ||
-    room.status === "NEEDS_CLEANING" ||
-    room.status === "OUT_OF_SERVICE" ||
-    room.status === "MAINTENANCE"
+const nightsBetween = (checkIn: string, checkOut: string) => {
+  const diff = Math.round(
+    (toUtc(dayOnly(checkOut)).getTime() - toUtc(dayOnly(checkIn)).getTime()) /
+      DAY_MS,
   );
+  return Math.max(1, Number.isFinite(diff) ? diff : 1);
 };
 
-/*
- * ================================
- * RESERVATION STATUS
- * ================================
- */
-
-const getStatusLabel = (status: string) => {
-  switch (status) {
-    case "BOOKED":
-      return "Upcoming";
-
-    case "CHECKED_IN":
-      return "In stay";
-
-    case "CHECKED_OUT":
-      return "Checked-out";
-
-    case "CANCELLED":
-      return "Cancelled";
-
-    case "NO_SHOW":
-      return "No-show";
-
-    default:
-      return status;
-  }
+const formatDate = (value: string) => {
+  const day = dayOnly(value);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(day)) return "-";
+  return new Intl.DateTimeFormat("en-US", {
+    timeZone: "UTC",
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(toUtc(day));
 };
 
-const getStatusClass = (status: string) => {
-  switch (status) {
-    case "BOOKED":
-      return styles.upcoming;
-
-    case "CHECKED_IN":
-      return styles.inStay;
-
-    case "CHECKED_OUT":
-      return styles.checkedOut;
-
-    case "CANCELLED":
-    case "NO_SHOW":
-      return styles.cancelled;
-
-    default:
-      return "";
-  }
+const formatMoney = (value: string | number) => {
+  const n = Number(value);
+  return `$${(Number.isFinite(n) ? n : 0).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
 };
 
-/*
- * ================================
- * API RESPONSE
- * ================================
- */
+const initialsOf = (name: string) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || "?";
+
+const titleCase = (value: string) =>
+  value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();
+
+/* "UNPAID" contains "PAID", so test for exact / partial values first. */
+const payKindOf = (status: string): PayKind => {
+  const s = String(status).toUpperCase();
+  if (s.includes("PARTIAL")) return "PARTIAL";
+  if (s === "PAID") return "PAID";
+  return "UNPAID";
+};
+
+const PAY_LABEL: Record<PayKind, string> = {
+  PAID: "Paid",
+  PARTIAL: "Partial",
+  UNPAID: "Unpaid",
+};
+
+/** CSV cell with quote escaping and protection against spreadsheet formula injection. */
+const csvCell = (value: unknown) => {
+  let text = String(value ?? "");
+  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
+  return /[",\n\r]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+};
 
 const readApiResponse = async (response: Response) => {
   const text = await response.text();
-
   try {
     return JSON.parse(text);
   } catch {
-    console.error("API returned a non-JSON response:", text);
-
     throw new Error(`Server returned ${response.status} instead of JSON.`);
   }
 };
 
-export default function ReservationsPage() {
-  /*
-   * DATA
-   */
+/*
+ * ================================
+ * PAGE
+ * ================================
+ */
+
+export default function ReservationHistoryPage() {
   const [reservations, setReservations] = useState<Reservation[]>([]);
-  const [guests, setGuests] = useState<Guest[]>([]);
-  const [rooms, setRooms] = useState<Room[]>([]);
+  const [me, setMe] = useState<{ fullName: string; role: string } | null>(null);
 
-  /*
-   * UI STATE
-   */
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [expired, setExpired] = useState(false);
+  const [notice, setNotice] = useState("");
+
   const [search, setSearch] = useState("");
-  const [filter, setFilter] = useState("all");
+  const [period, setPeriod] = useState<Period>("all");
+  const [from, setFrom] = useState("");
+  const [to, setTo] = useState("");
+  const [payFilter, setPayFilter] = useState<PayFilter>("all");
+  const [sort, setSort] = useState<SortKey>("newest");
   const [currentPage, setCurrentPage] = useState(1);
-  const [showModal, setShowModal] = useState(false);
 
-  const [editingReservation, setEditingReservation] =
-    useState<Reservation | null>(null);
+  const [toDelete, setToDelete] = useState<Reservation | null>(null);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
 
-  /*
-   * FORM
-   */
-  const [form, setForm] = useState<FormData>({
-    guestId: "",
-    roomId: "",
-    checkInDate: "",
-    checkOutDate: "",
-    pricePerNight: "",
-    totalPrice: "",
-    status: "BOOKED",
-    paymentStatus: "UNPAID",
-  });
-
-  /*
-   * TODAY
-   */
   const today = getTodayString();
 
-  const searchParams = useSearchParams();
-  const presetGuestId = searchParams.get("guestId");
-  const hasAutoOpenedRef = useRef(false);
+  /* ---------- load ---------- */
 
-  /*
-   * LOAD DATABASE DATA
-   */
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
-      setLoading(true);
-      setError("");
+      const response = await fetch("/api/v1/reservations", {
+        credentials: "include",
+        cache: "no-store",
+      });
+      const data = await readApiResponse(response);
 
-      const [reservationsResponse, guestsResponse, roomsResponse] =
-        await Promise.all([
-          fetch("/api/v1/reservations", { credentials: "include" }),
-          fetch("/api/v1/guests", { credentials: "include" }),
-          fetch("/api/v1/rooms", { credentials: "include" }),
-        ]);
-
-      const reservationsData = await readApiResponse(reservationsResponse);
-      const guestsData = await readApiResponse(guestsResponse);
-      const roomsData = await readApiResponse(roomsResponse);
-
-      if (!reservationsResponse.ok) {
-        throw new Error(
-          reservationsData?.error ||
-            reservationsData?.message ||
-            "Failed to load reservations",
-        );
+      if (response.status === 401) {
+        setExpired(true);
+        throw new Error("Your session has expired. Sign in again to continue.");
       }
-
-      if (!guestsResponse.ok) {
+      if (!response.ok) {
         throw new Error(
-          guestsData?.error || guestsData?.message || "Failed to load guests",
-        );
-      }
-
-      if (!roomsResponse.ok) {
-        throw new Error(
-          roomsData?.error || roomsData?.message || "Failed to load rooms",
+          data?.error || data?.message || "Failed to load reservations",
         );
       }
 
       setReservations(
-        Array.isArray(reservationsData)
-          ? reservationsData
-          : reservationsData?.data || reservationsData?.reservations || [],
+        Array.isArray(data) ? data : data?.data || data?.reservations || [],
       );
-
-      setGuests(
-        Array.isArray(guestsData)
-          ? guestsData
-          : guestsData?.data || guestsData?.guests || [],
-      );
-
-      setRooms(
-        Array.isArray(roomsData)
-          ? roomsData
-          : roomsData?.data || roomsData?.rooms || [],
-      );
+      setError("");
+      setExpired(false);
     } catch (err) {
       console.error(err);
-      setError(err instanceof Error ? err.message : "Failed to load data");
+      setError(
+        err instanceof Error ? err.message : "Failed to load reservations",
+      );
     } finally {
       setLoading(false);
     }
-  };
-
-  const openNewReservation = useCallback(
-    (presetGuestIdArg?: string) => {
-      setEditingReservation(null);
-
-      const firstUsableRoom = rooms.find(
-        (room) => !isRoomCurrentlyUnavailable(room),
-      );
-
-      setForm({
-        guestId: presetGuestIdArg || guests[0]?.id || "",
-        roomId: firstUsableRoom?.id || "",
-        checkInDate: today,
-        checkOutDate: "",
-        pricePerNight: firstUsableRoom ? String(firstUsableRoom.basePrice) : "",
-        totalPrice: "",
-        status: "BOOKED",
-        paymentStatus: "UNPAID",
-      });
-      setError("");
-      setShowModal(true);
-    },
-    [guests, rooms, today],
-  );
+  }, []);
 
   useEffect(() => {
     queueMicrotask(() => {
       void loadData();
     });
+  }, [loadData]);
+
+  useEffect(() => {
+    fetch("/api/v1/auth/me", { credentials: "include" })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => data?.user && setMe(data.user))
+      .catch(() => {});
   }, []);
 
   useEffect(() => {
-    if (hasAutoOpenedRef.current) return;
-    if (!presetGuestId || loading) return;
+    if (!notice) return;
+    const timer = setTimeout(() => setNotice(""), 4000);
+    return () => clearTimeout(timer);
+  }, [notice]);
 
-    const matchedGuest = guests.find((guest) => guest.id === presetGuestId);
-    if (!matchedGuest) return;
+  /* ---------- derived data ---------- */
 
-    hasAutoOpenedRef.current = true;
-    openNewReservation(presetGuestId);
-  }, [presetGuestId, loading, guests, openNewReservation]);
-
-  /*
-   * SEARCH + FILTER
-   * ================================
-   */
-  const filteredReservations = useMemo(() => {
-    const searchValue = search.trim().toLowerCase();
-
-    return reservations.filter((reservation) => {
-      const guestName = reservation.guest?.fullName?.toLowerCase() || "";
-      const roomNumber = reservation.room?.roomNumber?.toLowerCase() || "";
-      const reservationId = reservation.id.toLowerCase();
-
-      const matchesSearch =
-        !searchValue ||
-        guestName.includes(searchValue) ||
-        roomNumber.includes(searchValue) ||
-        reservationId.includes(searchValue);
-
-      if (!matchesSearch) {
-        return false;
-      }
-
-      if (filter === "all") {
-        return true;
-      }
-
-      if (filter === "this_month") {
-        const reservationDate = new Date(reservation.checkInDate);
-        const currentDate = new Date();
-
-        return (
-          reservationDate.getMonth() === currentDate.getMonth() &&
-          reservationDate.getFullYear() === currentDate.getFullYear()
-        );
-      }
-
-      if (filter === "upcoming") {
-        return reservation.status === "BOOKED";
-      }
-
-      if (filter === "in_stay") {
-        return reservation.status === "CHECKED_IN";
-      }
-
-      if (filter === "checked_out") {
-        return reservation.status === "CHECKED_OUT";
-      }
-
-      if (filter === "cancelled") {
-        return (
-          reservation.status === "CANCELLED" || reservation.status === "NO_SHOW"
-        );
-      }
-
-      return true;
-    });
-  }, [reservations, search, filter]);
-
-  const totalPages = Math.max(
-    1,
-    Math.ceil(filteredReservations.length / ITEMS_PER_PAGE),
+  /* History = stays that are finished. Everything else lives on the front-desk page. */
+  const history = useMemo(
+    () => reservations.filter((r) => r.status === "CHECKED_OUT"),
+    [reservations],
   );
+
+  const filtered = useMemo(() => {
+    const query = search.trim().toLowerCase();
+
+    const inPeriod = (r: Reservation) => {
+      const out = dayOnly(r.checkOutDate);
+      switch (period) {
+        case "this_month":
+          return out.slice(0, 7) === today.slice(0, 7);
+        case "last_30":
+          return out >= shiftDay(today, -30) && out <= today;
+        case "this_year":
+          return out.slice(0, 4) === today.slice(0, 4);
+        case "custom":
+          return (!from || out >= from) && (!to || out <= to);
+        default:
+          return true;
+      }
+    };
+
+    const rows = history.filter((r) => {
+      if (payFilter !== "all" && payKindOf(r.paymentStatus) !== payFilter)
+        return false;
+      if (!inPeriod(r)) return false;
+      if (!query) return true;
+      return (
+        (r.guest?.fullName ?? "").toLowerCase().includes(query) ||
+        (r.guest?.phone ?? "").toLowerCase().includes(query) ||
+        (r.room?.roomNumber ?? "").toLowerCase().includes(query) ||
+        r.id.toLowerCase().includes(query)
+      );
+    });
+
+    const byNewest = (a: Reservation, b: Reservation) =>
+      dayOnly(b.checkOutDate).localeCompare(dayOnly(a.checkOutDate)) ||
+      dayOnly(b.checkInDate).localeCompare(dayOnly(a.checkInDate));
+
+    return rows.sort((a, b) => {
+      switch (sort) {
+        case "oldest":
+          return byNewest(b, a);
+        case "highest":
+          return Number(b.totalPrice) - Number(a.totalPrice) || byNewest(a, b);
+        case "guest":
+          return (
+            (a.guest?.fullName ?? "").localeCompare(b.guest?.fullName ?? "") ||
+            byNewest(a, b)
+          );
+        default:
+          return byNewest(a, b);
+      }
+    });
+  }, [history, search, period, from, to, payFilter, sort, today]);
+
+  /* Stats follow the active filters, so they always describe what the table shows. */
+  const stats = useMemo(() => {
+    let billed = 0;
+    let unpaid = 0;
+    let unpaidCount = 0;
+    let partialCount = 0;
+    let nights = 0;
+    for (const r of filtered) {
+      const total = Number(r.totalPrice) || 0;
+      billed += total;
+      nights += nightsBetween(r.checkInDate, r.checkOutDate);
+      const kind = payKindOf(r.paymentStatus);
+      if (kind === "UNPAID") {
+        unpaid += total;
+        unpaidCount += 1;
+      } else if (kind === "PARTIAL") {
+        partialCount += 1;
+      }
+    }
+    return {
+      count: filtered.length,
+      billed,
+      unpaid,
+      unpaidCount,
+      partialCount,
+      avgNights: filtered.length ? nights / filtered.length : 0,
+    };
+  }, [filtered]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / ITEMS_PER_PAGE));
   const activePage = Math.min(currentPage, totalPages);
-  const paginatedReservations = filteredReservations.slice(
+  const pageRows = filtered.slice(
     (activePage - 1) * ITEMS_PER_PAGE,
     activePage * ITEMS_PER_PAGE,
   );
 
-  /*
-   * ================================
-   * RESET FORM
-   * ================================
-   */
+  const hasFilters =
+    search.trim() !== "" || period !== "all" || payFilter !== "all";
 
-  const resetForm = () => {
-    setForm({
-      guestId: "",
-      roomId: "",
-      checkInDate: today,
-      checkOutDate: "",
-      pricePerNight: "",
-      totalPrice: "",
-      status: "BOOKED",
-      paymentStatus: "UNPAID",
+  const resetPage = () => setCurrentPage(1);
+  const clearFilters = () => {
+    setSearch("");
+    setPeriod("all");
+    setFrom("");
+    setTo("");
+    setPayFilter("all");
+    resetPage();
+  };
+
+  /* ---------- actions ---------- */
+
+  const exportCsv = () => {
+    const header = [
+      "Guest",
+      "Phone",
+      "Room",
+      "Check-in",
+      "Check-out",
+      "Nights",
+      "Payment",
+      "Total",
+    ];
+    const lines = filtered.map((r) =>
+      [
+        r.guest?.fullName ?? "",
+        r.guest?.phone ?? "",
+        r.room?.roomNumber ?? "",
+        dayOnly(r.checkInDate),
+        dayOnly(r.checkOutDate),
+        nightsBetween(r.checkInDate, r.checkOutDate),
+        PAY_LABEL[payKindOf(r.paymentStatus)],
+        Number(r.totalPrice).toFixed(2),
+      ]
+        .map(csvCell)
+        .join(","),
+    );
+
+    const blob = new Blob(["﻿" + [header.join(","), ...lines].join("\r\n")], {
+      type: "text/csv;charset=utf-8",
     });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `reservation-history-${today}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    URL.revokeObjectURL(url);
   };
 
-  /*
-   * ================================
-   * NEW RESERVATION
-   * ================================
-   */
-  const openEditReservation = (reservation: Reservation) => {
-    setEditingReservation(reservation);
-
-    setForm({
-      guestId: reservation.guestId,
-      roomId: reservation.roomId,
-      checkInDate: reservation.checkInDate.split("T")[0],
-      checkOutDate: reservation.checkOutDate.split("T")[0],
-      pricePerNight: String(
-        reservation.room?.basePrice ?? reservation.pricePerNight,
-      ),
-      totalPrice: String(reservation.totalPrice),
-      status: reservation.status,
-      paymentStatus:
-        reservation.paymentStatus === "PAID"
-          ? "PAID"
-          : reservation.paymentStatus === "PARTIAL"
-            ? "PARTIAL"
-            : "UNPAID",
-    });
-    setError("");
-    setShowModal(true);
-  };
-
-  /*
-   * ================================
-   * CLOSE MODAL
-   * ================================
-   */
-
-  const closeModal = () => {
-    if (saving) return;
-
-    setShowModal(false);
-    setEditingReservation(null);
-
-    resetForm();
-    setError("");
-  };
-
-  /*
-   * HANDLERS FOR INPUTS
-   */
-  const handleGuestChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    setForm((current) => ({
-      ...current,
-      guestId: event.target.value,
-    }));
-  };
-
-  const handleRoomChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const roomId = event.target.value;
-    const selectedRoom = rooms.find((room) => room.id === roomId);
-
-    if (!selectedRoom) {
-      setForm((current) => ({
-        ...current,
-        roomId,
-        pricePerNight: "",
-        totalPrice: "",
-      }));
-      return;
-    }
-
-    if (isRoomCurrentlyUnavailable(selectedRoom)) {
-      setError("This room is currently unavailable.");
-      return;
-    }
-
-    /*
-     * IMPORTANT:
-     *
-     * We do NOT reject OCCUPIED,
-     * CLEANING, etc.
-     *
-     * The backend checks whether
-     * the selected reservation dates
-     * overlap another reservation.
-     */
-
-    setError("");
-    const nights = calculateNights(form.checkInDate, form.checkOutDate);
-    const pricePerNight = Number(selectedRoom.basePrice);
-    const totalPrice = nights > 0 ? pricePerNight * nights : 0;
-
-    setForm((current) => ({
-      ...current,
-      roomId,
-      pricePerNight: String(pricePerNight),
-      totalPrice: String(totalPrice),
-    }));
-  };
-
-  const handleCheckInChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const checkInDate = event.target.value;
-
-    if (checkInDate < today) {
-      setError("Check-in date cannot be before today.");
-      return;
-    }
-
-    if (form.checkOutDate && form.checkOutDate <= checkInDate) {
-      setError("Check-out date must be after check-in date.");
-    } else {
-      setError("");
-    }
-
-    const nights = calculateNights(checkInDate, form.checkOutDate);
-    const selectedRoom = rooms.find((room) => room.id === form.roomId);
-    const pricePerNight = selectedRoom ? Number(selectedRoom.basePrice) : 0;
-
-    setForm((current) => ({
-      ...current,
-      checkInDate,
-      totalPrice: String(nights > 0 ? pricePerNight * nights : 0),
-    }));
-  };
-
-  const handleCheckOutChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const checkOutDate = event.target.value;
-
-    if (form.checkInDate && checkOutDate <= form.checkInDate) {
-      setError("Check-out date must be after check-in date.");
-    } else {
-      setError("");
-    }
-
-    const nights = calculateNights(form.checkInDate, checkOutDate);
-    const selectedRoom = rooms.find((room) => room.id === form.roomId);
-    const pricePerNight = selectedRoom ? Number(selectedRoom.basePrice) : 0;
-
-    setForm((current) => ({
-      ...current,
-      checkOutDate,
-      totalPrice: String(nights > 0 ? pricePerNight * nights : 0),
-    }));
-  };
-
-  /*
-   * CHECK IN / OUT / DELETE
-   */
-  const handleCheckIn = async (reservationId: string) => {
-    if (!window.confirm("Are you sure you want to check in this guest?"))
-      return;
+  const confirmDelete = async () => {
+    if (!toDelete) return;
+    setDeleting(true);
+    setDeleteError("");
 
     try {
-      setError("");
-      const response = await fetch(
-        `/api/v1/reservations/${reservationId}/check-in`,
-        { method: "POST", credentials: "include" },
-      );
-      const data = await readApiResponse(response);
-
-      if (!response.ok) {
-        throw new Error(
-          data?.error || data?.message || "Failed to check in reservation",
-        );
-      } else {
-        setError("");
-      }
-      await loadData();
-    } catch (err) {
-      console.error(err);
-      setError(
-        err instanceof Error ? err.message : "Failed to check in reservation",
-      );
-    }
-  };
-
-  const handleCheckOut = async (reservationId: string) => {
-    if (!window.confirm("Are you sure you want to check out this guest?"))
-      return;
-
-    try {
-      setError("");
-      const response = await fetch(
-        `/api/v1/reservations/${reservationId}/check-out`,
-        { method: "POST", credentials: "include" },
-      );
-      const data = await readApiResponse(response);
-
-      if (!response.ok) {
-        throw new Error(
-          data?.error || data?.message || "Failed to check out reservation",
-        );
-      }
-      await loadData();
-    } catch (err) {
-      console.error(err);
-      setError(
-        err instanceof Error ? err.message : "Failed to check out reservation",
-      );
-    }
-  };
-
-  const handleDelete = async (reservationId: string) => {
-    if (!window.confirm("Are you sure you want to delete this reservation?"))
-      return;
-
-    try {
-      setError("");
-      const response = await fetch(`/api/v1/reservations/${reservationId}`, {
+      const response = await fetch(`/api/v1/reservations/${toDelete.id}`, {
         method: "DELETE",
         credentials: "include",
       });
@@ -743,326 +385,308 @@ export default function ReservationsPage() {
           data?.error || data?.message || "Failed to delete reservation",
         );
       }
-      await loadData();
+
+      setReservations((current) => current.filter((r) => r.id !== toDelete.id));
+      setNotice(
+        `Deleted the stay of ${toDelete.guest?.fullName ?? "the guest"} from history.`,
+      );
+      setToDelete(null);
     } catch (err) {
       console.error(err);
-      setError(
+      setDeleteError(
         err instanceof Error ? err.message : "Failed to delete reservation",
       );
-    }
-  };
-
-  /*
-   * SAVE RESERVATION
-   */
-  const saveReservation = async (event: React.FormEvent) => {
-    event.preventDefault();
-    setError("");
-
-    if (!form.guestId) {
-      setError("Please select a guest.");
-      return;
-    }
-    if (!form.roomId) {
-      setError("Please select a room.");
-      return;
-    }
-    if (!form.checkInDate) {
-      setError("Please select a check-in date.");
-      return;
-    }
-    if (!form.checkOutDate) {
-      setError("Please select a check-out date.");
-      return;
-    }
-
-    if (!editingReservation && form.checkInDate < today) {
-      setError("Check-in date cannot be before today.");
-      return;
-    }
-
-    if (form.checkOutDate <= form.checkInDate) {
-      setError("Check-out date must be after check-in date.");
-      return;
-    }
-
-    const selectedRoom = rooms.find((room) => room.id === form.roomId);
-    if (!selectedRoom) {
-      setError("Selected room was not found.");
-      return;
-    }
-
-    if (!editingReservation && isRoomCurrentlyUnavailable(selectedRoom)) {
-      setError("This room is currently unavailable.");
-      return;
-    }
-
-    const nights = calculateNights(form.checkInDate, form.checkOutDate);
-    if (nights <= 0) {
-      setError("Reservation must be at least one night.");
-      return;
-    }
-
-    try {
-      setSaving(true);
-      const isEditing = Boolean(editingReservation);
-      const response = await fetch(
-        isEditing
-          ? `/api/v1/reservations/${editingReservation!.id}`
-          : "/api/v1/reservations",
-        {
-          method: isEditing ? "PATCH" : "POST",
-          credentials: "include",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(
-            isEditing
-              ? {
-                  checkInDate: form.checkInDate,
-                  checkOutDate: form.checkOutDate,
-                  paymentStatus: form.paymentStatus,
-                }
-              : {
-                  guestId: form.guestId,
-                  roomId: form.roomId,
-                  checkInDate: form.checkInDate,
-                  checkOutDate: form.checkOutDate,
-                  paymentStatus: form.paymentStatus,
-                },
-          ),
-        },
-      );
-
-      const data = await readApiResponse(response);
-      if (!response.ok) {
-        throw new Error(
-          data?.error ||
-            data?.message ||
-            `Failed to ${isEditing ? "update" : "create"} reservation`,
-        );
-      }
-
-      await loadData();
-      setShowModal(false);
-      setEditingReservation(null);
-      resetForm();
-    } catch (err) {
-      console.error(err);
-      setError(
-        err instanceof Error ? err.message : "Failed to save reservation",
-      );
     } finally {
-      setSaving(false);
+      setDeleting(false);
     }
   };
 
-  const selectedRoom = rooms.find((room) => room.id === form.roomId);
-  const displayedPricePerNight = selectedRoom
-    ? Number(selectedRoom.basePrice)
-    : Number(form.pricePerNight || 0);
-  const displayedNights = calculateNights(form.checkInDate, form.checkOutDate);
-  const displayedTotal =
-    displayedNights > 0 ? displayedPricePerNight * displayedNights : 0;
+  /* ---------- UI ---------- */
 
-  /*
-   * ================================
-   * PAGE UI
-   * ================================
-   */
+  const userName = me?.fullName ?? "";
 
   return (
     <div className={styles.page}>
-      <main className={styles.content}>
-        {Header({
-          title: "Reservations",
-          subtitle: `${reservations.length} reservations this month`,
-          userSubtitle: "Managing reservations",
-        })}
-        {/* TOOLBAR */}
+      <main className={styles.content} aria-busy={loading}>
+        {/* HEADER */}
+        <header className={styles.header}>
+          <div className={styles.title}>
+            <h1>Reservation history</h1>
+            <p>
+              {loading
+                ? "Loading completed stays…"
+                : `${history.length} completed ${history.length === 1 ? "stay" : "stays"} on record`}
+            </p>
+          </div>
 
-        <div className={styles.toolbar}>
+          <div className={styles.userInfo}>
+            <span className={styles.avatar} aria-hidden>
+              {userName ? initialsOf(userName) : "–"}
+            </span>
+            <span className={styles.userText}>
+              <strong>{userName || "…"}</strong>
+              <small>{me ? titleCase(me.role) : ""}</small>
+            </span>
+          </div>
+        </header>
+
+        {/* STATS */}
+        <section
+          className={styles.stats}
+          aria-label="Summary of the current results"
+        >
+          <div className={styles.stat}>
+            <span>Completed stays</span>
+            <strong>{stats.count}</strong>
+            <small>
+              {stats.count
+                ? `${stats.avgNights.toFixed(1)} nights on average`
+                : "No stays in this view"}
+            </small>
+          </div>
+          <div className={styles.stat}>
+            <span>Total billed</span>
+            <strong>{formatMoney(stats.billed)}</strong>
+            <small>Across the stays shown</small>
+          </div>
+          <div
+            className={`${styles.stat} ${stats.unpaidCount ? styles.statWarn : ""}`}
+          >
+            <span>Unpaid</span>
+            <strong>{formatMoney(stats.unpaid)}</strong>
+            <small>
+              {stats.unpaidCount} unpaid · {stats.partialCount} partial
+            </small>
+          </div>
+        </section>
+
+        {/* TOOLBAR */}
+        <div className={styles.toolbar} role="search">
           <input
             className={styles.search}
-            type="text"
-            placeholder="Search by guest's name, ID, room number"
+            type="search"
+            placeholder="Search guest, phone, room or ID"
+            aria-label="Search history"
             value={search}
             onChange={(event) => {
               setSearch(event.target.value);
-              setCurrentPage(1);
+              resetPage();
             }}
           />
 
           <select
-            className={styles.filter}
-            value={filter}
+            className={styles.select}
+            aria-label="Check-out period"
+            value={period}
             onChange={(event) => {
-              setFilter(event.target.value);
-              setCurrentPage(1);
+              setPeriod(event.target.value as Period);
+              resetPage();
             }}
           >
-            <option value="all">All</option>
+            <option value="all">All time</option>
             <option value="this_month">This month</option>
-            <option value="upcoming">Upcoming</option>
-            <option value="in_stay">In stay</option>
-            <option value="checked_out">Checked-out</option>
-            <option value="cancelled">Cancelled</option>
+            <option value="last_30">Last 30 days</option>
+            <option value="this_year">This year</option>
+            <option value="custom">Custom range</option>
+          </select>
+
+          <select
+            className={styles.select}
+            aria-label="Payment status"
+            value={payFilter}
+            onChange={(event) => {
+              setPayFilter(event.target.value as PayFilter);
+              resetPage();
+            }}
+          >
+            <option value="all">Any payment</option>
+            <option value="PAID">Paid</option>
+            <option value="PARTIAL">Partial</option>
+            <option value="UNPAID">Unpaid</option>
+          </select>
+
+          <select
+            className={styles.select}
+            aria-label="Sort by"
+            value={sort}
+            onChange={(event) => {
+              setSort(event.target.value as SortKey);
+              resetPage();
+            }}
+          >
+            <option value="newest">Newest first</option>
+            <option value="oldest">Oldest first</option>
+            <option value="highest">Highest total</option>
+            <option value="guest">Guest A–Z</option>
           </select>
 
           <button
-            className={styles.newButton}
-            onClick={() => openNewReservation()}
+            className={styles.exportButton}
+            onClick={exportCsv}
+            disabled={filtered.length === 0}
           >
-            + New reservation
+            Export CSV
           </button>
         </div>
 
-        {/* ERROR */}
-        {error && !showModal && <div className={styles.error}>{error}</div>}
+        {period === "custom" && (
+          <div className={styles.range}>
+            <label>
+              Checked out from
+              <input
+                type="date"
+                value={from}
+                max={to || undefined}
+                onChange={(event) => {
+                  setFrom(event.target.value);
+                  resetPage();
+                }}
+              />
+            </label>
+            <label>
+              to
+              <input
+                type="date"
+                value={to}
+                min={from || undefined}
+                onChange={(event) => {
+                  setTo(event.target.value);
+                  resetPage();
+                }}
+              />
+            </label>
+          </div>
+        )}
 
-        {/* TABLE */}
+        {/* MESSAGES */}
+        {error && (
+          <div className={styles.error} role="alert">
+            <span>{error}</span>
+            {expired ? (
+              <a href="/login">Sign in</a>
+            ) : (
+              <button onClick={() => void loadData()}>Retry</button>
+            )}
+          </div>
+        )}
 
+        {/* RESULTS */}
         {loading ? (
-          <div className={styles.empty}>Loading reservations...</div>
-        ) : filteredReservations.length === 0 ? (
-          <div className={styles.empty}>No reservations found.</div>
+          <div className={styles.skeletons} aria-hidden>
+            {Array.from({ length: 5 }, (_, i) => (
+              <div key={i} className={styles.skeleton} />
+            ))}
+          </div>
+        ) : filtered.length === 0 ? (
+          <div className={styles.empty}>
+            <strong>
+              {history.length === 0
+                ? "No completed stays yet"
+                : "Nothing matches these filters"}
+            </strong>
+            <p>
+              {history.length === 0
+                ? "Guests appear here after they check out."
+                : "Try a different search, period or payment status."}
+            </p>
+            {hasFilters && (
+              <button className={styles.ghostButton} onClick={clearFilters}>
+                Clear filters
+              </button>
+            )}
+          </div>
         ) : (
-          /* TABLE */
           <>
             <div className={styles.tableContainer}>
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>Guest</th>
-
-                    <th>Room</th>
-
-                    <th>Check-in</th>
-
-                    <th>Check-out</th>
-
-                    <th>Status</th>
-
-                    <th>Payment</th>
-
-                    <th>Total</th>
-
-                    <th>Action</th>
+                    <th scope="col">Guest</th>
+                    <th scope="col">Room</th>
+                    <th scope="col">Stay</th>
+                    <th scope="col">Payment</th>
+                    <th scope="col" className={styles.num}>
+                      Total
+                    </th>
+                    <th scope="col">
+                      <span className={styles.srOnly}>Actions</span>
+                    </th>
                   </tr>
                 </thead>
 
                 <tbody>
-                  {filteredReservations.map((reservation) => {
-                    /*
-                     * Check-in button should
-                     * ONLY appear when the
-                     * reservation check-in
-                     * date is today.
-                     */
-                    const reservationCheckIn =
-                      reservation.checkInDate.split("T")[0];
-
-                    const canCheckInToday =
-                      reservationCheckIn === today &&
-                      reservation.status === "BOOKED";
+                  {pageRows.map((reservation) => {
+                    const name = reservation.guest?.fullName || "Unknown guest";
+                    const kind = payKindOf(reservation.paymentStatus);
+                    const nights = nightsBetween(
+                      reservation.checkInDate,
+                      reservation.checkOutDate,
+                    );
 
                     return (
                       <tr key={reservation.id}>
-                        {/* GUEST */}
-
-                        <td>
-                          <div className={styles.guest}>
-                            <strong>
-                              {reservation.guest?.fullName || "Unknown guest"}
-                            </strong>
-
+                        <td className={styles.guestCell}>
+                          <span className={styles.avatar} aria-hidden>
+                            {initialsOf(name)}
+                          </span>
+                          <span className={styles.guest}>
+                            <strong>{name}</strong>
                             {reservation.guest?.phone && (
                               <small>{reservation.guest.phone}</small>
                             )}
-                          </div>
-                        </td>
-
-                        {/* ROOM */}
-
-                        <td>Room {reservation.room?.roomNumber || "-"}</td>
-
-                        {/* CHECK-IN */}
-
-                        <td>{formatDate(reservation.checkInDate)}</td>
-
-                        {/* CHECK-OUT */}
-
-                        <td>{formatDate(reservation.checkOutDate)}</td>
-
-                        {/* STATUS */}
-
-                        <td>
-                          <span
-                            className={`${styles.status} ${getStatusClass(
-                              reservation.status,
-                            )}`}
-                          >
-                            {getStatusLabel(reservation.status)}
                           </span>
                         </td>
 
-                        {/* PAYMENT */}
+                        <td data-label="Room">
+                          <span className={styles.cellMain}>
+                            Room {reservation.room?.roomNumber || "-"}
+                          </span>
+                          {reservation.room?.roomType && (
+                            <small>{reservation.room.roomType}</small>
+                          )}
+                        </td>
 
-                        <td>{reservation.paymentStatus}</td>
+                        <td data-label="Stay">
+                          <span className={styles.cellMain}>
+                            {formatDate(reservation.checkInDate)} →{" "}
+                            {formatDate(reservation.checkOutDate)}
+                          </span>
+                          <small>
+                            {nights} {nights === 1 ? "night" : "nights"}
+                          </small>
+                        </td>
 
-                        {/* TOTAL */}
-
-                        <td>${formatPrice(reservation.totalPrice)}</td>
-
-                        {/* ACTIONS */}
-
-                        <td>
-                          <div
-                            style={{
-                              display: "flex",
-                              gap: "8px",
-                              alignItems: "center",
-                              flexWrap: "wrap",
-                            }}
+                        <td data-label="Payment">
+                          <span
+                            className={`${styles.pill} ${
+                              kind === "PAID"
+                                ? styles.paid
+                                : kind === "PARTIAL"
+                                  ? styles.partial
+                                  : styles.unpaid
+                            }`}
                           >
-                            {/* CHECK IN */}
+                            {PAY_LABEL[kind]}
+                          </span>
+                        </td>
 
-                            {canCheckInToday && (
-                              <button
-                                className={styles.editButton}
-                                onClick={() => handleCheckIn(reservation.id)}
-                              >
-                                Check in
-                              </button>
-                            )}
+                        <td data-label="Total" className={styles.num}>
+                          <span className={styles.cellMain}>
+                            {formatMoney(reservation.totalPrice)}
+                          </span>
+                        </td>
 
-                            {/* CHECK OUT */}
-
-                            {reservation.status === "CHECKED_IN" && (
-                              <button
-                                className={styles.editButton}
-                                onClick={() => handleCheckOut(reservation.id)}
-                              >
-                                Check out
-                              </button>
-                            )}
-
-                            {/* EDIT */}
-
-                            <button
-                              className={styles.editButton}
-                              onClick={() => openEditReservation(reservation)}
-                            >
-                              Edit
-                            </button>
-
-                            {/* DELETE */}
-
-                            <button
-                              className={styles.editButton}
-                              onClick={() => handleDelete(reservation.id)}
-                            >
-                              Delete
-                            </button>
-                          </div>
+                        <td className={styles.actions}>
+                          <button
+                            className={styles.deleteButton}
+                            onClick={() => {
+                              setDeleteError("");
+                              setToDelete(reservation);
+                            }}
+                            aria-label={`Delete the stay of ${name}`}
+                          >
+                            Delete
+                          </button>
                         </td>
                       </tr>
                     );
@@ -1070,186 +694,139 @@ export default function ReservationsPage() {
                 </tbody>
               </table>
             </div>
+
             {/* REUSABLE PAGINATION COMPONENT */}
             <Pagination
               currentPage={activePage}
               totalPages={totalPages}
-              totalItems={filteredReservations.length}
+              totalItems={filtered.length}
               itemsPerPage={ITEMS_PER_PAGE}
               onPageChange={(page) => setCurrentPage(page)}
             />
           </>
         )}
 
-        {/* ================================
-            MODAL
-            ================================ */}
-
-        {showModal && (
-          <div className={styles.overlay}>
-            <div className={styles.modal}>
-              <div className={styles.modalHeader}>
-                <h2>
-                  {editingReservation ? "Edit reservation" : "New reservation"}
-                </h2>
-                <button
-                  className={styles.closeButton}
-                  onClick={closeModal}
-                  disabled={saving}
-                >
-                  ×
-                </button>
-              </div>
-
-              {error && <div className={styles.error}>{error}</div>}
-
-              <form onSubmit={saveReservation}>
-                <div className={styles.formGrid}>
-                  <label>
-                    Guest
-                    <select
-                      value={form.guestId}
-                      onChange={handleGuestChange}
-                      required
-                    >
-                      <option value="">Select guest</option>
-                      {guests.map((guest) => (
-                        <option key={guest.id} value={guest.id}>
-                          {guest.fullName}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-
-                  <label>
-                    Room
-                    <select
-                      value={form.roomId}
-                      onChange={handleRoomChange}
-                      disabled={!!editingReservation}
-                      required
-                    >
-                      <option value="">Select room</option>
-                      {rooms.map((room) => {
-                        const unavailable = isRoomCurrentlyUnavailable(room);
-
-                        return (
-                          <option
-                            key={room.id}
-                            value={room.id}
-                            disabled={
-                              unavailable &&
-                              !(
-                                editingReservation &&
-                                editingReservation.roomId === room.id
-                              )
-                            }
-                          >
-                            Room {room.roomNumber} - {room.roomType} -{" "}
-                            {getRoomStatusLabel(room.status)}
-                          </option>
-                        );
-                      })}
-                    </select>
-                  </label>
-
-                  <label>
-                    Check-in
-                    <input
-                      type="date"
-                      value={form.checkInDate}
-                      min={
-                        editingReservation &&
-                        editingReservation.status !== "BOOKED"
-                          ? undefined
-                          : today
-                      }
-                      onChange={handleCheckInChange}
-                      required
-                    />
-                  </label>
-
-                  <label>
-                    Check-out
-                    <input
-                      type="date"
-                      value={form.checkOutDate}
-                      min={form.checkInDate ? form.checkInDate : today}
-                      onChange={handleCheckOutChange}
-                      required
-                    />
-                  </label>
-
-                  <label>
-                    Price per night
-                    <input
-                      type="number"
-                      value={displayedPricePerNight}
-                      readOnly
-                    />
-                  </label>
-
-                  <label>
-                    Total price
-                    <input type="number" value={displayedTotal} readOnly />
-                  </label>
-
-                  <label>
-                    Status
-                    <select value={form.status} disabled>
-                      <option value="BOOKED">Upcoming</option>
-                      <option value="CHECKED_IN">In stay</option>
-                      <option value="CHECKED_OUT">Checked-out</option>
-                      <option value="CANCELLED">Cancelled</option>
-                      <option value="NO_SHOW">No-show</option>
-                    </select>
-                  </label>
-
-                  <label>
-                    Payment status
-                    <select
-                      value={form.paymentStatus}
-                      onChange={(event) =>
-                        setForm((current) => ({
-                          ...current,
-                          paymentStatus: event.target.value,
-                        }))
-                      }
-                    >
-                      <option value="UNPAID">Unpaid</option>
-                      <option value="PAID">Paid</option>
-                      <option value="PARTIAL">Partial</option>
-                    </select>
-                  </label>
-                </div>
-
-                <div className={styles.modalActions}>
-                  <button
-                    type="button"
-                    className={styles.cancelButton}
-                    onClick={closeModal}
-                    disabled={saving}
-                  >
-                    Cancel
-                  </button>
-
-                  <button
-                    type="submit"
-                    className={styles.saveButton}
-                    disabled={saving}
-                  >
-                    {saving
-                      ? "Saving..."
-                      : editingReservation
-                        ? "Save changes"
-                        : "Create reservation"}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </div>
+        {toDelete && (
+          <ConfirmDelete
+            reservation={toDelete}
+            busy={deleting}
+            error={deleteError}
+            onCancel={() => !deleting && setToDelete(null)}
+            onConfirm={confirmDelete}
+          />
         )}
+
+        <div className={styles.toast} role="status" aria-live="polite">
+          {notice}
+        </div>
       </main>
     </div>
+  );
+}
+
+/*
+ * ================================
+ * DELETE CONFIRMATION
+ * ================================
+ *
+ * Native <dialog>: focus trap, Esc to close and an inert background come for free.
+ */
+
+function ConfirmDelete({
+  reservation,
+  busy,
+  error,
+  onCancel,
+  onConfirm,
+}: {
+  reservation: Reservation;
+  busy: boolean;
+  error: string;
+  onCancel: () => void;
+  onConfirm: () => void;
+}) {
+  const ref = useRef<HTMLDialogElement>(null);
+
+  useEffect(() => {
+    ref.current?.showModal();
+  }, []);
+
+  const kind = payKindOf(reservation.paymentStatus);
+  const name = reservation.guest?.fullName || "Unknown guest";
+
+  return (
+    <dialog
+      ref={ref}
+      className={styles.dialog}
+      aria-labelledby="delete-title"
+      onClose={onCancel}
+      onCancel={(event) => busy && event.preventDefault()}
+      onClick={(event) =>
+        event.target === ref.current && !busy && ref.current?.close()
+      }
+    >
+      <div className={styles.dialogBody}>
+        <h2 id="delete-title">Delete this stay from history?</h2>
+
+        <dl className={styles.summary}>
+          <div>
+            <dt>Guest</dt>
+            <dd>{name}</dd>
+          </div>
+          <div>
+            <dt>Room</dt>
+            <dd>{reservation.room?.roomNumber || "-"}</dd>
+          </div>
+          <div>
+            <dt>Stay</dt>
+            <dd>
+              {formatDate(reservation.checkInDate)} →{" "}
+              {formatDate(reservation.checkOutDate)}
+            </dd>
+          </div>
+          <div>
+            <dt>Total</dt>
+            <dd>
+              {formatMoney(reservation.totalPrice)} · {PAY_LABEL[kind]}
+            </dd>
+          </div>
+        </dl>
+
+        <p className={styles.dialogText}>
+          The record is removed permanently and will no longer count towards
+          totals or reports. This can’t be undone.
+        </p>
+
+        {kind !== "PAID" && (
+          <p className={styles.dialogWarn}>
+            This stay is <strong>{PAY_LABEL[kind].toLowerCase()}</strong>.
+            Deleting it also discards the outstanding balance.
+          </p>
+        )}
+
+        {error && (
+          <p className={styles.dialogError} role="alert">
+            {error}
+          </p>
+        )}
+      </div>
+
+      <div className={styles.dialogActions}>
+        <button
+          className={styles.cancelButton}
+          onClick={() => ref.current?.close()}
+          disabled={busy}
+        >
+          Keep it
+        </button>
+        <button
+          className={styles.dangerButton}
+          onClick={onConfirm}
+          disabled={busy}
+        >
+          {busy ? "Deleting…" : "Delete permanently"}
+        </button>
+      </div>
+    </dialog>
   );
 }

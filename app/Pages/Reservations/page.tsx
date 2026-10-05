@@ -9,6 +9,8 @@ import {
 } from "react";
 import s from "./page.module.css";
 import {
+  ApiError,
+  api,
   bucketDay,
   dayOnly,
   formatDate,
@@ -16,82 +18,86 @@ import {
   money,
   nightsBetween,
   payment,
+  roomBoard,
   roomLabel,
   shiftDate,
   todayInHotel,
   type Reservation,
-} from "../../../lib/frontdesk";
-import { useAuth } from "@/components/Auth/AuthProvider";
+  type Room,
+  type TileState,
+} from "./frontdesk";
+import { ConfirmCheckout, NewReservationDialog } from "./dialogs";
+import { CancelReservationDialog, EditReservationDialog } from "./edit-dialogs";
 
-// TODO: replace with your session/user source (no "me" endpoint was provided).
-const STAFF = { name: "Joanna D.", role: "Receptionist" };
-// No rooms endpoint was provided; set NEXT_PUBLIC_TOTAL_ROOMS to show "of N".
-const TOTAL_ROOMS = Number(process.env.NEXT_PUBLIC_TOTAL_ROOMS) || null;
-
+const PAGE_SIZE = 4;
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
+const titleCase = (v: string) => v.charAt(0) + v.slice(1).toLowerCase();
 
-async function errorMessage(res: Response) {
-  try {
-    const body = await res.json();
-    return body.error ?? body.message ?? `Request failed (${res.status})`;
-  } catch {
-    return `Request failed (${res.status})`;
-  }
-}
+const LEGEND: Record<TileState, string> = {
+  free: "Free",
+  arriving: "Arriving",
+  occupied: "Occupied",
+  departing: "Leaves today",
+  dirty: "Being cleaned",
+  oos: "Out of service",
+};
 
-type Task = { id: string; text: string; room?: string };
+type ColumnKey = "arriving" | "departing" | "staying";
+const NO_PAGES: Record<ColumnKey, number> = {
+  arriving: 0,
+  departing: 0,
+  staying: 0,
+};
 
 export default function FrontDeskPage() {
   const [today] = useState(todayInHotel);
   const [date, setDate] = useState(today);
   const [items, setItems] = useState<Reservation[] | null>(null);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [me, setMe] = useState<{ fullName: string; role: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [expired, setExpired] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
-  const [showAll, setShowAll] = useState(false);
-  const [done, setDone] = useState<Record<string, boolean>>({});
+  const [pages, setPages] = useState(NO_PAGES);
+  const [confirm, setConfirm] = useState<Reservation | null>(null);
+  const [booking, setBooking] = useState<{ roomId?: string } | null>(null);
+  const [editing, setEditing] = useState<Reservation | null>(null);
+  const [cancelling, setCancelling] = useState<Reservation | null>(null);
 
-  const { user } = useAuth();
-
-  /* The list endpoint has no date filter, so we refetch on every date change (fresh data)
-     and on window focus, then filter by the selected date on the client. */
-  const load = useCallback(async (signal?: AbortSignal) => {
+  /* List endpoints have no date filter: refetch on every date change and on focus, filter client-side. */
+  const load = useCallback(async () => {
     try {
-      const res = await fetch("/api/v1/reservations", {
-        signal,
-        cache: "no-store",
-      });
-      if (res.status === 401)
-        return setError("Your session has expired. Sign in again to continue.");
-      if (!res.ok) throw new Error(await errorMessage(res));
-      setItems(await res.json());
+      const [res, rms] = await Promise.all([
+        api<Reservation[]>("/reservations"),
+        api<Room[]>("/rooms"),
+      ]);
+      setItems(res);
+      setRooms(rms);
       setError(null);
+      setExpired(false);
     } catch (e) {
-      if ((e as Error).name !== "AbortError")
-        setError((e as Error).message || "Couldn't load reservations.");
+      if ((e as ApiError).status === 401) {
+        setExpired(true);
+        setError("Your session has expired. Sign in again to continue.");
+      } else setError((e as Error).message || "Couldn't load reservations.");
     }
   }, []);
 
   useEffect(() => {
-    const ctrl = new AbortController();
-    load(ctrl.signal);
-    return () => ctrl.abort();
+    load();
   }, [date, load]);
-
   useEffect(() => {
     const onFocus = () => load();
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, [load]);
-
   useEffect(() => {
-    try {
-      setDone(JSON.parse(localStorage.getItem("frontdesk:tasks") ?? "{}"));
-    } catch {}
+    api<{ user: { fullName: string; role: string } }>("/auth/me")
+      .then((d) => setMe(d.user))
+      .catch(() => {});
   }, []);
-
-  useEffect(() => setShowAll(false), [date]);
-
+  useEffect(() => setPages(NO_PAGES), [date]);
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 4000);
@@ -102,95 +108,150 @@ export default function FrontDeskPage() {
     () => bucketDay(items ?? [], date, today),
     [items, date, today],
   );
+  const board = useMemo(
+    () => roomBoard(rooms, day, date, today),
+    [rooms, day, date, today],
+  );
   const isToday = date === today;
   const loading = items === null && !error;
+  const free = board.filter((t) => t.state === "free").length;
+  const tonight = board.filter((t) =>
+    ["arriving", "occupied"].includes(t.state),
+  ).length;
+  const pct = rooms.length ? Math.round((tonight / rooms.length) * 100) : 0;
 
-  async function act(r: Reservation, kind: "check-in" | "check-out") {
+  /* Pagination: clamp the page when a list shrinks (after a check-out or a cancellation). */
+  const pageOf = (key: ColumnKey, total: number) =>
+    Math.min(pages[key], Math.max(0, Math.ceil(total / PAGE_SIZE) - 1));
+  const slice = <T,>(key: ColumnKey, list: T[]) => {
+    const p = pageOf(key, list.length);
+    return list.slice(p * PAGE_SIZE, p * PAGE_SIZE + PAGE_SIZE);
+  };
+  const pager = (key: ColumnKey, total: number) => (
+    <Pager
+      page={pageOf(key, total)}
+      total={total}
+      label={key}
+      onPage={(p) => setPages((prev) => ({ ...prev, [key]: p }))}
+    />
+  );
+
+  const merge = (u: Reservation) =>
+    setItems((p) => p?.map((x) => (x.id === u.id ? u : x)) ?? p);
+
+  async function run(
+    r: Reservation,
+    path: string,
+    init: RequestInit,
+    message: string,
+  ) {
     setBusy(r.id);
     try {
-      const res = await fetch(`/api/v1/reservations/${r.id}/${kind}`, {
-        method: "POST",
-      });
-      if (!res.ok) throw new Error(await errorMessage(res));
-      const updated: Reservation = await res.json();
-      setItems(
-        (prev) => prev?.map((x) => (x.id === updated.id ? updated : x)) ?? prev,
-      );
-      setToast(
-        `${guestName(updated)} ${kind === "check-in" ? "checked in" : "checked out"}.`,
-      );
+      merge(await api<Reservation>(`/reservations/${r.id}/${path}`, init));
+      setToast(message);
+      load(); // room statuses changed too (occupied / needs cleaning): keep the board truthful
+      return true;
     } catch (e) {
       setToast((e as Error).message);
+      return false;
     } finally {
       setBusy(null);
     }
   }
+  const checkIn = (r: Reservation) =>
+    run(r, "check-in", { method: "POST" }, `${guestName(r)} checked in.`);
+  const checkOut = (r: Reservation) =>
+    run(r, "check-out", { method: "POST" }, `${guestName(r)} checked out.`);
+  const markPaid = (r: Reservation) =>
+    run(
+      r,
+      "payment",
+      { method: "PATCH", body: JSON.stringify({ paymentStatus: "PAID" }) },
+      `${guestName(r)} marked as paid.`,
+    );
 
-  /* Tasks are derived from the day's data; completion is stored per date in localStorage. */
-  const tasks = useMemo<Task[]>(() => {
-    const t: Task[] = [];
-    day.departing.forEach((r) => {
-      t.push({
-        id: `clean-${r.id}`,
-        text: `Mark room ${roomLabel(r)} as cleaned`,
-        room: roomLabel(r),
+  async function cancelReservation(r: Reservation, reason: string) {
+    setBusy(r.id);
+    try {
+      await api(`/reservations/${r.id}/cancel`, {
+        method: "POST",
+        body: JSON.stringify({ reason }),
       });
-      if (payment(r).kind !== "paid")
-        t.push({
-          id: `pay-${r.id}`,
-          text: "Follow up on unpaid balance",
-          room: roomLabel(r),
-        });
-    });
-    day.arriving
-      .filter((r) => r.status !== "CHECKED_OUT")
-      .forEach((r) =>
-        t.push({
-          id: `welcome-${r.id}`,
-          text: `Prepare welcome note for ${guestName(r)}`,
-          room: roomLabel(r),
-        }),
-      );
-    t.push({ id: "keys", text: "Restock front desk key cards" });
-    if (day.departing.length)
-      t.push({ id: "late", text: "Send housekeeping the late checkout list" });
-    return t;
-  }, [day]);
+      setItems((p) => p?.filter((x) => x.id !== r.id) ?? p);
+      setToast(`Reservation for ${guestName(r)} cancelled.`);
+    } catch (e) {
+      setToast((e as Error).message);
+    } finally {
+      setBusy(null);
+      setCancelling(null);
+      load(); // success or failure, show what the server says now
+    }
+  }
 
-  const isDone = (id: string) => !!done[`${date}:${id}`];
-  const toggle = (id: string) =>
-    setDone((prev) => {
-      const next = { ...prev, [`${date}:${id}`]: !prev[`${date}:${id}`] };
-      try {
-        localStorage.setItem("frontdesk:tasks", JSON.stringify(next));
-      } catch {}
-      return next;
-    });
-  const doneCount = tasks.filter((t) => isDone(t.id)).length;
+  /** Paid reservations check out straight away; anything else asks first. */
+  const requestCheckout = (r: Reservation) =>
+    payment(r).kind === "paid" ? checkOut(r) : setConfirm(r);
 
-  const actionBtn = (r: Reservation, kind: "check-in" | "check-out") => (
+  /* Edit: in-house guests (extend / move room) and upcoming bookings. A no-show whose date has passed can only be cancelled. */
+  const canEdit = (r: Reservation) =>
+    r.status === "CHECKED_IN" ||
+    (r.status === "BOOKED" && dayOnly(r.checkInDate) >= today);
+  const canCancel = (r: Reservation) => r.status === "BOOKED";
+
+  const links = (r: Reservation) =>
+    canEdit(r) || canCancel(r) ? (
+      <div className={s.rowLinks}>
+        {canEdit(r) && (
+          <button
+            className={s.link}
+            onClick={() => setEditing(r)}
+            aria-label={`Edit reservation for ${guestName(r)}`}
+          >
+            Edit
+          </button>
+        )}
+        {canCancel(r) && (
+          <button
+            className={`${s.link} ${s.danger}`}
+            onClick={() => setCancelling(r)}
+            aria-label={`Cancel reservation for ${guestName(r)}`}
+          >
+            Cancel
+          </button>
+        )}
+      </div>
+    ) : null;
+
+  const btn = (r: Reservation, label: string, fn: () => void) => (
     <button
       className={s.primary}
       disabled={busy === r.id}
-      onClick={() => act(r, kind)}
-      aria-label={`${kind === "check-in" ? "Check in" : "Check out"} ${guestName(r)}`}
+      onClick={fn}
+      aria-label={`${label} ${guestName(r)}`}
     >
-      {busy === r.id
-        ? "Working…"
-        : kind === "check-in"
-          ? "Check in"
-          : "Check out"}
+      {busy === r.id ? "Working…" : label}
     </button>
   );
+  const paidBtn = (r: Reservation) =>
+    payment(r).kind === "paid" ? null : (
+      <button
+        className={s.pay}
+        disabled={busy === r.id}
+        onClick={() => markPaid(r)}
+        aria-label={`Mark ${guestName(r)} as paid`}
+      >
+        Paid
+      </button>
+    );
 
-  const visibleStaying = showAll ? day.staying : day.staying.slice(0, 2);
-  const hidden = day.staying.length - 2;
-  const initials = user?.fullName
-    .split(" ")
-    .map((p) => p[0])
-    .join("")
-    .slice(0, 2)
-    .toUpperCase();
+  const name = me?.fullName ?? "";
+  const initials =
+    name
+      .split(" ")
+      .map((p) => p[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "–";
 
   return (
     <main className={s.page} aria-busy={loading}>
@@ -241,8 +302,8 @@ export default function FrontDeskPage() {
             {initials}
           </span>
           <div>
-            <strong>{user?.fullName}</strong>
-            <span>{user?.role}</span>
+            <strong>{name || "…"}</strong>
+            <span>{me ? titleCase(me.role) : ""}</span>
           </div>
         </div>
       </header>
@@ -250,23 +311,32 @@ export default function FrontDeskPage() {
       {error && (
         <div className={s.error} role="alert">
           <span>{error}</span>
-          {error.includes("session") ? (
-            <a href="/">Sign in</a>
+          {expired ? (
+            <a href="/login">Sign in</a>
           ) : (
-            <button onClick={() => load()}>Retry</button>
+            <button onClick={load}>Retry</button>
           )}
         </div>
       )}
 
-      <p className={s.summary} aria-live="polite">
-        <i aria-hidden />
-        <b>{day.arriving.length}</b>{" "}
-        {day.arriving.length === 1 ? "arrival" : "arrivals"} ·{" "}
-        <b>{day.departing.length}</b>{" "}
-        {day.departing.length === 1 ? "departure" : "departures"} ·{" "}
-        <b>{day.staying.length}</b> rooms occupied
-        {TOTAL_ROOMS ? ` of ${TOTAL_ROOMS}` : ""}
-      </p>
+      <div className={s.summaryBar}>
+        <p className={s.summary} aria-live="polite">
+          <i aria-hidden />
+          <b>{day.arriving.length}</b>{" "}
+          {day.arriving.length === 1 ? "arrival" : "arrivals"} ·{" "}
+          <b>{day.departing.length}</b>{" "}
+          {day.departing.length === 1 ? "departure" : "departures"} ·{" "}
+          <b>{day.staying.length}</b> rooms occupied
+          {rooms.length ? ` of ${rooms.length}` : ""}
+        </p>
+        <button
+          className={s.primary}
+          onClick={() => setBooking({})}
+          disabled={!rooms.length}
+        >
+          + New reservation
+        </button>
+      </div>
 
       <section className={s.board}>
         <Column
@@ -275,23 +345,28 @@ export default function FrontDeskPage() {
           tone={s.slate}
           loading={loading}
           empty="No arrivals on this date."
+          footer={pager("arriving", day.arriving.length)}
         >
-          {day.arriving.map((r) => (
+          {slice("arriving", day.arriving).map((r) => (
             <Row
               key={r.id}
               name={guestName(r)}
-              meta={`Room ${roomLabel(r)} · ${plural(nightsBetween(r.checkInDate, r.checkOutDate), "night")}`}
+              extras={links(r)}
+              meta={`Room ${roomLabel(r)} · ${plural(nightsBetween(r.checkInDate, r.checkOutDate), "night")} · ${payment(r).label}`}
             >
+              {paidBtn(r)}
               {r.status === "BOOKED" ? (
                 isToday ? (
-                  actionBtn(r, "check-in")
+                  btn(r, "Check in", () => checkIn(r))
                 ) : (
                   <span className={s.note}>
                     {date < today ? "Did not arrive" : "Expected"}
                   </span>
                 )
               ) : (
-                <span className={s.note}>Checked in</span>
+                <span className={s.note}>
+                  {r.status === "CHECKED_OUT" ? "Checked out" : "Checked in"}
+                </span>
               )}
             </Row>
           ))}
@@ -303,17 +378,20 @@ export default function FrontDeskPage() {
           tone={s.clay}
           loading={loading}
           empty="No departures on this date."
+          footer={pager("departing", day.departing.length)}
         >
-          {day.departing.map((r) => {
+          {slice("departing", day.departing).map((r) => {
             const p = payment(r);
             return (
               <Row
                 key={r.id}
                 name={guestName(r)}
+                extras={links(r)}
                 meta={`Room ${roomLabel(r)} · ${p.kind === "unpaid" ? `Unpaid ${money(r.totalPrice)}` : p.label}`}
               >
+                {paidBtn(r)}
                 {r.status === "CHECKED_IN" && isToday ? (
-                  actionBtn(r, "check-out")
+                  btn(r, "Check out", () => requestCheckout(r))
                 ) : (
                   <span className={s.note}>
                     {r.status === "CHECKED_OUT" ? "Checked out" : "Due out"}
@@ -331,68 +409,121 @@ export default function FrontDeskPage() {
           loading={loading}
           wide
           empty="No in-house guests."
+          footer={pager("staying", day.staying.length)}
         >
-          {visibleStaying.map((r) => {
-            const needsCleaning = ["NEEDS_CLEANING", "CLEANING"].includes(
-              String(r.room?.status),
-            );
-            return (
-              <Row
-                key={r.id}
-                name={guestName(r)}
-                meta={`Room ${roomLabel(r)} · until ${formatDate(dayOnly(r.checkOutDate), { month: "short", day: "numeric" })}`}
-              >
-                <span className={s.note}>
-                  {needsCleaning ? "Needs cleaning" : payment(r).label}
-                </span>
-              </Row>
-            );
-          })}
-          {hidden > 0 && (
+          {slice("staying", day.staying).map((r) => (
             <Row
-              name={
-                showAll
-                  ? "Showing full house"
-                  : `+ ${plural(hidden, "more guest")}`
-              }
-              meta={showAll ? "All in-house guests" : "See full house list"}
+              key={r.id}
+              name={guestName(r)}
+              extras={links(r)}
+              meta={`Room ${roomLabel(r)} · until ${formatDate(dayOnly(r.checkOutDate), { month: "short", day: "numeric" })}`}
             >
-              <button
-                className={s.soft}
-                onClick={() => setShowAll(!showAll)}
-                aria-expanded={showAll}
-              >
-                {showAll ? "Show less" : "View all"}
-              </button>
+              {paidBtn(r)}
+              <span className={s.note}>{payment(r).label}</span>
             </Row>
-          )}
+          ))}
         </Column>
       </section>
 
-      <section className={s.card} aria-labelledby="tasks-h">
+      <section className={s.card} aria-labelledby="rooms-h">
         <div className={s.cardHead}>
-          <h2 id="tasks-h">{isToday ? "Today's" : "Day's"} tasks</h2>
-          <span className={`${s.badge} ${s.ink}`}>
-            {doneCount} of {tasks.length}
-          </span>
+          <div>
+            <h2 id="rooms-h">Room availability</h2>
+            <p className={s.hint}>
+              {rooms.length
+                ? `${pct}% occupied tonight · tap a free room to book it for ${formatDate(date < today ? today : date, { month: "short", day: "numeric" })}`
+                : "Loading rooms…"}
+            </p>
+          </div>
+          <span className={`${s.badge} ${s.ink}`}>{free} free</span>
         </div>
-        <ul className={s.tasks}>
-          {tasks.map((t) => (
-            <li key={t.id}>
-              <label className={isDone(t.id) ? s.taskDone : undefined}>
-                <input
-                  type="checkbox"
-                  checked={isDone(t.id)}
-                  onChange={() => toggle(t.id)}
-                />
-                <span className={s.box} aria-hidden />
-                <span className={s.taskText}>{t.text}</span>
-              </label>
-              {t.room && <span className={s.chip}>Room {t.room}</span>}
+        <ul className={s.legend}>
+          {(Object.keys(LEGEND) as TileState[]).map((k) => (
+            <li key={k}>
+              <i className={`${s.dot} ${s[`t_${k}`]}`} />
+              {LEGEND[k]}
+            </li>
+          ))}
+        </ul>
+        <ul className={s.tiles}>
+          {board.map(({ room, state, guest }) => (
+            <li key={room.id}>
+              <button
+                className={`${s.tile} ${s[`t_${state}`]}`}
+                disabled={state !== "free" || date < today}
+                onClick={() => setBooking({ roomId: room.id })}
+                aria-label={`Room ${room.roomNumber}, ${LEGEND[state]}${guest ? `, ${guest}` : ""}`}
+              >
+                <strong>{room.roomNumber}</strong>
+                <span>{guest ?? room.roomType ?? LEGEND[state]}</span>
+              </button>
             </li>
           ))}
         </ul>
       </section>
+
+      {booking && (
+        <NewReservationDialog
+          defaultDate={date}
+          today={today}
+          rooms={rooms}
+          reservations={items ?? []}
+          initialRoomId={booking.roomId}
+          onClose={() => setBooking(null)}
+          onConflict={load}
+          onCreated={(r) => {
+            setItems((p) => [r, ...(p ?? [])]);
+            setDate(dayOnly(r.checkInDate)); // jump to the booking's arrival day
+            setToast(
+              `Reservation created for ${guestName(r)} · Room ${roomLabel(r)}.`,
+            );
+          }}
+        />
+      )}
+
+      {editing && (
+        <EditReservationDialog
+          r={editing}
+          today={today}
+          rooms={rooms}
+          reservations={items ?? []}
+          onClose={() => setEditing(null)}
+          onConflict={load}
+          onSaved={(u) => {
+            merge(u);
+            setEditing(null);
+            setToast(
+              `Reservation updated for ${guestName(u)} · Room ${roomLabel(u)}.`,
+            );
+            load(); // a room move changes two rooms' statuses
+          }}
+        />
+      )}
+
+      {cancelling && (
+        <CancelReservationDialog
+          r={cancelling}
+          busy={busy === cancelling.id}
+          onKeep={() => setCancelling(null)}
+          onConfirm={(reason) => cancelReservation(cancelling, reason)}
+        />
+      )}
+
+      {confirm && (
+        <ConfirmCheckout
+          r={confirm}
+          busy={busy === confirm.id}
+          onCancel={() => setConfirm(null)}
+          onGo={async () => {
+            await checkOut(confirm);
+            setConfirm(null);
+          }}
+          onPayAndGo={async () => {
+            if (await markPaid(confirm)) await checkOut(confirm);
+            setConfirm(null);
+          }}
+        />
+      )}
 
       <div className={s.toast} role="status" aria-live="polite">
         {toast}
@@ -408,6 +539,7 @@ function Column({
   loading,
   empty,
   wide,
+  footer,
   children,
 }: {
   title: string;
@@ -416,6 +548,7 @@ function Column({
   loading: boolean;
   empty: string;
   wide?: boolean;
+  footer?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -431,6 +564,7 @@ function Column({
       ) : (
         <ul className={s.list}>{children}</ul>
       )}
+      {footer}
     </div>
   );
 }
@@ -438,10 +572,12 @@ function Column({
 function Row({
   name,
   meta,
+  extras,
   children,
 }: {
   name: string;
   meta: string;
+  extras?: ReactNode;
   children: ReactNode;
 }) {
   return (
@@ -449,8 +585,55 @@ function Row({
       <div className={s.who}>
         <strong>{name}</strong>
         <span>{meta}</span>
+        {extras}
       </div>
       <div className={s.act}>{children}</div>
     </li>
+  );
+}
+
+/** Shown only when a list has more than PAGE_SIZE entries. */
+function Pager({
+  page,
+  total,
+  label,
+  onPage,
+}: {
+  page: number;
+  total: number;
+  label: string;
+  onPage: (p: number) => void;
+}) {
+  if (total <= PAGE_SIZE) return null;
+  const pageCount = Math.ceil(total / PAGE_SIZE);
+  const from = page * PAGE_SIZE + 1;
+  const to = Math.min(total, from + PAGE_SIZE - 1);
+  return (
+    <nav className={s.pager} aria-label={`${label} pages`}>
+      <span>
+        {from}–{to} of {total}
+      </span>
+      <div>
+        <button
+          className={s.arrow}
+          disabled={page === 0}
+          onClick={() => onPage(page - 1)}
+          aria-label="Previous page"
+        >
+          ‹
+        </button>
+        <span aria-live="polite">
+          {page + 1} / {pageCount}
+        </span>
+        <button
+          className={s.arrow}
+          disabled={page >= pageCount - 1}
+          onClick={() => onPage(page + 1)}
+          aria-label="Next page"
+        >
+          ›
+        </button>
+      </div>
+    </nav>
   );
 }
