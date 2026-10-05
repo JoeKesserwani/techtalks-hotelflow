@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import styles from "./ReceptionistDash.module.css";
 import { useAuth } from "../Auth/AuthProvider";
 import { useRouter } from "next/navigation";
+import Header from "../Header/Header";
 
 type Arrival = {
 id: string;
@@ -73,36 +74,127 @@ outOfService: number;
 };
 
 arrivals: Arrival[];
-
 departures: Departure[];
-
 housekeepingAttention: HousekeepingTask[];
 };
 
+type Guest = {
+id: string;
+fullName: string;
+phone: string | null;
+email: string | null;
+};
+
+type Room = {
+id: string;
+roomNumber: string;
+roomType: string;
+floor: number;
+capacity: number;
+basePrice: string | number;
+status: string;
+};
+
+type PaymentStatus =
+| "UNPAID"
+| "PARTIALLY_PAID"
+| "PAID";
+
 const ReceptionistDash = () => {
 const { user } = useAuth();
-  const router = useRouter();
+const router = useRouter();
 
+// --------------------------------------------------
+// Dashboard state
+// --------------------------------------------------
 
-const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+const [dashboard, setDashboard] =
+useState<DashboardData | null>(null);
+
 const [loading, setLoading] = useState(true);
 const [error, setError] = useState("");
-const [actionLoading, setActionLoading] = useState<string | null>(null);
-const [awaitingApproval, setAwaitingApproval] = React.useState<number | null>(
-    null,
-  );
 
-  
+const [actionLoading, setActionLoading] =
+useState<string | null>(null);
 
-const today = new Date().toLocaleDateString("en-US", {
+// --------------------------------------------------
+// New Reservation state
+// --------------------------------------------------
+
+const [showNewReservation, setShowNewReservation] =
+useState(false);
+
+const [guests, setGuests] =
+useState<Guest[]>([]);
+
+const [rooms, setRooms] =
+useState<Room[]>([]);
+
+const [optionsLoading, setOptionsLoading] =
+useState(false);
+
+const [reservationSubmitting, setReservationSubmitting] =
+useState(false);
+
+const [reservationError, setReservationError] =
+useState("");
+
+const [reservationSuccess, setReservationSuccess] =
+useState("");
+
+const [selectedGuestId, setSelectedGuestId] =
+useState("");
+
+const [selectedRoomId, setSelectedRoomId] =
+useState("");
+
+const [checkInDate, setCheckInDate] =
+useState("");
+
+const [checkOutDate, setCheckOutDate] =
+useState("");
+
+const [paymentStatus, setPaymentStatus] =
+useState<PaymentStatus>("UNPAID");
+
+// --------------------------------------------------
+// Dates
+// --------------------------------------------------
+
+const getHotelDate = (date = new Date()) => {
+return new Intl.DateTimeFormat("en-CA", {
+timeZone: "Asia/Beirut",
+year: "numeric",
+month: "2-digit",
+day: "2-digit",
+}).format(date);
+};
+
+const todayDate = getHotelDate();
+
+const getNextDate = (dateString: string) => {
+const date = new Date(`${dateString}T00:00:00`);
+
+
+date.setDate(date.getDate() + 1);
+
+return date.toISOString().split("T")[0];
+
+
+};
+
+const today = new Date().toLocaleDateString(
+"en-US",
+{
 weekday: "long",
 year: "numeric",
 month: "long",
 day: "numeric",
-});
+}
+);
 
 // --------------------------------------------------
-// Fetch dashboard data
+// Fetch dashboard
 // --------------------------------------------------
 
 const fetchDashboard = async () => {
@@ -112,21 +204,35 @@ setError("");
 
 
   const response = await fetch(
-    "/api/v1/Dashboard/stats/Receptionist"
+    "/api/v1/Dashboard/stats/Receptionist",
+    {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    }
   );
 
   const data = await response.json();
 
   if (!response.ok || !data.success) {
     throw new Error(
-      data.message || "Failed to load receptionist dashboard."
+      data.message ||
+        "Failed to load receptionist dashboard."
     );
   }
 
   setDashboard(data);
 } catch (err) {
-  console.error("Receptionist dashboard error:", err);
-  setError("Unable to load dashboard data.");
+  console.error(
+    "Receptionist dashboard error:",
+    err
+  );
+
+  setError(
+    err instanceof Error
+      ? err.message
+      : "Unable to load dashboard data."
+  );
 } finally {
   setLoading(false);
 }
@@ -139,22 +245,276 @@ fetchDashboard();
 }, []);
 
 // --------------------------------------------------
+// Load guests and rooms
+// --------------------------------------------------
+
+const loadReservationOptions = async () => {
+try {
+setOptionsLoading(true);
+setReservationError("");
+
+
+  const [
+    guestsResponse,
+    roomsResponse,
+  ] = await Promise.all([
+    fetch("/api/v1/guests", {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    }),
+
+    fetch("/api/v1/rooms", {
+      method: "GET",
+      credentials: "include",
+      cache: "no-store",
+    }),
+  ]);
+
+  const guestsData =
+    await guestsResponse.json();
+
+  const roomsData =
+    await roomsResponse.json();
+
+  if (!guestsResponse.ok) {
+    throw new Error(
+      guestsData.message ||
+        guestsData.error ||
+        "Failed to load guests."
+    );
+  }
+
+  if (!roomsResponse.ok) {
+    throw new Error(
+      roomsData.message ||
+        roomsData.error ||
+        "Failed to load rooms."
+    );
+  }
+
+  /*
+   * Your current APIs return the arrays directly.
+   *
+   * Guests:
+   * GET /api/v1/guests
+   *
+   * Rooms:
+   * GET /api/v1/rooms
+   */
+
+  setGuests(
+    Array.isArray(guestsData)
+      ? guestsData
+      : guestsData.data ?? []
+  );
+
+  setRooms(
+    Array.isArray(roomsData)
+      ? roomsData
+      : roomsData.data ?? []
+  );
+} catch (err) {
+  console.error(
+    "Reservation options error:",
+    err
+  );
+
+  setReservationError(
+    err instanceof Error
+      ? err.message
+      : "Unable to load reservation options."
+  );
+} finally {
+  setOptionsLoading(false);
+}
+
+
+};
+
+// --------------------------------------------------
+// Open reservation modal
+// --------------------------------------------------
+
+const openNewReservation = () => {
+const localToday = getHotelDate();
+
+
+setShowNewReservation(true);
+
+setReservationError("");
+setReservationSuccess("");
+
+setSelectedGuestId("");
+setSelectedRoomId("");
+
+setCheckInDate(localToday);
+setCheckOutDate(getNextDate(localToday));
+
+setPaymentStatus("UNPAID");
+
+/*
+ * Load the options after opening the modal.
+ * The modal itself does NOT depend on loading.
+ */
+loadReservationOptions();
+
+
+};
+
+// --------------------------------------------------
+// Close reservation modal
+// --------------------------------------------------
+
+const closeNewReservation = () => {
+if (reservationSubmitting) {
+return;
+}
+
+
+setShowNewReservation(false);
+
+setReservationError("");
+setReservationSuccess("");
+
+};
+
+// --------------------------------------------------
+// Create reservation
+// --------------------------------------------------
+
+const handleCreateReservation = async (
+event: React.FormEvent<HTMLFormElement>
+) => {
+event.preventDefault();
+
+
+setReservationError("");
+setReservationSuccess("");
+
+if (!selectedGuestId) {
+  setReservationError(
+    "Please select a guest."
+  );
+  return;
+}
+
+if (!selectedRoomId) {
+  setReservationError(
+    "Please select a room."
+  );
+  return;
+}
+
+if (!checkInDate) {
+  setReservationError(
+    "Please select a check-in date."
+  );
+  return;
+}
+
+if (!checkOutDate) {
+  setReservationError(
+    "Please select a check-out date."
+  );
+  return;
+}
+
+if (checkInDate < todayDate) {
+  setReservationError(
+    "Check-in date cannot be before today."
+  );
+  return;
+}
+
+if (checkOutDate <= checkInDate) {
+  setReservationError(
+    "Check-out date must be after check-in date."
+  );
+  return;
+}
+
+try {
+  setReservationSubmitting(true);
+
+  const response = await fetch(
+    "/api/v1/reservations",
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        roomId: selectedRoomId,
+        guestId: selectedGuestId,
+        checkInDate,
+        checkOutDate,
+        paymentStatus,
+      }),
+    }
+  );
+
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        data.error ||
+        "Failed to create reservation."
+    );
+  }
+
+  setReservationSuccess(
+    "Reservation created successfully."
+  );
+
+  await fetchDashboard();
+
+  setTimeout(() => {
+    setShowNewReservation(false);
+    setReservationSuccess("");
+  }, 900);
+} catch (err) {
+  console.error(
+    "Create reservation error:",
+    err
+  );
+
+  setReservationError(
+    err instanceof Error
+      ? err.message
+      : "Unable to create reservation."
+  );
+} finally {
+  setReservationSubmitting(false);
+}
+
+
+};
+
+// --------------------------------------------------
 // Format date
 // --------------------------------------------------
 
 const formatDate = (dateString: string) => {
-return new Date(dateString).toLocaleDateString("en-US", {
+return new Date(dateString).toLocaleDateString(
+"en-US",
+{
 month: "short",
 day: "numeric",
 year: "numeric",
-});
+}
+);
 };
 
 // --------------------------------------------------
 // Room status labels
 // --------------------------------------------------
 
-const getRoomStatusLabel = (status: string) => {
+const getRoomStatusLabel = (
+status: string
+) => {
 switch (status) {
 case "AVAILABLE":
 return "Available";
@@ -189,7 +549,9 @@ return "Available";
 // Check In
 // --------------------------------------------------
 
-const handleCheckIn = async (reservationId: string) => {
+const handleCheckIn = async (
+reservationId: string
+) => {
 try {
 setActionLoading(reservationId);
 setError("");
@@ -199,6 +561,7 @@ setError("");
     `/api/v1/reservations/${reservationId}/check-in`,
     {
       method: "POST",
+      credentials: "include",
     }
   );
 
@@ -206,15 +569,17 @@ setError("");
 
   if (!response.ok) {
     throw new Error(
-      data.message || "Failed to check in reservation."
+      data.message ||
+        "Failed to check in reservation."
     );
   }
 
-  // Reload dashboard data so arrivals,
-  // room status and summary update immediately.
   await fetchDashboard();
 } catch (err) {
-  console.error("Check-in error:", err);
+  console.error(
+    "Check-in error:",
+    err
+  );
 
   setError(
     err instanceof Error
@@ -225,14 +590,15 @@ setError("");
   setActionLoading(null);
 }
 
-
 };
 
 // --------------------------------------------------
 // Check Out
 // --------------------------------------------------
 
-const handleCheckOut = async (reservationId: string) => {
+const handleCheckOut = async (
+reservationId: string
+) => {
 try {
 setActionLoading(reservationId);
 setError("");
@@ -242,6 +608,7 @@ setError("");
     `/api/v1/reservations/${reservationId}/check-out`,
     {
       method: "POST",
+      credentials: "include",
     }
   );
 
@@ -249,15 +616,17 @@ setError("");
 
   if (!response.ok) {
     throw new Error(
-      data.message || "Failed to check out reservation."
+      data.message ||
+        "Failed to check out reservation."
     );
   }
 
-  // Reload dashboard data so departures,
-  // room status and summary update immediately.
   await fetchDashboard();
 } catch (err) {
-  console.error("Check-out error:", err);
+  console.error(
+    "Check-out error:",
+    err
+  );
 
   setError(
     err instanceof Error
@@ -271,6 +640,63 @@ setError("");
 
 };
 
+// --------------------------------------------------
+// Housekeeping Review
+// --------------------------------------------------
+
+const handleHousekeepingReview = async (
+taskId: string,
+action: "APPROVE" | "REJECT"
+) => {
+try {
+setActionLoading(taskId);
+setError("");
+
+
+  const response = await fetch(
+    `/api/v1/housekeeping/tasks/${taskId}/review`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      credentials: "include",
+      body: JSON.stringify({
+        action,
+      }),
+    }
+  );
+
+  const data = await response
+    .json()
+    .catch(() => null);
+
+  if (!response.ok) {
+    throw new Error(
+      data?.message ||
+        data?.error ||
+        `Failed to ${action.toLowerCase()} housekeeping task.`
+    );
+  }
+
+  await fetchDashboard();
+} catch (err) {
+  console.error(
+    "Housekeeping review error:",
+    err
+  );
+
+  setError(
+    err instanceof Error
+      ? err.message
+      : "Unable to update housekeeping task."
+  );
+} finally {
+  setActionLoading(null);
+}
+
+
+};
 
 // --------------------------------------------------
 // Render
@@ -278,19 +704,13 @@ setError("");
 
 return ( <div className={styles.page}> <main className={styles.main}>
 
+
     {/* Header */}
-    <header className={styles.header}>
-      <div>
-        <h1>Hello, {user?.fullName}!</h1>
-        <p>Today&apos;s hotel operations</p>
-      </div>
-
-      <div className={styles.headerRight}>
-        <span className={styles.date}>{today}</span>
-        <span className={styles.roleBadge}>{user?.role}</span>
-      </div>
-    </header>
-
+    {Header({
+        title: "Hello, " + (user?.fullName || "there")+"!",
+        subtitle: "Today's hotel operations",
+        userSubtitle: (today),
+      })}
     {/* Error */}
     {error && (
       <div className={styles.sectionCard}>
@@ -301,23 +721,41 @@ return ( <div className={styles.page}> <main className={styles.main}>
     {/* Summary */}
     <section className={styles.statsGrid}>
       <div className={styles.statCard}>
-        <span className={styles.statLabel}>ARRIVALS TODAY</span>
+        <span className={styles.statLabel}>
+          ARRIVALS TODAY
+        </span>
+
         <strong>
-          {loading ? "—" : dashboard?.summary.arrivalsToday ?? 0}
+          {loading
+            ? "—"
+            : dashboard?.summary
+                .arrivalsToday ?? 0}
         </strong>
       </div>
 
       <div className={styles.statCard}>
-        <span className={styles.statLabel}>DEPARTURES TODAY</span>
+        <span className={styles.statLabel}>
+          DEPARTURES TODAY
+        </span>
+
         <strong>
-          {loading ? "—" : dashboard?.summary.departuresToday ?? 0}
+          {loading
+            ? "—"
+            : dashboard?.summary
+                .departuresToday ?? 0}
         </strong>
       </div>
 
       <div className={styles.statCard}>
-        <span className={styles.statLabel}>AVAILABLE ROOMS</span>
+        <span className={styles.statLabel}>
+          AVAILABLE ROOMS
+        </span>
+
         <strong>
-          {loading ? "—" : dashboard?.summary.availableRooms ?? 0}
+          {loading
+            ? "—"
+            : dashboard?.summary
+                .availableRooms ?? 0}
         </strong>
       </div>
     </section>
@@ -329,8 +767,13 @@ return ( <div className={styles.page}> <main className={styles.main}>
       <div className={styles.sectionCard}>
         <div className={styles.sectionHeader}>
           <div>
-            <h2>Today&apos;s Arrivals</h2>
-            <p>Guests expected to check in today</p>
+            <h2>
+              Today&apos;s Arrivals
+            </h2>
+
+            <p>
+              Guests expected to check in today
+            </p>
           </div>
         </div>
 
@@ -349,39 +792,64 @@ return ( <div className={styles.page}> <main className={styles.main}>
             </div>
           ) : dashboard?.arrivals.length === 0 ? (
             <div className={styles.tableRow}>
-              <span>No arrivals today</span>
+              <span>
+                No arrivals today
+              </span>
             </div>
           ) : (
-            dashboard?.arrivals.map((arrival) => (
-              <div
-                className={styles.tableRow}
-                key={arrival.id}
-              >
-                <span>{arrival.guest.fullName}</span>
-
-                <span>{arrival.room.roomNumber}</span>
-
-                <span>
-                  {formatDate(arrival.checkInDate)}
-                </span>
-
-                <span className={styles.pendingStatus}>
-                  {arrival.status === "BOOKED"
-                    ? "Booked"
-                    : arrival.status}
-                </span>
-
-                <button
-                  className={styles.actionButton}
-                  onClick={() => handleCheckIn(arrival.id)}
-                  disabled={actionLoading === arrival.id}
+            dashboard?.arrivals.map(
+              (arrival) => (
+                <div
+                  className={styles.tableRow}
+                  key={arrival.id}
                 >
-                  {actionLoading === arrival.id
-                    ? "Checking in..."
-                    : "Check in"}
-                </button>
-              </div>
-            ))
+                  <span>
+                    {arrival.guest.fullName}
+                  </span>
+
+                  <span>
+                    {arrival.room.roomNumber}
+                  </span>
+
+                  <span>
+                    {formatDate(
+                      arrival.checkInDate
+                    )}
+                  </span>
+
+                  <span
+                    className={
+                      styles.pendingStatus
+                    }
+                  >
+                    {arrival.status ===
+                    "BOOKED"
+                      ? "Booked"
+                      : arrival.status}
+                  </span>
+
+                  <button
+                    className={
+                      styles.actionButton
+                    }
+                    onClick={() =>
+                      handleCheckIn(
+                        arrival.id
+                      )
+                    }
+                    disabled={
+                      actionLoading ===
+                      arrival.id
+                    }
+                  >
+                    {actionLoading ===
+                    arrival.id
+                      ? "Checking in..."
+                      : "Check in"}
+                  </button>
+                </div>
+              )
+            )
           )}
         </div>
       </div>
@@ -391,30 +859,45 @@ return ( <div className={styles.page}> <main className={styles.main}>
         <div className={styles.sectionHeader}>
           <div>
             <h2>Quick Actions</h2>
-            <p>Common reception tasks</p>
+
+            <p>
+              Start a common reception action
+            </p>
           </div>
         </div>
 
         <div className={styles.quickActions}>
-          <button>New Reservation</button>
-          <button>Check In</button>
-          <button>Check Out</button>
-          <button>Guest Lookup</button>
-          <button>View Rooms</button>
+          <button
+            type="button"
+            onClick={openNewReservation}
+          >
+            + New Reservation
+          </button>
         </div>
       </div>
-
     </section>
 
     {/* Today's Departures */}
     <section className={styles.sectionCard}>
       <div className={styles.sectionHeader}>
         <div>
-          <h2>Today&apos;s Departures</h2>
-          <p>Guests expected to check out today</p>
+          <h2>
+            Today&apos;s Departures
+          </h2>
+
+          <p>
+            Guests expected to check out today
+          </p>
         </div>
 
-        <button className={styles.viewButton}>
+        <button
+          className={styles.viewButton}
+          onClick={() =>
+            router.push(
+              "/Pages/Reservations"
+            )
+          }
+        >
           View all
         </button>
       </div>
@@ -434,56 +917,78 @@ return ( <div className={styles.page}> <main className={styles.main}>
           </div>
         ) : dashboard?.departures.length === 0 ? (
           <div className={styles.tableRow}>
-            <span>No departures today</span>
+            <span>
+              No departures today
+            </span>
           </div>
         ) : (
-          dashboard?.departures.map((departure) => (
-            <div
-              className={styles.tableRow}
-              key={departure.id}
-            >
-              <span>{departure.guest.fullName}</span>
-
-              <span>{departure.room.roomNumber}</span>
-
-              <span>
-                {formatDate(departure.checkOutDate)}
-              </span>
-
-              <span
-                className={
-                  departure.status === "CHECKED_OUT"
-                    ? styles.completedStatus
-                    : styles.pendingStatus
-                }
+          dashboard?.departures.map(
+            (departure) => (
+              <div
+                className={styles.tableRow}
+                key={departure.id}
               >
-                {departure.status === "CHECKED_IN"
-                  ? "Staying"
-                  : departure.status === "CHECKED_OUT"
-                    ? "Checked out"
-                    : departure.status}
-              </span>
+                <span>
+                  {departure.guest.fullName}
+                </span>
 
-              <button
-                className={styles.actionButton}
-                onClick={() =>
-                  departure.status === "CHECKED_IN"
-                    ? handleCheckOut(departure.id)
-                    : undefined
-                }
-                disabled={
-                  departure.status === "CHECKED_IN" &&
-                  actionLoading === departure.id
-                }
-              >
-                {departure.status === "CHECKED_IN"
-                  ? actionLoading === departure.id
-                    ? "Checking out..."
-                    : "Check out"
-                  : "View"}
-              </button>
-            </div>
-          ))
+                <span>
+                  {departure.room.roomNumber}
+                </span>
+
+                <span>
+                  {formatDate(
+                    departure.checkOutDate
+                  )}
+                </span>
+
+                <span
+                  className={
+                    departure.status ===
+                    "CHECKED_OUT"
+                      ? styles.completedStatus
+                      : styles.pendingStatus
+                  }
+                >
+                  {departure.status ===
+                  "CHECKED_IN"
+                    ? "Staying"
+                    : departure.status ===
+                      "CHECKED_OUT"
+                      ? "Checked out"
+                      : departure.status}
+                </span>
+
+                <button
+                  className={
+                    styles.actionButton
+                  }
+                  onClick={() =>
+                    departure.status ===
+                    "CHECKED_IN"
+                      ? handleCheckOut(
+                          departure.id
+                        )
+                      : undefined
+                  }
+                  disabled={
+                    departure.status ===
+                      "CHECKED_IN" &&
+                    actionLoading ===
+                      departure.id
+                  }
+                >
+                  {departure.status ===
+                  "CHECKED_IN"
+                    ? actionLoading ===
+                      departure.id
+                      ? "Checking out..."
+                      : "Check out"
+                    : "View"}
+                </button>
+              </div>
+            )
+          )
         )}
       </div>
     </section>
@@ -493,79 +998,100 @@ return ( <div className={styles.page}> <main className={styles.main}>
       <div className={styles.sectionHeader}>
         <div>
           <h2>Room Status</h2>
-          <p>Current status of hotel rooms</p>
+
+          <p>
+            Current status of hotel rooms
+          </p>
         </div>
 
         <button
-              className={styles.viewButton}
-              onClick={() => router.push("/Pages/Rooms")}
-            >
-              View all
-            </button>
+          className={styles.viewButton}
+          onClick={() =>
+            router.push(
+              "/Pages/Rooms"
+            )
+          }
+        >
+          View all
+        </button>
       </div>
 
       <div className={styles.roomStatusGrid}>
 
         <div className={styles.roomStatusItem}>
           <span>Available</span>
+
           <strong>
             {loading
               ? "—"
-              : dashboard?.roomStatus.available ?? 0}
+              : dashboard?.roomStatus
+                  .available ?? 0}
           </strong>
         </div>
 
         <div className={styles.roomStatusItem}>
           <span>Upcoming</span>
+
           <strong>
             {loading
               ? "—"
-              : dashboard?.roomStatus.reserved ?? 0}
+              : dashboard?.roomStatus
+                  .reserved ?? 0}
           </strong>
         </div>
 
         <div className={styles.roomStatusItem}>
           <span>In stay</span>
+
           <strong>
             {loading
               ? "—"
-              : dashboard?.roomStatus.occupied ?? 0}
+              : dashboard?.roomStatus
+                  .occupied ?? 0}
           </strong>
         </div>
 
         <div className={styles.roomStatusItem}>
           <span>Needs cleaning</span>
+
           <strong>
             {loading
               ? "—"
-              : dashboard?.roomStatus.needsCleaning ?? 0}
+              : dashboard?.roomStatus
+                  .needsCleaning ?? 0}
           </strong>
         </div>
 
         <div className={styles.roomStatusItem}>
           <span>Cleaning</span>
+
           <strong>
             {loading
               ? "—"
-              : dashboard?.roomStatus.cleaning ?? 0}
+              : dashboard?.roomStatus
+                  .cleaning ?? 0}
           </strong>
         </div>
 
         <div className={styles.roomStatusItem}>
           <span>In review</span>
+
           <strong>
             {loading
               ? "—"
-              : dashboard?.roomStatus.inReview ?? 0}
+              : dashboard?.roomStatus
+                  .inReview ?? 0}
           </strong>
         </div>
 
         <div className={styles.roomStatusItem}>
           <span>Out of service</span>
+
           <strong>
             {loading
               ? "—"
-              : dashboard?.roomStatus.outOfService ?? 0}
+              : dashboard?.roomStatus
+                  .outOfService ?? 0}
           </strong>
         </div>
 
@@ -576,16 +1102,25 @@ return ( <div className={styles.page}> <main className={styles.main}>
     <section className={styles.sectionCard}>
       <div className={styles.sectionHeader}>
         <div>
-          <h2>Housekeeping Attention</h2>
-          <p>Rooms that need reception action</p>
+          <h2>
+            Housekeeping Attention
+          </h2>
+
+          <p>
+            Rooms that need reception action
+          </p>
         </div>
 
-         <button
-              className={styles.viewButton}
-              onClick={() => router.push("/Pages/HousekeepingReview")}
-            >
-              View all
-            </button>
+        <button
+          className={styles.viewButton}
+          onClick={() =>
+            router.push(
+              "/Pages/HousekeepingReview"
+            )
+          }
+        >
+          View all
+        </button>
       </div>
 
       <div className={styles.table}>
@@ -600,54 +1135,425 @@ return ( <div className={styles.page}> <main className={styles.main}>
           <div className={styles.tableRow}>
             <span>Loading...</span>
           </div>
-        ) : dashboard?.housekeepingAttention.length === 0 ? (
+        ) : dashboard?.housekeepingAttention
+            .length === 0 ? (
           <div className={styles.tableRow}>
             <span>
               No housekeeping attention required
             </span>
           </div>
         ) : (
-          dashboard?.housekeepingAttention.map((task) => (
-            <div
-              className={styles.tableRow}
-              key={task.id}
-            >
-              <span>{task.room.roomNumber}</span>
+          dashboard?.housekeepingAttention.map(
+            (task) => (
+              <div
+                className={styles.tableRow}
+                key={task.id}
+              >
+                <span>
+                  {task.room.roomNumber}
+                </span>
 
-              <span className={styles.pendingStatus}>
-                {task.status === "IN_REVIEW"
-                  ? "In review"
-                  : getRoomStatusLabel(task.room.status)}
-              </span>
+                <span
+                  className={
+                    styles.pendingStatus
+                  }
+                >
+                  {task.status ===
+                  "IN_REVIEW"
+                    ? "In review"
+                    : getRoomStatusLabel(
+                        task.room.status
+                      )}
+                </span>
 
-              <span>{task.assignedTo.fullName}</span>
+                <span>
+                  {task.assignedTo.fullName}
+                </span>
 
-              <div className={styles.reviewActions}>
-                {task.status === "IN_REVIEW" ? (
-                  <>
-                    <button className={styles.approveButton}>
-                      Approve
+                <div
+                  className={
+                    styles.reviewActions
+                  }
+                >
+                  {task.status ===
+                  "IN_REVIEW" ? (
+                    <>
+                      <button
+                        className={
+                          styles.approveButton
+                        }
+                        onClick={() =>
+                          handleHousekeepingReview(
+                            task.id,
+                            "APPROVE"
+                          )
+                        }
+                        disabled={
+                          actionLoading ===
+                          task.id
+                        }
+                      >
+                        {actionLoading ===
+                        task.id
+                          ? "..."
+                          : "Approve"}
+                      </button>
+
+                      <button
+                        className={
+                          styles.rejectButton
+                        }
+                        onClick={() =>
+                          handleHousekeepingReview(
+                            task.id,
+                            "REJECT"
+                          )
+                        }
+                        disabled={
+                          actionLoading ===
+                          task.id
+                        }
+                      >
+                        {actionLoading ===
+                        task.id
+                          ? "..."
+                          : "Reject"}
+                      </button>
+                    </>
+                  ) : (
+                    <button
+                      className={
+                        styles.actionButton
+                      }
+                      onClick={() =>
+                        router.push(
+                          "/Pages/HousekeepingReview"
+                        )
+                      }
+                    >
+                      View
                     </button>
-
-                    <button className={styles.rejectButton}>
-                      Reject
-                    </button>
-                  </>
-                ) : (
-                  <button className={styles.actionButton}>
-                    Assign Task
-                  </button>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          ))
+            )
+          )
         )}
       </div>
     </section>
 
   </main>
-</div>
 
+  {/* =================================================
+      New Reservation Modal
+      ================================================= */}
+
+  {showNewReservation && (
+    <div
+      className={styles.modalOverlay}
+      onMouseDown={(event) => {
+        if (
+          event.target ===
+          event.currentTarget
+        ) {
+          closeNewReservation();
+        }
+      }}
+    >
+      <form
+        className={styles.modal}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="new-reservation-title"
+        onSubmit={handleCreateReservation}
+      >
+
+        {/* Modal Header */}
+        <div className={styles.modalHeader}>
+          <div>
+            <h2 id="new-reservation-title">
+              New Reservation
+            </h2>
+
+            <p>
+              Create a reservation for a guest.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            className={styles.modalClose}
+            onClick={closeNewReservation}
+            aria-label="Close new reservation"
+            disabled={reservationSubmitting}
+          >
+            ×
+          </button>
+        </div>
+
+        {/* Modal Body */}
+        <div className={styles.modalBody}>
+
+          {/* Error */}
+          {reservationError && (
+            <div
+              className={styles.modalError}
+              role="alert"
+            >
+              {reservationError}
+            </div>
+          )}
+
+          {/* Success */}
+          {reservationSuccess && (
+            <div
+              className={styles.modalSuccess}
+              role="status"
+            >
+              {reservationSuccess}
+            </div>
+          )}
+
+          {/* Loading options */}
+          {optionsLoading && (
+            <div
+              className={styles.modalLoading}
+            >
+              Loading guests and rooms...
+            </div>
+          )}
+
+          {/* Guest */}
+          <div className={styles.formField}>
+            <label htmlFor="reservation-guest">
+              Guest
+            </label>
+
+            <select
+              id="reservation-guest"
+              value={selectedGuestId}
+              onChange={(event) =>
+                setSelectedGuestId(
+                  event.target.value
+                )
+              }
+              disabled={
+                optionsLoading ||
+                reservationSubmitting
+              }
+              required
+            >
+              <option value="">
+                Select a guest
+              </option>
+
+              {guests.map((guest) => (
+                <option
+                  key={guest.id}
+                  value={guest.id}
+                >
+                  {guest.fullName}
+                  {guest.phone
+                    ? ` — ${guest.phone}`
+                    : ""}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Room */}
+          <div className={styles.formField}>
+            <label htmlFor="reservation-room">
+              Room
+            </label>
+
+            <select
+              id="reservation-room"
+              value={selectedRoomId}
+              onChange={(event) =>
+                setSelectedRoomId(
+                  event.target.value
+                )
+              }
+              disabled={
+                optionsLoading ||
+                reservationSubmitting
+              }
+              required
+            >
+              <option value="">
+                Select a room
+              </option>
+
+              {rooms.map((room) => (
+                <option
+                  key={room.id}
+                  value={room.id}
+                >
+                  Room {room.roomNumber} —{" "}
+                  {room.roomType} —{" "}
+                  {room.basePrice} / night
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Dates */}
+          <div className={styles.formRow}>
+
+            {/* Check-in */}
+            <div
+              className={styles.formField}
+            >
+              <label htmlFor="reservation-checkin">
+                Check-in
+              </label>
+
+              <input
+                id="reservation-checkin"
+                type="date"
+                value={checkInDate}
+                min={todayDate}
+                onChange={(event) => {
+                  const newCheckIn =
+                    event.target.value;
+
+                  setCheckInDate(
+                    newCheckIn
+                  );
+
+                  /*
+                   * If the current checkout
+                   * is no longer valid,
+                   * automatically move it
+                   * to the next day.
+                   */
+                  if (
+                    checkOutDate &&
+                    checkOutDate <=
+                      newCheckIn
+                  ) {
+                    setCheckOutDate(
+                      getNextDate(
+                        newCheckIn
+                      )
+                    );
+                  }
+                }}
+                disabled={
+                  reservationSubmitting
+                }
+                required
+              />
+            </div>
+
+            {/* Check-out */}
+            <div
+              className={styles.formField}
+            >
+              <label htmlFor="reservation-checkout">
+                Check-out
+              </label>
+
+              <input
+                id="reservation-checkout"
+                type="date"
+                value={checkOutDate}
+                min={
+                  checkInDate
+                    ? getNextDate(
+                        checkInDate
+                      )
+                    : undefined
+                }
+                onChange={(event) =>
+                  setCheckOutDate(
+                    event.target.value
+                  )
+                }
+                disabled={
+                  reservationSubmitting ||
+                  !checkInDate
+                }
+                required
+              />
+            </div>
+
+          </div>
+
+          {/* Payment */}
+          <div className={styles.formField}>
+            <label htmlFor="reservation-payment">
+              Payment status
+            </label>
+
+            <select
+              id="reservation-payment"
+              value={paymentStatus}
+              onChange={(event) =>
+                setPaymentStatus(
+                  event.target
+                    .value as PaymentStatus
+                )
+              }
+              disabled={
+                reservationSubmitting
+              }
+            >
+              <option value="UNPAID">
+                Unpaid
+              </option>
+
+              <option value="PARTIALLY_PAID">
+                Partially paid
+              </option>
+
+              <option value="PAID">
+                Paid
+              </option>
+            </select>
+          </div>
+
+        </div>
+
+        {/* Modal Footer */}
+        <div className={styles.modalFooter}>
+
+          <button
+            type="button"
+            className={styles.modalCancel}
+            onClick={closeNewReservation}
+            disabled={
+              reservationSubmitting
+            }
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            className={styles.modalPrimary}
+            disabled={
+              optionsLoading ||
+              reservationSubmitting ||
+              !selectedGuestId ||
+              !selectedRoomId ||
+              !checkInDate ||
+              !checkOutDate
+            }
+          >
+            {reservationSubmitting
+              ? "Creating..."
+              : "Create Reservation"}
+          </button>
+
+        </div>
+
+      </form>
+    </div>
+  )}
+
+</div>
 
 );
 };

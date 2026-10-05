@@ -9,6 +9,7 @@ import React, {
 } from "react";
 import Pagination from "@/components/Pagination";
 import styles from "./page.module.css";
+import Header from "@/components/Header/Header";
 
 /*
  * ================================

@@ -5,6 +5,7 @@ import Link from "next/link";
 import AddGuestModal from "../../../components/AddGuestModal";
 import Pagination from "../../../components/Pagination"; // Adjust path if using alias like "@/components/Pagination"
 import styles from "./page.module.css";
+import Header from "@/components/Header/Header";
 
 type Room = { roomNumber: string };
 
@@ -230,16 +231,11 @@ export default function GuestsPage() {
   return (
     <div className={styles.layout}>
       <main className={styles.main}>
-        <header className={styles.topBar}>
-          <div>
-            <h2>Guests</h2>
-
-            <p className={styles.subtitle}>
-              {guests.length} {guests.length === 1 ? "guest" : "guests"}
-            </p>
-          </div>
-        </header>
-
+        {Header({
+          title: "Guests",
+          subtitle: `${guests.length} ${guests.length === 1 ? "guest" : "guests"}`,
+          userSubtitle: "Checking guests",
+        })}
         <div className={styles.toolbar}>
           <input
             className={styles.searchInput}

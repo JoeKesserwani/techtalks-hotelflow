@@ -6,7 +6,7 @@ import { ApiError, handleRouteError } from '../../../../../../../lib/api/errors'
 export async function POST(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const user = await requireAuth({ roles: ['MANAGER', 'HOUSEKEEPING'] });
+    const user = await requireAuth({ roles: ['ADMIN','MANAGER', 'HOUSEKEEPING'] });
     if (!user) throw new ApiError('Unauthorized', 401);
 
     const task = await prisma.housekeepingTask.findFirst({ where: { id, hotelId: user.hotelId } });
