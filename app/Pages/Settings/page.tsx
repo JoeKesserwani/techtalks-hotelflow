@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import styles from "./page.module.css";
+import Header from "@/components/Header/Header";
 
 type HotelSettings = {
   id: string;
@@ -103,11 +104,12 @@ export default function HotelSettingsPage() {
 
   return (
     <main className={styles.page}>
-      <header className={styles.header}>
-        <h1>Hotel settings</h1>
-        <p className={styles.subtitle}>General information and preferences</p>
-      </header>
 
+      <Header
+        title="Hotel Settings"
+        subtitle="Manage your hotel information and preferences"
+        userSubtitle="Currently managing hotel settings"
+      />
       <section className={styles.card}>
         <h2 className={styles.cardTitle}>Hotel profile</h2>
 

@@ -10,6 +10,7 @@ import React, {
 import { useSearchParams } from "next/navigation";
 import Pagination from "@/components/Pagination";
 import styles from "./page.module.css";
+import Header from "@/components/Header/Header";
 
 /*
  * ================================
@@ -871,22 +872,11 @@ export default function ReservationsPage() {
   return (
     <div className={styles.page}>
       <main className={styles.content}>
-        {/* HEADER */}
-
-        <header className={styles.header}>
-          <div className={styles.title}>
-            <h1>Reservations</h1>
-
-            <p>{reservations.length} reservations this month</p>
-          </div>
-
-          <div className={styles.userInfo}>
-            <span>Receptionist</span>
-
-            <span className={styles.userRole}>Receptionist</span>
-          </div>
-        </header>
-
+        {Header({
+          title: "Reservations",
+          subtitle: `${reservations.length} reservations this month`,
+          userSubtitle: "Managing reservations",
+        })}
         {/* TOOLBAR */}
 
         <div className={styles.toolbar}>

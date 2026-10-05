@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Pagination from "@/components/Pagination";
 import styles from "./rooms.module.css";
 import { useAuth } from "@/components/Auth/AuthProvider";
+import Header from "@/components/Header/Header";
 
 type RoomStatus =
   | "AVAILABLE"
@@ -511,27 +512,11 @@ const Page = () => {
     <div className={styles.page}>
       <main className={styles.main}>
         {/* Header */}
-        <header className={styles.header}>
-          <div>
-            <h1 className={styles.title}>Room Setup</h1>
-
-            <p className={styles.subtitle}>
-              {rooms.length} rooms across{" "}
-              {new Set(rooms.map((room) => room.floor)).size} floors
-            </p>
-          </div>
-
-          <div className={styles.role}>
-            <div className={styles.roleInfo}>
-              <strong>{user?.fullName}</strong>
-
-              <span>Currently managing rooms</span>
-            </div>
-
-            <div className={styles.roleBadge}>{user?.role}</div>
-          </div>
-        </header>
-
+        {Header({
+          title: "Room Setup",
+          subtitle: `${rooms.length} rooms across ${new Set(  rooms.map((room) => room.floor)).size} floors`,
+          userSubtitle: "Currently managing rooms",
+        })}
         {/* Search + Filters + Add Room */}
         <div className={styles.toolbar}>
           <input
