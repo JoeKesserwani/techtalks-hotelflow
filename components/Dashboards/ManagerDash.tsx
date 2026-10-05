@@ -271,15 +271,7 @@ const ManagerDash = () => {
 
                   {/* Actions */}
                   <div className={styles.actions}>
-                    <button
-                      className={styles.commentButton}
-                      onClick={() => {
-                        setSelectedTask(task);
-                        setActiveModal("comment");
-                      }}
-                    >
-                      Comment
-                    </button>
+                    
 
                     <button
                       className={styles.rejectButton}
