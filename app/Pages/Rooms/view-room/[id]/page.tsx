@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Sidebar from "@/components/Navbars/navbar";
 import { useParams, useRouter } from "next/navigation";
 import styles from "./viewRoom.module.css";
-import { useAuth } from "@/components/Auth/AuthProvider";
+import Header from "@/components/Header/Header";
 
 type RoomStatus =
   | "AVAILABLE"
@@ -89,7 +89,6 @@ function getStatusClass(status: RoomStatus) {
 const ViewRoomPage = () => {
   const params = useParams();
   const router = useRouter();
-  const { user } = useAuth();
 
   const roomId = params.id as string;
 
@@ -253,30 +252,13 @@ const ViewRoomPage = () => {
               >
                 ← Back to Room Setup
               </button>
-
-              <p className={styles.label}>ROOM DETAILS</p>
-
-              <h1 className={styles.title}>
-                Room Details
-              </h1>
-
-              <p className={styles.subtitle}>
-                Unable to load the requested room.
-              </p>
-            </div>
-
-            <div className={styles.role}>
-              <div className={styles.roleInfo}>
-                <strong>{user?.fullName}</strong>
-                <span>Currently managing rooms</span>
-              </div>
-
-              <div className={styles.roleBadge}>
-                {user?.role}
-              </div>
             </div>
           </header>
-
+          <Header
+            title="Room Details"
+            subtitle="Unable to load the requested room."
+            userSubtitle="Currently managing rooms"
+          />
           <section className={styles.errorCard}>
             <h2>Unable to load room</h2>
 
@@ -321,41 +303,17 @@ const ViewRoomPage = () => {
             >
               ← Back to Room Setup
             </button>
-
-            <p className={styles.label}>
-              ROOM DETAILS
-            </p>
-
-            <h1 className={styles.title}>
-              Room {room.roomNumber}
-            </h1>
-
-            <p className={styles.subtitle}>
-              {room.roomType} room
-            </p>
-
-          </div>
-
-          <div className={styles.role}>
-
-            <div className={styles.roleInfo}>
-              <strong>
-                {user?.fullName}
-              </strong>
-
-              <span>
-                Currently managing rooms
-              </span>
-            </div>
-
-            <div className={styles.roleBadge}>
-              {user?.role}
-            </div>
-
           </div>
 
         </header>
-
+        <p className={styles.label}>
+            ROOM DETAILS
+        </p>
+        <Header
+          title={`Room ${room.roomNumber}`}
+          subtitle={`${room.roomType} room on floor ${room.floor}`}
+          userSubtitle="Currently managing rooms"
+        />
         {/* ------------------------------------------------------------------ */}
         {/* Status                                                              */}
         {/* ------------------------------------------------------------------ */}

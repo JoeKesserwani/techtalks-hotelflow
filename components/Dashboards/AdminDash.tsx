@@ -4,6 +4,7 @@ import React from "react";
 import styles from "./AdminDash.module.css";
 import { useAuth } from "../Auth/AuthProvider";
 import { useRouter } from "next/navigation";
+import Header from "../Header/Header";
 
 type RoomStatus =
   | "AVAILABLE"
@@ -171,7 +172,7 @@ const AdminDash = () => {
     <div className={styles.dashboard}>
       <main className={styles.main}>
         {/* HEADER */}
-        <header className={styles.header}>
+       {/* <header className={styles.header}>
           <div>
             <h1 className={styles.title}>Hello, {user?.fullName}!</h1>
 
@@ -188,8 +189,17 @@ const AdminDash = () => {
           <div className={styles.user}>
             <span className={styles.roleBadge}>{user?.role}</span>
           </div>
-        </header>
-
+        </header>*/}
+        <Header
+          title={`Hello, ${user?.fullName}!`}
+          subtitle={new Date().toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+          userSubtitle={""}
+        />
         {/* DASHBOARD STATISTICS */}
         <section className={styles.statsGrid}>
           <article className={styles.statCard}>

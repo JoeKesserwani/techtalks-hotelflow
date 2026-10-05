@@ -63,77 +63,13 @@
   letter-spacing: 1.5px;
 }
 
-.title {
-  margin: 0;
 
-  color: #26332a;
-
-  font-family: Georgia, serif;
-  font-size: 38px;
-  font-weight: 600;
-  line-height: 1.2;
-}
-
-.subtitle {
-  margin: 6px 0 0;
-
-  color: #8a877e;
-
-  font-family: "IBM Plex Sans", sans-serif;
-  font-size: 14px;
-  line-height: 1.5;
-}
 
 /* -------------------------------------------------------------------------- */
 /* User                                                                       */
 /* -------------------------------------------------------------------------- */
 
-.role {
-  display: flex;
-  align-items: center;
-  gap: 12px;
 
-  flex-shrink: 0;
-}
-
-.roleInfo {
-  display: flex;
-  flex-direction: column;
-
-  text-align: right;
-
-  font-family: "IBM Plex Sans", sans-serif;
-  font-size: 12px;
-}
-
-.roleInfo strong {
-  color: #292821;
-  font-weight: 600;
-}
-
-.roleInfo span {
-  margin-top: 3px;
-  color: #99958a;
-}
-
-.roleBadge {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  min-width: 70px;
-  min-height: 36px;
-  padding: 0 14px;
-
-  box-sizing: border-box;
-
-  background: #c76543;
-  color: white;
-
-  font-family: "IBM Plex Sans", sans-serif;
-  font-size: 12px;
-  font-weight: 600;
-}
 
 /* -------------------------------------------------------------------------- */
 /* Status                                                                     */

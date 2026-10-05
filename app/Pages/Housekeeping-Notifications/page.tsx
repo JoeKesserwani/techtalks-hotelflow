@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import styles from "./HousekeepingNotifications.module.css";
 import { useAuth } from "@/components/Auth/AuthProvider";
+import Header from "@/components/Header/Header";
 
 type NotificationTab = "all" | "unread" | "read";
 type NotificationTone = "created" | "approved" | "rejected";
@@ -239,25 +240,13 @@ export default function HousekeepingNotificationsPage() {
 
   return (
     <main className={styles.page}>
+      
       <div className={styles.container}>
-        <header className={styles.header}>
-          <div>
-            <h1 className={styles.title}>Housekeeping notifications</h1>
-            <p className={styles.subtitle}>
-              {unreadCount} unread - {readCount} read
-            </p>
-          </div>
-
-          <div className={styles.role}>
-            <div className={styles.roleInfo}>
-              <strong>{user?.fullName}</strong>
-              <span>Current notifications</span>
-            </div>
-
-            <div className={styles.roleBadge}>{user?.role}</div>
-          </div>
-        </header>
-
+        {Header({
+          title: "Housekeeping Notifications",
+          subtitle: `${unreadCount} unread - ${readCount} read`,
+          userSubtitle: "Currently reviewing notifications",
+        })}
         <nav className={styles.tabs} aria-label="Notification filters">
           {[
             { key: "all", label: "All" },
