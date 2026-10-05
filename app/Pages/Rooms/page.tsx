@@ -158,30 +158,45 @@ const Page = () => {
   /* -------------------------------------------------------------------------- */
 
   useEffect(() => {
-    async function loadRooms() {
-      try {
-        setIsLoading(true);
-        setError(null);
+  async function loadRooms() {
+    try {
+      setIsLoading(true);
+      setError(null);
 
-        const response = await fetch("/api/v1/rooms");
-        const data = await response.json();
+      const response = await fetch("/api/v1/rooms", {
+        cache: "no-store",
+      });
 
-        if (!response.ok) {
-          throw new Error(data.error ?? "Unable to load rooms.");
-        }
+      const data = await response.json();
 
-        setRooms(sortRoomsByNumber(data as Room[]));
-      } catch (error) {
-        setError(
-          error instanceof Error ? error.message : "Unable to load rooms.",
-        );
-      } finally {
-        setIsLoading(false);
+      if (!response.ok) {
+        throw new Error(data.error ?? "Unable to load rooms.");
       }
-    }
 
+      setRooms(sortRoomsByNumber(data as Room[]));
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Unable to load rooms.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  loadRooms();
+
+  const handleFocus = () => {
     loadRooms();
-  }, []);
+  };
+
+  window.addEventListener("focus", handleFocus);
+
+  return () => {
+    window.removeEventListener("focus", handleFocus);
+  };
+}, []);
 
   /* -------------------------------------------------------------------------- */
   /* Filter Rooms                                                               */
@@ -557,14 +572,17 @@ const Page = () => {
               </option>
             ))}
           </select>
-
-          <button
-            type="button"
-            className={styles.addButton}
-            onClick={openAddRoom}
-          >
-            + Add Room
-          </button>
+          {user?.role !== "RECEPTIONIST" && (
+            <button
+              type="button"
+              className={styles.addButton}
+              onClick={openAddRoom}
+            >
+              + Add Room
+            </button>
+          )}
+          
+            
         </div>
 
         {/* Room Table */}
@@ -641,14 +659,14 @@ const Page = () => {
                         >
                           View
                         </button>
-
+                        {user?.role !== "RECEPTIONIST" && (
                         <button
                           type="button"
                           className={styles.editButton}
                           onClick={() => openEditRoom(room)}
                         >
                           Edit
-                        </button>
+                        </button>)}
                       </div>
                     </td>
                   </tr>

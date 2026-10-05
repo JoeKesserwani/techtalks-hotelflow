@@ -38,10 +38,17 @@ const ReceptionistNavigation = [
   { name: "Rooms setup", href: "/Pages/Rooms" },
 ];
 
+const HousekeepingNavigation = [
+  { name: "Dashboard", href: "/Pages/Dashboard" },
+  { name: "History", href: "/Pages/Housekeeping-History" },
+  { name: "Notifications", href: "/Pages/Housekeeping-Notifications" },
+]
+
 const navigationByRole = {
   ADMIN: AdminNavigation,
   MANAGER: ManagerNavigation,
   RECEPTIONIST: ReceptionistNavigation,
+  HOUSEKEEPING: HousekeepingNavigation,
 } as const;
 
 export default function Sidebar() {

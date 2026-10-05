@@ -8,6 +8,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { usePathname } from "next/navigation";
 
 export type CurrentUser = {
   fullName: string;
@@ -40,8 +41,9 @@ type AuthContextValue = {
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const pathname = usePathname();
   const [user, setUserState] = useState<CurrentUser | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => pathname !== "/");
   const [hotel, setHotel] = useState<HotelInfo | null>(null);
   const [hotelError, setHotelError] = useState<string | null>(null);
   const hotelLoading = Boolean(user && !hotel && !hotelError);
@@ -53,6 +55,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
+    if (pathname === "/" || user) return;
+
     async function loadCurrentUser() {
       try {
         const response = await fetch("/api/v1/auth/me");
@@ -66,7 +70,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     loadCurrentUser().catch(() => setLoading(false));
-  }, [setUser]);
+  }, [pathname, setUser, user]);
 
   useEffect(() => {
     if (loading || !user) return;
