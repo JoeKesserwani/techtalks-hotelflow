@@ -1,9 +1,6 @@
 import { prisma } from "../../../../../../lib/db";
 import { requireAuth } from "../../../../../../lib/middleware/requireAuth";
-import {
-  ApiError,
-  handleRouteError,
-} from "../../../../../../lib/api/errors";
+import { ApiError, handleRouteError } from "../../../../../../lib/api/errors";
 import { writeAuditLog } from "../../../../../../lib/services/audit.service";
 
 const HOTEL_TIME_ZONE = "Asia/Beirut";
@@ -51,24 +48,14 @@ function dateToHotelDateString(value: Date) {
 /*
  * Calculate nights using date-only strings.
  */
-function calculateNights(
-  checkInDate: string,
-  checkOutDate: string
-) {
-  const checkIn =
-    dateOnlyToUtcDate(checkInDate);
+function calculateNights(checkInDate: string, checkOutDate: string) {
+  const checkIn = dateOnlyToUtcDate(checkInDate);
 
-  const checkOut =
-    dateOnlyToUtcDate(checkOutDate);
+  const checkOut = dateOnlyToUtcDate(checkOutDate);
 
-  const difference =
-    checkOut.getTime() -
-    checkIn.getTime();
+  const difference = checkOut.getTime() - checkIn.getTime();
 
-  return Math.ceil(
-    difference /
-      (1000 * 60 * 60 * 24)
-  );
+  return Math.ceil(difference / (1000 * 60 * 60 * 24));
 }
 
 export async function POST(
@@ -77,7 +64,7 @@ export async function POST(
     params,
   }: {
     params: Promise<{ id: string }>;
-  }
+  },
 ) {
   try {
     const { id } = await params;
@@ -86,71 +73,55 @@ export async function POST(
      * Only manager and receptionist can check out.
      */
     const user = await requireAuth({
-      roles: ["ADMIN","MANAGER", "RECEPTIONIST"],
+      roles: ["ADMIN", "MANAGER", "RECEPTIONIST"],
     });
 
     if (!user) {
-      throw new ApiError(
-        "Unauthorized",
-        401
-      );
+      throw new ApiError("Unauthorized", 401);
     }
 
     /*
      * Find reservation.
      */
-    const reservation =
-      await prisma.reservation.findFirst({
-        where: {
-          id,
-          hotelId: user.hotelId,
-        },
+    const reservation = await prisma.reservation.findFirst({
+      where: {
+        id,
+        hotelId: user.hotelId,
+      },
 
-        include: {
-          room: true,
-          guest: true,
-        },
-      });
+      include: {
+        room: true,
+        guest: true,
+      },
+    });
 
     if (!reservation) {
-      throw new ApiError(
-        "Reservation not found",
-        404
-      );
+      throw new ApiError("Reservation not found", 404);
     }
 
     /*
      * If already checked out, simply return it.
      * This makes checkout safe to retry.
      */
-    if (
-      reservation.status ===
-      "CHECKED_OUT"
-    ) {
-      return Response.json(
-        reservation
-      );
+    if (reservation.status === "CHECKED_OUT") {
+      return Response.json(reservation);
     }
 
     /*
      * Checkout is only allowed for
      * a currently checked-in reservation.
      */
-    if (
-      reservation.status !==
-      "CHECKED_IN"
-    ) {
+    if (reservation.status !== "CHECKED_IN") {
       throw new ApiError(
         "Only checked-in reservations can be checked out",
-        400
+        400,
       );
     }
 
     /*
      * Today's date in Beirut.
      */
-    const todayString =
-      getTodayString();
+    const todayString = getTodayString();
 
     /*
      * Get the reservation's check-in date
@@ -158,10 +129,7 @@ export async function POST(
      *
      * This avoids timezone problems.
      */
-    const checkInDateString =
-      dateToHotelDateString(
-        reservation.checkInDate
-      );
+    const checkInDateString = dateToHotelDateString(reservation.checkInDate);
 
     /*
      * Checkout cannot happen before
@@ -171,13 +139,10 @@ export async function POST(
      * should already have today's date,
      * but this validation protects the database.
      */
-    if (
-      todayString <
-      checkInDateString
-    ) {
+    if (todayString < checkInDateString) {
       throw new ApiError(
         "Check-out date cannot be before the check-in date",
-        400
+        400,
       );
     }
 
@@ -188,19 +153,12 @@ export async function POST(
      * as the database value because the server
      * timezone can be different from Beirut.
      */
-    const checkOutDate =
-      dateOnlyToUtcDate(
-        todayString
-      );
+    const checkOutDate = dateOnlyToUtcDate(todayString);
 
     /*
      * Calculate the number of nights.
      */
-    const nights =
-      calculateNights(
-        checkInDateString,
-        todayString
-      );
+    const nights = calculateNights(checkInDateString, todayString);
 
     /*
      * At least one night.
@@ -209,132 +167,102 @@ export async function POST(
      * we still treat the stay as one night
      * for checkout purposes.
      */
-    const finalNights =
-      Math.max(1, nights);
+    const finalNights = Math.max(1, nights);
 
-    const updated =
-      await prisma.$transaction(
-        async (tx) => {
-          /*
-           * Get the room again inside
-           * the transaction.
-           */
-          const room =
-            await tx.room.findFirst({
-              where: {
-                id: reservation.roomId,
-                hotelId: user.hotelId,
-              },
-            });
+    const updated = await prisma.$transaction(async (tx) => {
+      /*
+       * Get the room again inside
+       * the transaction.
+       */
+      const room = await tx.room.findFirst({
+        where: {
+          id: reservation.roomId,
+          hotelId: user.hotelId,
+        },
+      });
 
-          if (!room) {
-            throw new ApiError(
-              "Room not found",
-              404
-            );
-          }
+      if (!room) {
+        throw new ApiError("Room not found", 404);
+      }
 
-          /*
-           * Price comes from the reservation.
-           *
-           * This preserves the price that
-           * was used for the booking.
-           */
-          const pricePerNight =
-            reservation.pricePerNight;
+      /*
+       * Price comes from the reservation.
+       *
+       * This preserves the price that
+       * was used for the booking.
+       */
+      const pricePerNight = reservation.pricePerNight;
 
-          const totalPrice =
-            pricePerNight.mul(
-              finalNights
-            );
+      const totalPrice = pricePerNight.mul(finalNights);
 
-          /*
-           * Update reservation.
-           */
-          const result =
-            await tx.reservation.update({
-              where: {
-                id,
-              },
+      /*
+       * Update reservation.
+       */
+      const result = await tx.reservation.update({
+        where: {
+          id,
+        },
 
-              data: {
-                status:
-                  "CHECKED_OUT",
+        data: {
+          status: "CHECKED_OUT",
 
-                checkOutDate,
+          checkOutDate,
 
-                totalPrice,
-              },
+          totalPrice,
+        },
 
-              include: {
-                room: true,
-                guest: true,
-              },
-            });
+        include: {
+          room: true,
+          guest: true,
+        },
+      });
 
-          /*
-           * After checkout, the room needs cleaning.
-           */
-          await tx.room.update({
-            where: {
-              id: reservation.roomId,
-            },
+      /*
+       * After checkout, the room needs cleaning.
+       */
+      await tx.room.update({
+        where: {
+          id: reservation.roomId,
+        },
 
-            data: {
-              status:
-                "NEEDS_CLEANING",
-            },
-          });
+        data: {
+          status: "NEEDS_CLEANING",
+        },
+      });
 
-          /*
-           * Audit log.
-           */
-          await writeAuditLog(
-            tx,
-            {
-              hotelId:
-                user.hotelId,
+      /*
+       * Audit log.
+       */
+      await writeAuditLog(tx, {
+        hotelId: user.hotelId,
 
-              userId:
-                user.userId,
+        userId: user.userId,
 
-              action:
-                "RESERVATION_CHECKED_OUT",
+        action: "RESERVATION_CHECKED_OUT",
 
-              entityType:
-                "reservation",
+        entityType: "reservation",
 
-              metadata: {
-                reservationId:
-                  id,
+        metadata: {
+          reservationId: id,
 
-                roomId:
-                  reservation.roomId,
+          roomId: reservation.roomId,
 
-                guestId:
-                  reservation.guestId,
+          guestId: reservation.guestId,
 
-                checkInDate:
-                  checkInDateString,
+          checkInDate: checkInDateString,
 
-                checkOutDate:
-                  todayString,
+          checkOutDate: todayString,
 
-                nights:
-                  finalNights,
+          nights: finalNights,
 
-                totalPrice,
-              },
-            }
-          );
+          totalPrice,
+        },
+      });
 
-          return result;
-        }
-      );
+      return result;
+    });
 
-    return Response.json(
-      updated
-    );
+    return Response.json(updated);
   } catch (err) {
     return handleRouteError(err);
   }

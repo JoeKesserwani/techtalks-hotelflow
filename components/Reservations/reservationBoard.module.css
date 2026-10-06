@@ -1,0 +1,268 @@
+/* Styles for <ReservationsBoard />: Arriving / Departing / Staying columns. */
+.arrow {
+  height: 32px;
+  min-width: 32px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--ink);
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+.arrow:hover {
+  background: var(--chip);
+}
+
+/* Cards */
+.board {
+  composes: tokens from "./tokens.module.css";
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 16px;
+  margin-bottom: 28px;
+  color: var(--ink);
+  font-family:
+    system-ui,
+    -apple-system,
+    "Segoe UI",
+    sans-serif;
+  font-size: 14px;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  align-self: start;
+}
+.cardHead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 18px;
+}
+.cardHead h2 {
+  font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+  margin: 0;
+  font-size: 17px;
+}
+.board :focus-visible {
+  outline: 2px solid var(--clay);
+  outline-offset: 2px;
+}
+.badge {
+  min-width: 26px;
+  padding: 3px 9px;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: center;
+}
+.slate {
+  background: var(--slate);
+}
+.clay {
+  background: var(--clay);
+}
+.olive {
+  background: var(--olive);
+}
+.empty {
+  margin: 0;
+  padding: 20px 18px;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+}
+.list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 18px;
+  border-top: 1px solid var(--line);
+  min-height: 60px;
+}
+.who {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+.who strong {
+  font-size: 15px;
+  overflow-wrap: anywhere;
+}
+.who span {
+  color: var(--muted);
+  font-size: 12.5px;
+}
+.act {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.note {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+/* Buttons */
+.primary {
+  border: 0;
+  border-radius: 8px;
+  font:
+    700 12.5px system-ui,
+    sans-serif;
+  padding: 9px 14px;
+  min-height: 34px;
+  cursor: pointer;
+}
+.primary {
+  background: var(--clay);
+  color: #fff;
+}
+.primary:hover:not(:disabled) {
+  background: var(--clay-dark);
+}
+.primary:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.pay {
+  border: 1px solid var(--sage);
+  background: transparent;
+  color: var(--olive);
+  border-radius: 8px;
+  font:
+    700 12.5px system-ui,
+    sans-serif;
+  padding: 9px 12px;
+  min-height: 34px;
+  cursor: pointer;
+}
+.pay:hover:not(:disabled) {
+  background: var(--sage);
+  color: #fff;
+}
+.pay:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* Tablet: two columns, house list spans full width */
+@media (min-width: 760px) {
+  .board {
+    grid-template-columns: 1fr 1fr;
+  }
+  .wide {
+    grid-column: 1 / -1;
+  }
+}
+
+/* Desktop: three joined columns, as in the design */
+@media (min-width: 1040px) {
+  .board {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0;
+  }
+  .wide {
+    grid-column: auto;
+  }
+  .board > .card {
+    border-radius: 0;
+  }
+  .board > .card:first-child {
+    border-radius: 14px 0 0 14px;
+  }
+  .board > .card:last-child {
+    border-radius: 0 14px 14px 0;
+  }
+  .board > .card + .card {
+    margin-left: -1px;
+  }
+}
+
+/* Phones: stack action under the guest when space is tight */
+@media (max-width: 420px) {
+  .row {
+    flex-wrap: wrap;
+  }
+  .act {
+    justify-content: flex-start;
+    width: 100%;
+  }
+  .primary {
+    padding: 10px 16px;
+  }
+}
+
+/* Row secondary actions (Edit / Cancel) */
+.rowLinks {
+  display: flex;
+  gap: 16px;
+  margin-top: 2px;
+}
+.link {
+  background: none;
+  border: 0;
+  padding: 6px 0;
+  min-height: 30px;
+  font:
+    600 12.5px system-ui,
+    sans-serif;
+  color: var(--olive);
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.link:hover {
+  color: var(--ink);
+}
+.danger,
+.danger:hover {
+  color: #a3412d;
+}
+
+/* Pagination */
+.pager {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 18px;
+  border-top: 1px solid var(--line);
+  font-size: 12.5px;
+  color: var(--muted);
+}
+.pager > div {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.pager .arrow {
+  height: 30px;
+  min-width: 30px;
+  font-size: 16px;
+}
+.arrow:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.arrow:disabled:hover {
+  background: var(--card);
+}
+@media (max-width: 560px) {
+  .pager {
+    padding: 10px 14px;
+  }
+}
