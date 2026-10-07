@@ -5,6 +5,7 @@ import { Role } from "@/app/generated/prisma/enums";
 import styles from "./page.module.css";
 import { useAuth } from "@/components/Auth/AuthProvider";
 import Pagination from "@/components/Pagination";
+import Header from "@/components/Header/Header";
 
 type StaffMember = {
   id: string;
@@ -257,24 +258,11 @@ export default function StaffPage() {
 
   return (
     <main className={styles.page}>
-      <header className={styles.header}>
-        <div>
-          <h1>Staff Management</h1>
-          <p>
-            {staff.length} {staff.length === 1 ? "account" : "accounts"} ·
-            Manage roles and access
-          </p>
-        </div>
-        <div className={styles.role}>
-          <div className={styles.roleInfo}>
-            <strong>{user?.fullName}</strong>
-            <span>Currently reviewing rooms</span>
-          </div>
-
-          <div className={styles.roleBadge}>{user?.role}</div>
-        </div>
-      </header>
-
+      {Header({
+        title: "Staff Management",
+        subtitle: `${staff.length} ${staff.length === 1 ? "account" : "accounts"} · Manage roles and access`,
+        userSubtitle: "Currently reviewing rooms",
+      })}
       <section className={styles.toolbar} aria-label="Staff controls">
         <label className={styles.searchLabel}>
           <span className="sr-only">Search staff</span>

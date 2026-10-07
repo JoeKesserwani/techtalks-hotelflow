@@ -4,6 +4,7 @@ import React from "react";
 import styles from "./AdminDash.module.css";
 import { useAuth } from "../Auth/AuthProvider";
 import { useRouter } from "next/navigation";
+import Header from "../Header/Header";
 
 type RoomStatus =
   | "AVAILABLE"
@@ -363,11 +364,8 @@ const AdminDash = () => {
   return (
     <div className={styles.dashboard}>
       <main className={styles.main}>
-        {/* ==================================================
-            HEADER
-        ================================================== */}
-
-        <header className={styles.header}>
+        {/* HEADER */}
+       {/* <header className={styles.header}>
           <div>
             <h1 className={styles.title}>
               Hello, {user?.fullName}!
@@ -388,12 +386,18 @@ const AdminDash = () => {
               {user?.role}
             </span>
           </div>
-        </header>
-
-        {/* ==================================================
-            DASHBOARD STATISTICS
-        ================================================== */}
-
+        </header>*/}
+        <Header
+          title={`Hello, ${user?.fullName}!`}
+          subtitle={new Date().toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+          userSubtitle={""}
+        />
+        {/* DASHBOARD STATISTICS */}
         <section className={styles.statsGrid}>
           <article className={styles.statCard}>
             <strong className={styles.statValue}>

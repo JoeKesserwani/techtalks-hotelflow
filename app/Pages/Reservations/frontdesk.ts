@@ -15,18 +15,50 @@ export interface Reservation {
   totalPrice: string | number;
   status: "BOOKED" | "CHECKED_IN" | "CHECKED_OUT" | string;
   paymentStatus: string;
-  room?: {
-    number?: string | number;
-    roomNumber?: string | number;
-    name?: string;
-    status?: string;
-  };
-  guest?: {
-    fullName?: string;
-    name?: string;
-    firstName?: string;
-    lastName?: string;
-  };
+  room?: Room;
+  guest?: Guest;
+}
+
+export interface Room {
+  id: string;
+  roomNumber: string;
+  roomType?: string;
+  floor?: number;
+  capacity?: number;
+  basePrice: string | number;
+  status?: string;
+}
+export interface Guest {
+  id: string;
+  fullName: string;
+  phone?: string | null;
+  email?: string | null;
+}
+
+export const API = "/api/v1";
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public status: number,
+  ) {
+    super(message);
+  }
+}
+export async function api<T>(path: string, init?: RequestInit): Promise<T> {
+  const res = await fetch(`${API}${path}`, {
+    cache: "no-store",
+    ...init,
+    headers: { "Content-Type": "application/json", ...init?.headers },
+  });
+  if (!res.ok) {
+    let msg = `Request failed (${res.status})`;
+    try {
+      const b = await res.json();
+      msg = b.error ?? b.message ?? msg;
+    } catch {}
+    throw new ApiError(msg, res.status);
+  }
+  return res.json();
 }
 
 export interface Day {
@@ -64,19 +96,10 @@ export const formatDate = (d: string, opts: Intl.DateTimeFormatOptions) =>
     .format(toUtc(d))
     .replace(/\bSep\b/, "Sept");
 
-export const guestName = (r: Reservation) =>
-  r.guest?.fullName ??
-  r.guest?.name ??
-  ([r.guest?.firstName, r.guest?.lastName].filter(Boolean).join(" ") ||
-    "Guest");
+export const guestName = (r: Reservation) => r.guest?.fullName ?? "Guest";
 
 export const roomLabel = (r: Reservation) =>
-  String(
-    r.room?.number ??
-      r.room?.roomNumber ??
-      r.room?.name ??
-      r.roomId.slice(0, 4),
-  );
+  r.room?.roomNumber ?? r.roomId.slice(0, 4);
 
 export type PayKind = "paid" | "partial" | "unpaid";
 
@@ -136,4 +159,89 @@ export function bucketDay(
     departing: departing.sort(byRoom),
     staying: staying.sort(byRoom),
   };
+}
+
+/* ---------- Conflict detection (mirrors the server's overlap rule: existing.in < new.out && existing.out > new.in) ---------- */
+export const ACTIVE = ["BOOKED", "CHECKED_IN"];
+const overlaps = (r: Reservation, inD: string, outD: string) =>
+  dayOnly(r.checkInDate) < outD && dayOnly(r.checkOutDate) > inD;
+
+export const findRoomConflict = (
+  all: Reservation[],
+  roomId: string,
+  inD: string,
+  outD: string,
+  ignoreId?: string,
+) =>
+  all.find(
+    (r) =>
+      r.id !== ignoreId &&
+      r.roomId === roomId &&
+      ACTIVE.includes(r.status) &&
+      overlaps(r, inD, outD),
+  );
+
+export const findGuestConflict = (
+  all: Reservation[],
+  guestId: string,
+  inD: string,
+  outD: string,
+) =>
+  all.find(
+    (r) =>
+      r.guestId === guestId &&
+      ACTIVE.includes(r.status) &&
+      overlaps(r, inD, outD),
+  );
+
+/* ---------- Room board for a date ---------- */
+export type TileState =
+  | "arriving"
+  | "occupied"
+  | "departing"
+  | "dirty"
+  | "oos"
+  | "free";
+export interface Tile {
+  room: Room;
+  state: TileState;
+  guest?: string;
+}
+
+export function roomBoard(
+  rooms: Room[],
+  day: Day,
+  date: string,
+  today: string,
+): Tile[] {
+  const index = (l: Reservation[]) => new Map(l.map((r) => [r.roomId, r]));
+  const arr = index(
+    day.arriving.filter((r) => ["BOOKED", "CHECKED_IN"].includes(r.status)),
+  );
+  const stay = index(day.staying);
+  const dep = index(day.departing);
+  return rooms
+    .map((room): Tile => {
+      const a = arr.get(room.id),
+        s = stay.get(room.id),
+        d = dep.get(room.id);
+      if (a) return { room, state: "arriving", guest: guestName(a) };
+      if (s) return { room, state: "occupied", guest: guestName(s) };
+      if (room.status === "OUT_OF_SERVICE" && date >= today)
+        return { room, state: "oos" };
+      if (d) return { room, state: "departing", guest: guestName(d) };
+      if (
+        date === today &&
+        ["NEEDS_CLEANING", "CLEANING", "IN_REVIEW"].includes(
+          String(room.status),
+        )
+      )
+        return { room, state: "dirty" };
+      return { room, state: "free" };
+    })
+    .sort((x, y) =>
+      x.room.roomNumber.localeCompare(y.room.roomNumber, undefined, {
+        numeric: true,
+      }),
+    );
 }

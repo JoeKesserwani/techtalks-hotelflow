@@ -4,6 +4,7 @@ import React from "react";
 import styles from "./AdminDash.module.css";
 import { useAuth } from "../Auth/AuthProvider";
 import { useRouter } from "next/navigation";
+import Header from "../Header/Header";
 
 type RoomStatus =
   | "AVAILABLE"
@@ -183,25 +184,16 @@ const ManagerDash = () => {
     <div className={styles.dashboard}>
       <main className={styles.main}>
         {/* HEADER */}
-        <header className={styles.header}>
-          <div>
-            <h1 className={styles.title}>Hello, {user?.fullName}!</h1>
-
-            <p className={styles.date} suppressHydrationWarning>
-              {new Date().toLocaleDateString("en-US", {
+        {Header({
+        title: "Hello, " + (user?.fullName || "there") + "!",
+        subtitle: "Overview of hotel operations",
+        userSubtitle: (new Date().toLocaleDateString("en-US", {
                 weekday: "long",
                 year: "numeric",
                 month: "long",
                 day: "numeric",
-              })}
-            </p>
-          </div>
-
-          <div className={styles.user}>
-            <span className={styles.roleBadge}>{user?.role}</span>
-          </div>
-        </header>
-
+              })),
+      })}
         {/* DASHBOARD STATISTICS */}
         <section className={styles.statsGrid}>
           <article className={styles.statCard}>
@@ -279,15 +271,7 @@ const ManagerDash = () => {
 
                   {/* Actions */}
                   <div className={styles.actions}>
-                    <button
-                      className={styles.commentButton}
-                      onClick={() => {
-                        setSelectedTask(task);
-                        setActiveModal("comment");
-                      }}
-                    >
-                      Comment
-                    </button>
+                    
 
                     <button
                       className={styles.rejectButton}

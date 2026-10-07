@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import styles from "./ReceptionistDash.module.css";
 import { useAuth } from "../Auth/AuthProvider";
 import { useRouter } from "next/navigation";
+import Header from "../Header/Header";
 
 type Arrival = {
 id: string;
@@ -705,28 +706,11 @@ return ( <div className={styles.page}> <main className={styles.main}>
 
 
     {/* Header */}
-    <header className={styles.header}>
-      <div>
-        <h1>
-          Hello, {user?.fullName}!
-        </h1>
-
-        <p>
-          Today&apos;s hotel operations
-        </p>
-      </div>
-
-      <div className={styles.headerRight}>
-        <span className={styles.date}>
-          {today}
-        </span>
-
-        <span className={styles.roleBadge}>
-          {user?.role}
-        </span>
-      </div>
-    </header>
-
+    {Header({
+        title: "Hello, " + (user?.fullName || "there")+"!",
+        subtitle: "Today's hotel operations",
+        userSubtitle: (today),
+      })}
     {/* Error */}
     {error && (
       <div className={styles.sectionCard}>
