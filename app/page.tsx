@@ -4,6 +4,7 @@ import styles from "./page.module.css";
 import { useAuth } from "@/components/Auth/AuthProvider";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import InstallPrompt from "@/components/PWA/InstallPrompt";
 
 export default function Home() {
   const Router = useRouter();
@@ -95,6 +96,8 @@ export default function Home() {
             <p className={styles.subtitle}>
               Enter your credentials to access your dashboard
             </p>
+
+            <InstallPrompt />
 
             <form onSubmit={handleSubmit}>
               <div className={styles.formGroup}>
