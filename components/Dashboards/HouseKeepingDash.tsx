@@ -3,6 +3,7 @@
 import React from "react";
 import styles from "./HouseKeepingDash.module.css";
 import { useAuth } from "../Auth/AuthProvider";
+import Header from "../Header/Header";
 
 type TaskStatus = "PENDING" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
 
@@ -282,22 +283,19 @@ export default function HouseKeepingDash() {
   return (
     <div className={styles.dashboard}>
       <main className={styles.main}>
-        <header className={styles.header}>
-          <div className={styles.headerCopy}>
-            <p className={styles.eyebrow}>HOTELFLOW · HOUSEKEEPING</p>
-            <h1 className={styles.title}>Hello, {user?.fullName || "Housekeeping team"}!</h1>
-            <p className={styles.date} suppressHydrationWarning>{displayDate}</p>
-          </div>
-          <div className={styles.user}>
-            <span className={styles.userAvatar} aria-hidden="true">
-              {(user?.fullName || "H").trim().charAt(0).toUpperCase()}
-            </span>
-            <div className={styles.userDetails}>
-              <span className={styles.userName}>{user?.fullName || "Housekeeping"}</span>
-              <span className={styles.roleBadge}>{user?.role || "HOUSEKEEPING"}</span>
-            </div>
-          </div>
-        </header>
+
+        {/* HEADER */}
+        <Header
+          title={`Hello, ${user?.fullName || "there"}!`}
+          subtitle="Overview of housekeeping operations"
+          userSubtitle={new Date().toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        />
+        {/* ERROR */}
 
         {error && (
           <div className={styles.error} role="alert">

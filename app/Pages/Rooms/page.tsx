@@ -2,10 +2,10 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import Sidebar from "@/components/Navbars/navbar";
 import Pagination from "@/components/Pagination";
 import styles from "./rooms.module.css";
 import { useAuth } from "@/components/Auth/AuthProvider";
+import Header from "@/components/Header/Header";
 
 type RoomStatus =
   | "AVAILABLE"
@@ -159,30 +159,45 @@ const Page = () => {
   /* -------------------------------------------------------------------------- */
 
   useEffect(() => {
-    async function loadRooms() {
-      try {
-        setIsLoading(true);
-        setError(null);
+  async function loadRooms() {
+    try {
+      setIsLoading(true);
+      setError(null);
 
-        const response = await fetch("/api/v1/rooms");
-        const data = await response.json();
+      const response = await fetch("/api/v1/rooms", {
+        cache: "no-store",
+      });
 
-        if (!response.ok) {
-          throw new Error(data.error ?? "Unable to load rooms.");
-        }
+      const data = await response.json();
 
-        setRooms(sortRoomsByNumber(data as Room[]));
-      } catch (error) {
-        setError(
-          error instanceof Error ? error.message : "Unable to load rooms.",
-        );
-      } finally {
-        setIsLoading(false);
+      if (!response.ok) {
+        throw new Error(data.error ?? "Unable to load rooms.");
       }
-    }
 
+      setRooms(sortRoomsByNumber(data as Room[]));
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Unable to load rooms.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  loadRooms();
+
+  const handleFocus = () => {
     loadRooms();
-  }, []);
+  };
+
+  window.addEventListener("focus", handleFocus);
+
+  return () => {
+    window.removeEventListener("focus", handleFocus);
+  };
+}, []);
 
   /* -------------------------------------------------------------------------- */
   /* Filter Rooms                                                               */
@@ -497,27 +512,11 @@ const Page = () => {
     <div className={styles.page}>
       <main className={styles.main}>
         {/* Header */}
-        <header className={styles.header}>
-          <div>
-            <h1 className={styles.title}>Room Setup</h1>
-
-            <p className={styles.subtitle}>
-              {rooms.length} rooms across{" "}
-              {new Set(rooms.map((room) => room.floor)).size} floors
-            </p>
-          </div>
-
-          <div className={styles.role}>
-            <div className={styles.roleInfo}>
-              <strong>{user?.fullName}</strong>
-
-              <span>Currently managing rooms</span>
-            </div>
-
-            <div className={styles.roleBadge}>{user?.role}</div>
-          </div>
-        </header>
-
+        {Header({
+          title: "Room Setup",
+          subtitle: `${rooms.length} rooms across ${new Set(  rooms.map((room) => room.floor)).size} floors`,
+          userSubtitle: "Currently managing rooms",
+        })}
         {/* Search + Filters + Add Room */}
         <div className={styles.toolbar}>
           <input
@@ -558,14 +557,17 @@ const Page = () => {
               </option>
             ))}
           </select>
-
-          <button
-            type="button"
-            className={styles.addButton}
-            onClick={openAddRoom}
-          >
-            + Add Room
-          </button>
+          {user?.role !== "RECEPTIONIST" && (
+            <button
+              type="button"
+              className={styles.addButton}
+              onClick={openAddRoom}
+            >
+              + Add Room
+            </button>
+          )}
+          
+            
         </div>
 
         {/* Room Table */}
@@ -642,14 +644,14 @@ const Page = () => {
                         >
                           View
                         </button>
-
+                        {user?.role !== "RECEPTIONIST" && (
                         <button
                           type="button"
                           className={styles.editButton}
                           onClick={() => openEditRoom(room)}
                         >
                           Edit
-                        </button>
+                        </button>)}
                       </div>
                     </td>
                   </tr>
@@ -743,7 +745,6 @@ const Page = () => {
                     onChange={(event) => setNewFloor(event.target.value)}
                     placeholder="e.g. 1"
                     maxLength={2}
-                    
                   />
                 </div>
 
@@ -841,9 +842,7 @@ const Page = () => {
                   id="roomNumber"
                   type="text"
                   value={roomNumber}
-                  onChange={(event) =>
-                    setRoomNumber(event.target.value)
-                  }
+                  onChange={(event) => setRoomNumber(event.target.value)}
                   maxLength={10}
                 />
               </div>
@@ -884,9 +883,7 @@ const Page = () => {
                     min="1"
                     max="20"
                     value={floor}
-                    onChange={(event) =>
-                      setFloor(event.target.value)
-                    }
+                    onChange={(event) => setFloor(event.target.value)}
                     maxLength={2}
                   />
                 </div>
@@ -900,9 +897,7 @@ const Page = () => {
                     min="1"
                     max="10"
                     value={capacity}
-                    onChange={(event) =>
-                      setCapacity(event.target.value)
-                    }
+                    onChange={(event) => setCapacity(event.target.value)}
                     maxLength={2}
                   />
                 </div>
@@ -918,9 +913,7 @@ const Page = () => {
                   step="1"
                   max="9999"
                   value={basePrice}
-                  onChange={(event) =>
-                    setBasePrice(event.target.value)
-                  }
+                  onChange={(event) => setBasePrice(event.target.value)}
                   maxLength={4}
                 />
 

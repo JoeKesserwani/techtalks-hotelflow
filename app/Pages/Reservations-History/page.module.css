@@ -1,0 +1,753 @@
+/* ============================================================
+   Reservation history
+   Uses the app's existing design tokens (--color-*, --radius-*, --font-*).
+   Breakpoints: >1000 full table · 760–1000 compact table · <760 stacked cards
+   ============================================================ */
+
+.page {
+  display: flex;
+  min-height: 100vh;
+  background: var(--color-bg);
+  font-family: var(--font-body);
+  color: var(--color-text);
+}
+
+.content {
+  flex: 1;
+  min-width: 0;
+  padding: clamp(16px, 3vw, 32px);
+}
+
+.page :focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+}
+
+.srOnly {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ---------- Header ---------- */
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.title h1 {
+  margin: 0;
+  font-family: var(--font-heading);
+  font-size: clamp(22px, 4vw, 30px);
+  font-weight: 500;
+  line-height: 1.15;
+}
+
+.title p {
+  margin: 4px 0 0;
+  color: var(--color-muted);
+  font-size: 14px;
+}
+
+.userInfo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.userText {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.3;
+  font-size: 13px;
+}
+
+.userText small {
+  color: var(--color-muted);
+}
+
+.avatar {
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Stats ---------- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin: 20px 0 16px;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 14px 16px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  min-width: 0;
+}
+
+.stat span {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.stat strong {
+  font-family: var(--font-heading);
+  font-size: clamp(20px, 3vw, 26px);
+  font-weight: 500;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+
+.stat small {
+  color: var(--color-muted);
+  font-size: 12.5px;
+}
+
+.statWarn {
+  border-color: var(--color-status-cancelled-text);
+}
+
+.statWarn strong {
+  color: var(--color-status-cancelled-text);
+}
+
+/* ---------- Toolbar ---------- */
+
+.toolbar {
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) repeat(3, auto) auto;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 14px;
+}
+
+.search,
+.select,
+.range input {
+  height: 42px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-field);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 14px;
+  min-width: 0;
+}
+
+.search::placeholder {
+  color: var(--color-faint);
+}
+
+.select {
+  cursor: pointer;
+}
+
+.exportButton,
+.ghostButton {
+  height: 42px;
+  padding: 0 16px;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-field);
+  background: var(--color-surface);
+  color: var(--color-label);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 150ms ease;
+}
+
+.exportButton:hover:not(:disabled),
+.ghostButton:hover {
+  background: var(--color-surface-alt);
+}
+
+.exportButton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.range {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: flex-end;
+  margin-bottom: 14px;
+}
+
+.range label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 12.5px;
+  color: var(--color-label);
+  font-weight: 500;
+}
+
+/* ---------- Messages ---------- */
+
+.error {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 14px;
+  padding: 10px 14px;
+  border-radius: var(--radius-field);
+  background: var(--color-status-cancelled);
+  color: var(--color-status-cancelled-text);
+  font-size: 14px;
+}
+
+.error button,
+.error a {
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 48px 20px;
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border);
+  border-radius: var(--radius-card);
+  color: var(--color-muted);
+}
+
+.empty strong {
+  color: var(--color-text);
+  font-family: var(--font-heading);
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.empty p {
+  margin: 0;
+  font-size: 14px;
+}
+
+.empty .ghostButton {
+  margin-top: 10px;
+}
+
+.skeletons {
+  display: grid;
+  gap: 8px;
+}
+
+.skeleton {
+  height: 62px;
+  border-radius: var(--radius-card);
+  border: 1px solid var(--color-border-soft);
+  background: linear-gradient(
+    90deg,
+    var(--color-surface) 25%,
+    var(--color-surface-alt) 50%,
+    var(--color-surface) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.4s linear infinite;
+}
+
+@keyframes shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+/* ---------- Table ---------- */
+
+.tableContainer {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th {
+  padding: 12px 16px;
+  background: var(--color-bg);
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.table td {
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--color-border-soft);
+  font-size: 14px;
+  vertical-align: middle;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.table tbody tr {
+  transition: background-color 120ms ease;
+}
+
+.table tbody tr:hover {
+  background: var(--color-surface-alt);
+}
+
+.table small {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-muted);
+  font-size: 12.5px;
+}
+
+.cellMain {
+  font-weight: 500;
+}
+
+.num {
+  text-align: right !important;
+  font-variant-numeric: tabular-nums;
+}
+
+.guestCell {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 200px;
+}
+
+.guest {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.guest strong {
+  overflow-wrap: anywhere;
+}
+
+.actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.deleteButton {
+  min-height: 36px;
+  padding: 0 14px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-field);
+  background: transparent;
+  color: var(--color-status-cancelled-text);
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease;
+}
+
+.deleteButton:hover {
+  background: var(--color-status-cancelled);
+  border-color: var(--color-status-cancelled-text);
+}
+
+/* ---------- Payment pills ---------- */
+
+.pill {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.paid {
+  background: var(--color-status-success);
+  color: var(--color-status-success-text);
+}
+
+.partial {
+  background: var(--color-status-upcoming);
+  color: var(--color-status-upcoming-text);
+}
+
+.unpaid {
+  background: var(--color-status-cancelled);
+  color: var(--color-status-cancelled-text);
+}
+
+/* ---------- Toast ---------- */
+
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  max-width: calc(100vw - 32px);
+  padding: 10px 16px;
+  border-radius: var(--radius-field);
+  background: var(--color-text);
+  color: var(--color-bg);
+  font-size: 14px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 200ms ease;
+}
+
+.toast:not(:empty) {
+  opacity: 1;
+}
+
+/* ---------- Delete dialog ---------- */
+
+.dialog {
+  width: min(480px, calc(100vw - 24px));
+  max-height: 92dvh;
+  padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  box-shadow: var(--shadow-dropdown);
+  overflow: hidden;
+}
+
+.dialog[open] {
+  display: flex;
+  flex-direction: column;
+}
+
+.dialog::backdrop {
+  background: rgba(46, 42, 34, 0.5);
+}
+
+.dialogBody {
+  padding: 22px 24px 8px;
+  overflow-y: auto;
+}
+
+.dialogBody h2 {
+  margin: 0 0 14px;
+  font-family: var(--font-heading);
+  font-size: 20px;
+  font-weight: 500;
+}
+
+.summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px 16px;
+  margin: 0 0 14px;
+  padding: 14px;
+  background: var(--color-bg);
+  border-radius: var(--radius-field);
+}
+
+.summary dt {
+  color: var(--color-muted);
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.summary dd {
+  margin: 2px 0 0;
+  font-size: 14px;
+  font-weight: 500;
+  overflow-wrap: anywhere;
+}
+
+.dialogText {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-label);
+}
+
+.dialogWarn,
+.dialogError {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-field);
+  background: var(--color-status-cancelled);
+  color: var(--color-status-cancelled-text);
+  font-size: 13.5px;
+  line-height: 1.5;
+}
+
+.dialogActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px 20px;
+  border-top: 1px solid var(--color-border-soft);
+  margin-top: 8px;
+}
+
+.cancelButton,
+.dangerButton {
+  min-height: 42px;
+  padding: 0 18px;
+  border-radius: var(--radius-field);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancelButton {
+  border: 1px solid var(--color-border-input);
+  background: var(--color-surface);
+  color: var(--color-label);
+}
+
+.dangerButton {
+  border: 0;
+  background: var(--color-status-cancelled-text);
+  color: var(--color-surface);
+  transition: filter 150ms ease;
+}
+
+.dangerButton:hover:not(:disabled) {
+  filter: brightness(0.9);
+}
+
+.cancelButton:disabled,
+.dangerButton:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+
+/* ============================================================
+   Responsive
+   ============================================================ */
+
+/* Tablet: toolbar wraps, table gets tighter */
+@media (max-width: 1000px) {
+  .toolbar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .search {
+    grid-column: 1 / -1;
+  }
+
+  .exportButton {
+    grid-column: 1 / -1;
+  }
+
+  .table th,
+  .table td {
+    padding: 12px;
+  }
+
+  .guestCell {
+    min-width: 170px;
+  }
+}
+
+/* Phones: each row becomes a card */
+@media (max-width: 760px) {
+  .userText {
+    display: none;
+  }
+
+  .stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .stats .stat:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .toolbar {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .toolbar .select:last-of-type {
+    grid-column: 1 / -1;
+  }
+
+  .tableContainer {
+    background: transparent;
+    border: 0;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  .table,
+  .table tbody,
+  .table tr,
+  .table td {
+    display: block;
+    width: 100%;
+  }
+
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+
+  .table tbody {
+    display: grid;
+    gap: 12px;
+  }
+
+  .table tbody tr {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-card);
+    box-shadow: var(--shadow-card);
+    overflow: hidden;
+  }
+
+  .table tbody tr:hover {
+    background: var(--color-surface);
+  }
+
+  .table td {
+    border: 0;
+    padding: 10px 16px;
+    text-align: left !important;
+    min-width: 0;
+  }
+
+  /* label above each value */
+  .table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    margin-bottom: 2px;
+    color: var(--color-muted);
+    font-size: 11.5px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .table .guestCell {
+    grid-column: 1 / -1;
+    min-width: 0;
+    padding: 14px 16px 12px;
+    border-bottom: 1px solid var(--color-border-soft);
+  }
+
+  .table td[data-label="Stay"] {
+    grid-column: 1 / -1;
+  }
+
+  .table .actions {
+    grid-column: 1 / -1;
+    padding: 8px 12px 12px;
+    border-top: 1px solid var(--color-border-soft);
+    text-align: right !important;
+  }
+
+  .deleteButton {
+    width: 100%;
+    min-height: 44px;
+    border-color: var(--color-status-cancelled-text);
+  }
+
+  .dialog {
+    width: 100vw;
+    max-width: 100vw;
+    margin: auto 0 0;
+    border-radius: var(--radius-card) var(--radius-card) 0 0;
+  }
+
+  .dialogActions {
+    flex-direction: column-reverse;
+  }
+
+  .dialogActions button {
+    width: 100%;
+    min-height: 46px;
+  }
+}
+
+@media (max-width: 420px) {
+  .toolbar {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar .select:last-of-type {
+    grid-column: auto;
+  }
+
+  .summary {
+    grid-template-columns: 1fr;
+  }
+
+  .header {
+    align-items: flex-start;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+
+  .toast,
+  .table tbody tr,
+  .deleteButton,
+  .dangerButton {
+    transition: none;
+  }
+}

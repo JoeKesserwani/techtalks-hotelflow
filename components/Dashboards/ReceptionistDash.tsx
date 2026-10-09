@@ -4,652 +4,530 @@ import React, { useEffect, useState } from "react";
 import styles from "./ReceptionistDash.module.css";
 import { useAuth } from "../Auth/AuthProvider";
 import { useRouter } from "next/navigation";
+import Header from "../Header/Header";
+import { ReservationsBoard } from "../Reservations/reservationBoard";
+import { NewReservationDialog } from "../Reservations/newReservationDialog";
+import HousekeepingReview, {
+  HousekeepingTask as ReviewHousekeepingTask,
+} from "../Housekeeping/housekeepingApproval";
 
 type Arrival = {
-id: string;
-checkInDate: string;
-status: string;
-guest: {
-id: string;
-fullName: string;
-phone: string | null;
-};
-room: {
-id: string;
-roomNumber: string;
-roomType: string;
-};
+  id: string;
+  checkInDate: string;
+  status: string;
+  guest: {
+    id: string;
+    fullName: string;
+    phone: string | null;
+  };
+  room: {
+    id: string;
+    roomNumber: string;
+    roomType: string;
+  };
 };
 
 type Departure = {
-id: string;
-checkOutDate: string;
-status: string;
-guest: {
-id: string;
-fullName: string;
-phone: string | null;
-};
-room: {
-id: string;
-roomNumber: string;
-roomType: string;
-};
+  id: string;
+  checkOutDate: string;
+  status: string;
+  guest: {
+    id: string;
+    fullName: string;
+    phone: string | null;
+  };
+  room: {
+    id: string;
+    roomNumber: string;
+    roomType: string;
+  };
 };
 
-type HousekeepingTask = {
-id: string;
-status: string;
-room: {
-id: string;
-roomNumber: string;
-roomType: string;
-status: string;
-};
-assignedTo: {
-id: string;
-fullName: string;
-role: string;
-};
+type HousekeepingAttentionTask = {
+  id: string;
+  status: string;
+  completedAt?: string | null;
+  photos?: unknown;
+  room: {
+    id: string;
+    roomNumber: string;
+    roomType: string;
+    status: string;
+  };
+  assignedTo: {
+    id: string;
+    fullName: string;
+    role: string;
+  };
 };
 
 type DashboardData = {
-success: boolean;
+  success: boolean;
 
-summary: {
-arrivalsToday: number;
-departuresToday: number;
-availableRooms: number;
+  summary: {
+    arrivalsToday: number;
+    departuresToday: number;
+    availableRooms: number;
+  };
+
+  roomStatus: {
+    available: number;
+    reserved: number;
+    occupied: number;
+    inReview: number;
+    needsCleaning: number;
+    cleaning: number;
+    outOfService: number;
+  };
+
+  arrivals: Arrival[];
+  departures: Departure[];
+  housekeepingAttention: HousekeepingAttentionTask[];
 };
 
-roomStatus: {
-available: number;
-reserved: number;
-occupied: number;
-inReview: number;
-needsCleaning: number;
-cleaning: number;
-outOfService: number;
-};
-
-arrivals: Arrival[];
-
-departures: Departure[];
-
-housekeepingAttention: HousekeepingTask[];
-};
+// Reservations shown on the dashboard are limited to today.
 
 const ReceptionistDash = () => {
-const { user } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
 
+  const [dashboard, setDashboard] = useState<DashboardData | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [reservations, setReservations] = useState<any[]>([]);
+  const [reservationRooms, setReservationRooms] = useState<any[]>([]);
+  const [reservationsLoading, setReservationsLoading] = useState(true);
+  const [showNewReservation, setShowNewReservation] = useState(false);
+  const [reservationToast, setReservationToast] = useState("");
 
-const [dashboard, setDashboard] = useState<DashboardData | null>(null);
-const [loading, setLoading] = useState(true);
-const [error, setError] = useState("");
-const [actionLoading, setActionLoading] = useState<string | null>(null);
-const [awaitingApproval, setAwaitingApproval] = React.useState<number | null>(
-    null,
-  );
+  // --------------------------------------------------
+  // Dates
+  // --------------------------------------------------
 
-  
+  const getHotelDate = (date = new Date()) => {
+    return new Intl.DateTimeFormat("en-CA", {
+      timeZone: "Asia/Beirut",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+    }).format(date);
+  };
 
-const today = new Date().toLocaleDateString("en-US", {
-weekday: "long",
-year: "numeric",
-month: "long",
-day: "numeric",
-});
+  const todayDate = getHotelDate();
 
-// --------------------------------------------------
-// Fetch dashboard data
-// --------------------------------------------------
+  const getNextDate = (dateString: string) => {
+    const date = new Date(`${dateString}T00:00:00`);
 
-const fetchDashboard = async () => {
-try {
-setLoading(true);
-setError("");
+    date.setDate(date.getDate() + 1);
 
+    return date.toISOString().split("T")[0];
+  };
 
-  const response = await fetch(
-    "/api/v1/Dashboard/stats/Receptionist"
-  );
+  const today = new Date().toLocaleDateString("en-US", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 
-  const data = await response.json();
+  // --------------------------------------------------
+  // Fetch dashboard
+  // --------------------------------------------------
 
-  if (!response.ok || !data.success) {
-    throw new Error(
-      data.message || "Failed to load receptionist dashboard."
-    );
-  }
+  const fetchDashboard = async () => {
+    try {
+      setLoading(true);
+      setError("");
 
-  setDashboard(data);
-} catch (err) {
-  console.error("Receptionist dashboard error:", err);
-  setError("Unable to load dashboard data.");
-} finally {
-  setLoading(false);
-}
+      const response = await fetch("/api/v1/Dashboard/stats/Receptionist", {
+        method: "GET",
+        credentials: "include",
+        cache: "no-store",
+      });
 
+      const data = await response.json();
 
-};
+      if (!response.ok || !data.success) {
+        throw new Error(
+          data.message || "Failed to load receptionist dashboard.",
+        );
+      }
 
-useEffect(() => {
-fetchDashboard();
-}, []);
+      setDashboard(data);
+    } catch (err) {
+      console.error("Receptionist dashboard error:", err);
 
-// --------------------------------------------------
-// Format date
-// --------------------------------------------------
-
-const formatDate = (dateString: string) => {
-return new Date(dateString).toLocaleDateString("en-US", {
-month: "short",
-day: "numeric",
-year: "numeric",
-});
-};
-
-// --------------------------------------------------
-// Room status labels
-// --------------------------------------------------
-
-const getRoomStatusLabel = (status: string) => {
-switch (status) {
-case "AVAILABLE":
-return "Available";
-
-
-  case "RESERVED":
-    return "Upcoming";
-
-  case "OCCUPIED":
-    return "In stay";
-
-  case "IN_REVIEW":
-    return "In review";
-
-  case "NEEDS_CLEANING":
-    return "Needs cleaning";
-
-  case "CLEANING":
-    return "Cleaning";
-
-  case "OUT_OF_SERVICE":
-    return "Out of service";
-
-  default:
-    return status;
-}
-
-
-};
-
-// --------------------------------------------------
-// Check In
-// --------------------------------------------------
-
-const handleCheckIn = async (reservationId: string) => {
-try {
-setActionLoading(reservationId);
-setError("");
-
-
-  const response = await fetch(
-    `/api/v1/reservations/${reservationId}/check-in`,
-    {
-      method: "POST",
+      setError(
+        err instanceof Error ? err.message : "Unable to load dashboard data.",
+      );
+    } finally {
+      setLoading(false);
     }
-  );
+  };
 
-  const data = await response.json();
-
-  if (!response.ok) {
-    throw new Error(
-      data.message || "Failed to check in reservation."
-    );
-  }
-
-  // Reload dashboard data so arrivals,
-  // room status and summary update immediately.
-  await fetchDashboard();
-} catch (err) {
-  console.error("Check-in error:", err);
-
-  setError(
-    err instanceof Error
-      ? err.message
-      : "Unable to check in reservation."
-  );
-} finally {
-  setActionLoading(null);
-}
-
-
-};
-
-// --------------------------------------------------
-// Check Out
-// --------------------------------------------------
-
-const handleCheckOut = async (reservationId: string) => {
-try {
-setActionLoading(reservationId);
-setError("");
-
-
-  const response = await fetch(
-    `/api/v1/reservations/${reservationId}/check-out`,
-    {
-      method: "POST",
+  const fetchReservations = async () => {
+    try {
+      setReservationsLoading(true);
+      const [reservationsResponse, roomsResponse] = await Promise.all([
+        fetch("/api/v1/reservations", {
+          credentials: "include",
+          cache: "no-store",
+        }),
+        fetch("/api/v1/rooms", { credentials: "include", cache: "no-store" }),
+      ]);
+      const reservationsData = await reservationsResponse.json();
+      const roomsData = await roomsResponse.json();
+      if (!reservationsResponse.ok)
+        throw new Error(
+          reservationsData?.message ||
+            reservationsData?.error ||
+            "Failed to load reservations.",
+        );
+      if (!roomsResponse.ok)
+        throw new Error(
+          roomsData?.message || roomsData?.error || "Failed to load rooms.",
+        );
+      const allReservations = Array.isArray(reservationsData)
+        ? reservationsData
+        : (reservationsData?.data ?? reservationsData?.reservations ?? []);
+      const allRooms = Array.isArray(roomsData)
+        ? roomsData
+        : (roomsData?.data ?? roomsData?.rooms ?? []);
+      const todaysReservations = allReservations.filter((r: any) => {
+        const checkIn = String(r?.checkInDate ?? "").slice(0, 10);
+        const checkOut = String(r?.checkOutDate ?? "").slice(0, 10);
+        return (
+          checkIn === todayDate ||
+          checkOut === todayDate ||
+          (checkIn < todayDate && checkOut > todayDate)
+        );
+      });
+      setReservations(todaysReservations);
+      setReservationRooms(allRooms);
+    } catch (err) {
+      console.error("Receptionist reservations error:", err);
+      setError(
+        err instanceof Error ? err.message : "Unable to load reservations.",
+      );
+    } finally {
+      setReservationsLoading(false);
     }
-  );
+  };
 
-  const data = await response.json();
+  useEffect(() => {
+    fetchDashboard();
+    fetchReservations();
+  }, []);
 
-  if (!response.ok) {
-    throw new Error(
-      data.message || "Failed to check out reservation."
+  const showReservationToast = (message: string) => {
+    setReservationToast(message);
+    window.setTimeout(() => setReservationToast(""), 2500);
+  };
+
+  const openNewReservation = () => {
+    setReservationToast("");
+    setShowNewReservation(true);
+  };
+
+  const closeNewReservation = () => setShowNewReservation(false);
+
+  const handleReservationCreated = (reservation: any) => {
+    setReservations((current) => [...current, reservation]);
+    setShowNewReservation(false);
+    showReservationToast("Reservation created successfully.");
+    fetchDashboard();
+    fetchReservations();
+  };
+
+  const handleReservationUpdate = (reservation: any) => {
+    setReservations((current) =>
+      current.map((item) => (item.id === reservation.id ? reservation : item)),
     );
-  }
+  };
 
-  // Reload dashboard data so departures,
-  // room status and summary update immediately.
-  await fetchDashboard();
-} catch (err) {
-  console.error("Check-out error:", err);
+  const handleReservationRemove = (id: string) => {
+    setReservations((current) => current.filter((item) => item.id !== id));
+  };
 
-  setError(
-    err instanceof Error
-      ? err.message
-      : "Unable to check out reservation."
-  );
-} finally {
-  setActionLoading(null);
-}
+  // --------------------------------------------------
+  // Format date
+  // --------------------------------------------------
 
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
+  };
 
-};
+  // --------------------------------------------------
+  // Check In
+  // --------------------------------------------------
 
+  const handleCheckIn = async (reservationId: string) => {
+    try {
+      setError("");
 
-// --------------------------------------------------
-// Render
-// --------------------------------------------------
+      const response = await fetch(
+        `/api/v1/reservations/${reservationId}/check-in`,
+        {
+          method: "POST",
+          credentials: "include",
+        },
+      );
 
-return ( <div className={styles.page}> <main className={styles.main}>
+      const data = await response.json();
 
-    {/* Header */}
-    <header className={styles.header}>
-      <div>
-        <h1>Hello, {user?.fullName}!</h1>
-        <p>Today&apos;s hotel operations</p>
-      </div>
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to check in reservation.");
+      }
 
-      <div className={styles.headerRight}>
-        <span className={styles.date}>{today}</span>
-        <span className={styles.roleBadge}>{user?.role}</span>
-      </div>
-    </header>
+      await fetchDashboard();
+    } catch (err) {
+      console.error("Check-in error:", err);
 
-    {/* Error */}
-    {error && (
-      <div className={styles.sectionCard}>
-        <p>{error}</p>
-      </div>
-    )}
+      setError(
+        err instanceof Error ? err.message : "Unable to check in reservation.",
+      );
+    }
+  };
 
-    {/* Summary */}
-    <section className={styles.statsGrid}>
-      <div className={styles.statCard}>
-        <span className={styles.statLabel}>ARRIVALS TODAY</span>
-        <strong>
-          {loading ? "—" : dashboard?.summary.arrivalsToday ?? 0}
-        </strong>
-      </div>
+  // --------------------------------------------------
+  // Check Out
+  // --------------------------------------------------
 
-      <div className={styles.statCard}>
-        <span className={styles.statLabel}>DEPARTURES TODAY</span>
-        <strong>
-          {loading ? "—" : dashboard?.summary.departuresToday ?? 0}
-        </strong>
-      </div>
+  const handleCheckOut = async (reservationId: string) => {
+    try {
+      setError("");
 
-      <div className={styles.statCard}>
-        <span className={styles.statLabel}>AVAILABLE ROOMS</span>
-        <strong>
-          {loading ? "—" : dashboard?.summary.availableRooms ?? 0}
-        </strong>
-      </div>
-    </section>
+      const response = await fetch(
+        `/api/v1/reservations/${reservationId}/check-out`,
+        {
+          method: "POST",
+          credentials: "include",
+        },
+      );
 
-    {/* Arrivals + Quick Actions */}
-    <section className={styles.contentGrid}>
+      const data = await response.json();
 
-      {/* Today's Arrivals */}
-      <div className={styles.sectionCard}>
-        <div className={styles.sectionHeader}>
-          <div>
-            <h2>Today&apos;s Arrivals</h2>
-            <p>Guests expected to check in today</p>
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to check out reservation.");
+      }
+
+      await fetchDashboard();
+    } catch (err) {
+      console.error("Check-out error:", err);
+
+      setError(
+        err instanceof Error ? err.message : "Unable to check out reservation.",
+      );
+    }
+  };
+
+  const housekeepingReviewTasks: ReviewHousekeepingTask[] = (
+    dashboard?.housekeepingAttention ?? []
+  )
+    .filter((task) => task.status === "IN_REVIEW")
+    .map((task) => ({
+      id: task.id,
+      room: {
+        roomNumber: task.room.roomNumber,
+        roomType: task.room.roomType,
+      },
+      assignedTo: { fullName: task.assignedTo.fullName },
+      completedAt: task.completedAt ?? "",
+      photoUrl:
+        Array.isArray(task.photos) && typeof task.photos[0] === "string"
+          ? task.photos[0]
+          : undefined,
+    }));
+
+  const handleHousekeepingReviewed = async () => {
+    await fetchDashboard();
+  };
+
+  // --------------------------------------------------
+  // Render
+  // --------------------------------------------------
+
+  return (
+    <div className={styles.page}>
+      {" "}
+      <main className={styles.main}>
+        {/* Header */}
+        {Header({
+          title: "Hello, " + (user?.fullName || "there") + "!",
+          subtitle: "Today's hotel operations",
+          userSubtitle: today,
+        })}
+        {/* Error */}
+        {error && (
+          <div className={styles.sectionCard}>
+            <p>{error}</p>
           </div>
-        </div>
-
-        <div className={styles.table}>
-          <div className={styles.tableHeader}>
-            <span>Guest</span>
-            <span>Room</span>
-            <span>Date</span>
-            <span>Status</span>
-            <span>Action</span>
-          </div>
-
-          {loading ? (
-            <div className={styles.tableRow}>
-              <span>Loading...</span>
-            </div>
-          ) : dashboard?.arrivals.length === 0 ? (
-            <div className={styles.tableRow}>
-              <span>No arrivals today</span>
-            </div>
-          ) : (
-            dashboard?.arrivals.map((arrival) => (
-              <div
-                className={styles.tableRow}
-                key={arrival.id}
-              >
-                <span>{arrival.guest.fullName}</span>
-
-                <span>{arrival.room.roomNumber}</span>
-
-                <span>
-                  {formatDate(arrival.checkInDate)}
-                </span>
-
-                <span className={styles.pendingStatus}>
-                  {arrival.status === "BOOKED"
-                    ? "Booked"
-                    : arrival.status}
-                </span>
-
-                <button
-                  className={styles.actionButton}
-                  onClick={() => handleCheckIn(arrival.id)}
-                  disabled={actionLoading === arrival.id}
-                >
-                  {actionLoading === arrival.id
-                    ? "Checking in..."
-                    : "Check in"}
-                </button>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-
-      {/* Quick Actions */}
-      <div className={styles.sectionCard}>
-        <div className={styles.sectionHeader}>
-          <div>
-            <h2>Quick Actions</h2>
-            <p>Common reception tasks</p>
-          </div>
-        </div>
-
-        <div className={styles.quickActions}>
-          <button>New Reservation</button>
-          <button>Check In</button>
-          <button>Check Out</button>
-          <button>Guest Lookup</button>
-          <button>View Rooms</button>
-        </div>
-      </div>
-
-    </section>
-
-    {/* Today's Departures */}
-    <section className={styles.sectionCard}>
-      <div className={styles.sectionHeader}>
-        <div>
-          <h2>Today&apos;s Departures</h2>
-          <p>Guests expected to check out today</p>
-        </div>
-
-        <button className={styles.viewButton}>
-          View all
-        </button>
-      </div>
-
-      <div className={styles.table}>
-        <div className={styles.tableHeader}>
-          <span>Guest</span>
-          <span>Room</span>
-          <span>Date</span>
-          <span>Status</span>
-          <span>Action</span>
-        </div>
-
-        {loading ? (
-          <div className={styles.tableRow}>
-            <span>Loading...</span>
-          </div>
-        ) : dashboard?.departures.length === 0 ? (
-          <div className={styles.tableRow}>
-            <span>No departures today</span>
-          </div>
-        ) : (
-          dashboard?.departures.map((departure) => (
-            <div
-              className={styles.tableRow}
-              key={departure.id}
-            >
-              <span>{departure.guest.fullName}</span>
-
-              <span>{departure.room.roomNumber}</span>
-
-              <span>
-                {formatDate(departure.checkOutDate)}
-              </span>
-
-              <span
-                className={
-                  departure.status === "CHECKED_OUT"
-                    ? styles.completedStatus
-                    : styles.pendingStatus
-                }
-              >
-                {departure.status === "CHECKED_IN"
-                  ? "Staying"
-                  : departure.status === "CHECKED_OUT"
-                    ? "Checked out"
-                    : departure.status}
-              </span>
-
-              <button
-                className={styles.actionButton}
-                onClick={() =>
-                  departure.status === "CHECKED_IN"
-                    ? handleCheckOut(departure.id)
-                    : undefined
-                }
-                disabled={
-                  departure.status === "CHECKED_IN" &&
-                  actionLoading === departure.id
-                }
-              >
-                {departure.status === "CHECKED_IN"
-                  ? actionLoading === departure.id
-                    ? "Checking out..."
-                    : "Check out"
-                  : "View"}
-              </button>
-            </div>
-          ))
         )}
-      </div>
-    </section>
 
-    {/* Room Status */}
-    <section className={styles.sectionCard}>
-      <div className={styles.sectionHeader}>
-        <div>
-          <h2>Room Status</h2>
-          <p>Current status of hotel rooms</p>
-        </div>
+        {/* Summary */}
+        <section className={styles.statsGrid}>
+          <div className={styles.statCard}>
+            <span className={styles.statLabel}>ARRIVALS TODAY</span>
 
-        <button
+            <strong>
+              {loading ? "—" : (dashboard?.summary.arrivalsToday ?? 0)}
+            </strong>
+          </div>
+
+          <div className={styles.statCard}>
+            <span className={styles.statLabel}>DEPARTURES TODAY</span>
+
+            <strong>
+              {loading ? "—" : (dashboard?.summary.departuresToday ?? 0)}
+            </strong>
+          </div>
+
+          <div className={styles.statCard}>
+            <span className={styles.statLabel}>AVAILABLE ROOMS</span>
+
+            <strong>
+              {loading ? "—" : (dashboard?.summary.availableRooms ?? 0)}
+            </strong>
+          </div>
+        </section>
+
+        {/* Today's Reservations */}
+        <section className={styles.sectionCard}>
+          <div className={styles.sectionHeader}>
+            <div>
+              <h2>Today&apos;s Reservations</h2>
+              <p>Arriving, departing, and staying guests for today</p>
+            </div>
+            <button
+              type="button"
+              className={styles.viewButton}
+              onClick={openNewReservation}
+            >
+              + New Reservation
+            </button>
+          </div>
+          <ReservationsBoard
+            date={todayDate}
+            today={todayDate}
+            items={reservations}
+            rooms={reservationRooms}
+            loading={reservationsLoading}
+            onUpdate={handleReservationUpdate}
+            onRemove={handleReservationRemove}
+            onReload={fetchReservations}
+            onToast={showReservationToast}
+          />
+        </section>
+
+        {/* Room Status */}
+        <section className={styles.sectionCard}>
+          <div className={styles.sectionHeader}>
+            <div>
+              <h2>Room Status</h2>
+
+              <p>Current status of hotel rooms</p>
+            </div>
+
+            <button
               className={styles.viewButton}
               onClick={() => router.push("/Pages/Rooms")}
             >
               View all
             </button>
-      </div>
-
-      <div className={styles.roomStatusGrid}>
-
-        <div className={styles.roomStatusItem}>
-          <span>Available</span>
-          <strong>
-            {loading
-              ? "—"
-              : dashboard?.roomStatus.available ?? 0}
-          </strong>
-        </div>
-
-        <div className={styles.roomStatusItem}>
-          <span>Upcoming</span>
-          <strong>
-            {loading
-              ? "—"
-              : dashboard?.roomStatus.reserved ?? 0}
-          </strong>
-        </div>
-
-        <div className={styles.roomStatusItem}>
-          <span>In stay</span>
-          <strong>
-            {loading
-              ? "—"
-              : dashboard?.roomStatus.occupied ?? 0}
-          </strong>
-        </div>
-
-        <div className={styles.roomStatusItem}>
-          <span>Needs cleaning</span>
-          <strong>
-            {loading
-              ? "—"
-              : dashboard?.roomStatus.needsCleaning ?? 0}
-          </strong>
-        </div>
-
-        <div className={styles.roomStatusItem}>
-          <span>Cleaning</span>
-          <strong>
-            {loading
-              ? "—"
-              : dashboard?.roomStatus.cleaning ?? 0}
-          </strong>
-        </div>
-
-        <div className={styles.roomStatusItem}>
-          <span>In review</span>
-          <strong>
-            {loading
-              ? "—"
-              : dashboard?.roomStatus.inReview ?? 0}
-          </strong>
-        </div>
-
-        <div className={styles.roomStatusItem}>
-          <span>Out of service</span>
-          <strong>
-            {loading
-              ? "—"
-              : dashboard?.roomStatus.outOfService ?? 0}
-          </strong>
-        </div>
-
-      </div>
-    </section>
-
-    {/* Housekeeping Attention */}
-    <section className={styles.sectionCard}>
-      <div className={styles.sectionHeader}>
-        <div>
-          <h2>Housekeeping Attention</h2>
-          <p>Rooms that need reception action</p>
-        </div>
-
-         <button
-              className={styles.viewButton}
-              onClick={() => router.push("/Pages/HousekeepingReview")}
-            >
-              View all
-            </button>
-      </div>
-
-      <div className={styles.table}>
-        <div className={styles.tableHeader}>
-          <span>Room</span>
-          <span>Status</span>
-          <span>Assigned To</span>
-          <span>Action</span>
-        </div>
-
-        {loading ? (
-          <div className={styles.tableRow}>
-            <span>Loading...</span>
           </div>
-        ) : dashboard?.housekeepingAttention.length === 0 ? (
-          <div className={styles.tableRow}>
-            <span>
-              No housekeeping attention required
-            </span>
-          </div>
-        ) : (
-          dashboard?.housekeepingAttention.map((task) => (
-            <div
-              className={styles.tableRow}
-              key={task.id}
-            >
-              <span>{task.room.roomNumber}</span>
 
-              <span className={styles.pendingStatus}>
-                {task.status === "IN_REVIEW"
-                  ? "In review"
-                  : getRoomStatusLabel(task.room.status)}
-              </span>
+          <div className={styles.roomStatusGrid}>
+            <div className={styles.roomStatusItem}>
+              <span>Available</span>
 
-              <span>{task.assignedTo.fullName}</span>
-
-              <div className={styles.reviewActions}>
-                {task.status === "IN_REVIEW" ? (
-                  <>
-                    <button className={styles.approveButton}>
-                      Approve
-                    </button>
-
-                    <button className={styles.rejectButton}>
-                      Reject
-                    </button>
-                  </>
-                ) : (
-                  <button className={styles.actionButton}>
-                    Assign Task
-                  </button>
-                )}
-              </div>
+              <strong>
+                {loading ? "—" : (dashboard?.roomStatus.available ?? 0)}
+              </strong>
             </div>
-          ))
-        )}
-      </div>
-    </section>
 
-  </main>
-</div>
+            <div className={styles.roomStatusItem}>
+              <span>Upcoming</span>
 
+              <strong>
+                {loading ? "—" : (dashboard?.roomStatus.reserved ?? 0)}
+              </strong>
+            </div>
 
-);
+            <div className={styles.roomStatusItem}>
+              <span>In stay</span>
+
+              <strong>
+                {loading ? "—" : (dashboard?.roomStatus.occupied ?? 0)}
+              </strong>
+            </div>
+
+            <div className={styles.roomStatusItem}>
+              <span>Needs cleaning</span>
+
+              <strong>
+                {loading ? "—" : (dashboard?.roomStatus.needsCleaning ?? 0)}
+              </strong>
+            </div>
+
+            <div className={styles.roomStatusItem}>
+              <span>Cleaning</span>
+
+              <strong>
+                {loading ? "—" : (dashboard?.roomStatus.cleaning ?? 0)}
+              </strong>
+            </div>
+
+            <div className={styles.roomStatusItem}>
+              <span>In review</span>
+
+              <strong>
+                {loading ? "—" : (dashboard?.roomStatus.inReview ?? 0)}
+              </strong>
+            </div>
+
+            <div className={styles.roomStatusItem}>
+              <span>Out of service</span>
+
+              <strong>
+                {loading ? "—" : (dashboard?.roomStatus.outOfService ?? 0)}
+              </strong>
+            </div>
+          </div>
+        </section>
+
+        <HousekeepingReview
+          title="Housekeeping Attention"
+          tasks={housekeepingReviewTasks}
+          emptyMessage={
+            loading
+              ? "Loading housekeeping tasks..."
+              : "No housekeeping tasks awaiting approval."
+          }
+          onTaskReviewed={handleHousekeepingReviewed}
+        />
+      </main>
+      {reservationToast && (
+        <div className={styles.sectionCard} role="status">
+          <p>{reservationToast}</p>
+        </div>
+      )}
+      {showNewReservation && (
+        <NewReservationDialog
+          defaultDate={todayDate}
+          today={todayDate}
+          rooms={reservationRooms}
+          reservations={reservations}
+          onClose={closeNewReservation}
+          onCreated={handleReservationCreated}
+          onConflict={fetchReservations}
+        />
+      )}
+    </div>
+  );
 };
 
 export default ReceptionistDash;

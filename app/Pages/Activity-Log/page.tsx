@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import Pagination from "../../../components/Pagination";
 import { describeActivity, type ActivityLogItem } from "./describeActivity";
 import styles from "./page.module.css";
+import Header from "@/components/Header/Header";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 4;
 
 const CATEGORY_OPTIONS = [
   { value: "", label: "All activity" },
@@ -193,14 +194,11 @@ export default function ActivityLogPage() {
 
   return (
     <main className={styles.page}>
-      <header className={styles.header}>
-        <h1>Activity log</h1>
-        <p className={styles.subtitle}>
-          A read-only record of who changed what in the system, newest first.
-          Entries cannot be edited or deleted.
-        </p>
-      </header>
-
+      {Header({
+        title: "Activity Log",
+        subtitle: "A read-only record of system changes",
+        userSubtitle: "Currently reviewing activity",
+      })}
       <div className={styles.toolbar}>
         <input
           className={styles.searchInput}

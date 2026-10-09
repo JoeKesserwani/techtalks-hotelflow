@@ -2,6 +2,7 @@ import { prisma } from '../../../../../../../lib/db';
 import { requireAuth } from '../../../../../../../lib/middleware/requireAuth';
 import { writeAuditLog } from '../../../../../../../lib/services/audit.service';
 import { ApiError, handleRouteError } from '../../../../../../../lib/api/errors';
+import { createNotification } from '@/lib/notifications';
 
 const MAX_PHOTOS = 10;
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB per image
@@ -81,6 +82,11 @@ export async function POST(
       }
     }
 
+    const room = await prisma.room.findFirst({
+      where: { id: task.roomId, hotelId: user.hotelId },
+      select: { roomNumber: true },
+    });
+
     const updated = await prisma.$transaction(async (tx) => {
       const result = await tx.housekeepingTask.update({
         where: { id },
@@ -121,7 +127,6 @@ export async function POST(
           photoCount: photos.length,
         },
       });
-
       return result;
     });
 

@@ -97,6 +97,15 @@ Run commands:
 
 Open http://localhost:3000 after running `npm run dev`.
 
+### Install HotelFlow on a mobile device
+
+HotelFlow can be installed from a supported mobile browser when it is served
+over HTTPS (localhost is also supported for development). On Android, use the
+browser's **Install app** prompt or choose **Install app** from its menu. On
+iPhone or iPad, open the site in Safari, tap **Share**, then choose **Add to
+Home Screen**. The installed PWA opens in its own app window; it is not an App
+Store download and does not currently support offline hotel operations.
+
 Test commands:
 
 - npm run lint

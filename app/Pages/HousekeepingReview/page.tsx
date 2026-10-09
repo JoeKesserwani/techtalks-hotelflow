@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import styles from "./HousekeepingReview.module.css";
 import { useAuth } from "@/components/Auth/AuthProvider";
+import  Header  from "@/components/Header/Header";
 
 type Status = "active" | "awaiting" | "approved" | "pending" | "in-progress";
 
@@ -209,13 +210,13 @@ export default function HousekeepingReviewPage() {
           ? {
               ...task,
               status: reviewAction === "approved" ? "approved" : "pending",
-              comment: comment.trim() || task.comment,
-              reviewedAt: "Just now",
+              notes: comment.trim() || task.comment,
+              completed_at: "Just now",
             }
           : task,
       ),
     );
-
+    
     setReviewTask(null);
     setReviewAction(null);
     setComment("");
@@ -237,26 +238,7 @@ export default function HousekeepingReviewPage() {
     <main className={styles.page}>
       <div className={styles.container}>
         {/* Header */}
-        <header className={styles.header}>
-          <div>
-            <h1 className={styles.title}>Housekeeping review</h1>
-
-            <p className={styles.subtitle}>
-              {awaitingTasks.length} awaiting - {approvedTasks.length} done -{" "}
-              {activeTasks.length} active
-            </p>
-          </div>
-
-          <div className={styles.role}>
-            <div className={styles.roleInfo}>
-              <strong>{user?.fullName}</strong>
-              <span>Currently reviewing rooms</span>
-            </div>
-
-            <div className={styles.roleBadge}>{user?.role}</div>
-          </div>
-        </header>
-
+        {Header({ title: "Housekeeping review", subtitle: `${awaitingTasks.length} awaiting - ${approvedTasks.length} done - ${activeTasks.length} active`, userSubtitle: "Currently reviewing rooms" })}
         {/* Tabs */}
         <div className={styles.tabs}>
           <button
