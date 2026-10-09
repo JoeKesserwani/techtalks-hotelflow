@@ -25,6 +25,10 @@
   font-size: 14px;
 }
 
+.content {
+  margin-top: 14px;
+}
+
 .role {
   display: flex;
   min-width: 0;

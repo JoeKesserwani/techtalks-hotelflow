@@ -28,6 +28,7 @@ export interface RoomAvailabilityChartProps {
   date: string;
   today: string;
   onSelectRoom: (roomId: string) => void;
+  onViewAll?: () => void;
 }
 
 export function RoomAvailabilityChart({
@@ -36,6 +37,7 @@ export function RoomAvailabilityChart({
   date,
   today,
   onSelectRoom,
+  onViewAll,
 }: RoomAvailabilityChartProps) {
   const [pagination, setPagination] = useState({ date, page: 0 });
 
@@ -94,7 +96,18 @@ export function RoomAvailabilityChart({
               : "Loading rooms…"}
           </p>
         </div>
-        <span className={styles.freeBadge}>{free} free</span>
+        <div className={styles.headerActions}>
+          <span className={styles.freeBadge}>{free} free</span>
+          {onViewAll && (
+            <button
+              className={styles.viewAll}
+              type="button"
+              onClick={onViewAll}
+            >
+              View all
+            </button>
+          )}
+        </div>
       </div>
 
       <ul className={styles.statusStats} aria-label="Room counts by status">

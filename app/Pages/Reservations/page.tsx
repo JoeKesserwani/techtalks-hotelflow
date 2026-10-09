@@ -19,15 +19,13 @@ import {
 import { NewReservationDialog } from "../../../components/Reservations/newReservationDialog";
 import { ReservationsBoard } from "../../../components/Reservations/reservationBoard";
 import { RoomAvailabilityChart } from "../../../components/Reservations/RoomAvailabilityChart";
-
-const titleCase = (v: string) => v.charAt(0) + v.slice(1).toLowerCase();
+import Header from "../../../components/Header/Header";
 
 export default function FrontDeskPage() {
   const [today] = useState(todayInHotel);
   const [date, setDate] = useState(today);
   const [items, setItems] = useState<Reservation[] | null>(null);
   const [rooms, setRooms] = useState<Room[]>([]);
-  const [me, setMe] = useState<{ fullName: string; role: string } | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [expired, setExpired] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
@@ -53,18 +51,13 @@ export default function FrontDeskPage() {
   }, []);
 
   useEffect(() => {
-    load();
+    void Promise.resolve().then(load);
   }, [date, load]);
   useEffect(() => {
     const onFocus = () => load();
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, [load]);
-  useEffect(() => {
-    api<{ user: { fullName: string; role: string } }>("/auth/me")
-      .then((d) => setMe(d.user))
-      .catch(() => {});
-  }, []);
   useEffect(() => {
     if (!toast) return;
     const t = setTimeout(() => setToast(null), 4000);
@@ -81,69 +74,54 @@ export default function FrontDeskPage() {
   const merge = (u: Reservation) =>
     setItems((p) => p?.map((x) => (x.id === u.id ? u : x)) ?? p);
 
-  const name = me?.fullName ?? "";
-  const initials =
-    name
-      .split(" ")
-      .map((p) => p[0])
-      .join("")
-      .slice(0, 2)
-      .toUpperCase() || "–";
-
   return (
     <main className={`${s.page} ${t.tokens}`} aria-busy={loading}>
-      <header className={s.header}>
-        <div>
-          <div className={s.nav}>
-            <button
-              className={s.arrow}
-              onClick={() => setDate(shiftDate(date, -1))}
-              aria-label="Previous day"
-            >
-              ‹
-            </button>
-            <h1>
-              {formatDate(date, {
-                weekday: "long",
-                month: "short",
-                day: "numeric",
-              })}
-            </h1>
-            <button
-              className={s.arrow}
-              onClick={() => setDate(shiftDate(date, 1))}
-              aria-label="Next day"
-            >
-              ›
-            </button>
-            {!isToday && (
-              <button className={s.ghost} onClick={() => setDate(today)}>
-                Today
-              </button>
-            )}
-            <input
-              className={s.picker}
-              type="date"
-              value={date}
-              aria-label="Jump to date"
-              onChange={(e) => e.target.value && setDate(e.target.value)}
-            />
-          </div>
-          <p className={s.sub}>
-            {isToday ? "Today's" : "Day's"} arrivals, departures, and in-house
-            guests
-          </p>
-        </div>
-        <div className={s.staff}>
-          <span className={s.avatar} aria-hidden>
-            {initials}
+      <Header
+        title="Reservations"
+        subtitle="Arrivals, departures, and in-house guests"
+        userSubtitle={formatDate(date, {
+          weekday: "long",
+          year: "numeric",
+          month: "long",
+          day: "numeric",
+        })}
+      >
+        <div className={s.nav}>
+          <button
+            className={s.arrow}
+            onClick={() => setDate(shiftDate(date, -1))}
+            aria-label="Previous day"
+          >
+            ‹
+          </button>
+          <span className={s.selectedDate} aria-live="polite">
+            {formatDate(date, {
+              weekday: "long",
+              month: "short",
+              day: "numeric",
+            })}
           </span>
-          <div>
-            <strong>{name || "…"}</strong>
-            <span>{me ? titleCase(me.role) : ""}</span>
-          </div>
+          <button
+            className={s.arrow}
+            onClick={() => setDate(shiftDate(date, 1))}
+            aria-label="Next day"
+          >
+            ›
+          </button>
+          {!isToday && (
+            <button className={s.ghost} onClick={() => setDate(today)}>
+              Today
+            </button>
+          )}
+          <input
+            className={s.picker}
+            type="date"
+            value={date}
+            aria-label="Jump to date"
+            onChange={(e) => e.target.value && setDate(e.target.value)}
+          />
         </div>
-      </header>
+      </Header>
 
       {error && (
         <div className={s.error} role="alert">
