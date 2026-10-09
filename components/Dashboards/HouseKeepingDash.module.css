@@ -1,17 +1,18 @@
 .dashboard {
-min-height: 100vh;
-width: 100%;
-background: #f5f1e8;
-font-family: "IBM Plex Sans", sans-serif;
-color: #27231f;
+  min-height: 100vh;
+  width: 100%;
+  background: #f5f1e8;
+  font-family: "IBM Plex Sans", sans-serif;
+  color: #27231f;
 }
 
 .main {
-width: 100%;
-max-width: 1600px;
-margin: 0 auto;
-padding: 40px;
-box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 40px;
+  box-sizing: border-box;
 }
 
 /* ================================
@@ -19,39 +20,39 @@ HEADER
 ================================ */
 
 .header {
-display: flex;
-justify-content: space-between;
-align-items: center;
-margin-bottom: 38px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 38px;
 }
 
 .title {
-margin: 0;
-font-family: "Times New Roman", serif;
-font-size: 44px;
-font-weight: 600;
-line-height: 1.1;
+  margin: 0;
+  font-family: "Times New Roman", serif;
+  font-size: 44px;
+  font-weight: 600;
+  line-height: 1.1;
 }
 
 .date {
-margin: 10px 0 0;
-font-size: 16px;
-color: #777;
+  margin: 10px 0 0;
+  font-size: 16px;
+  color: #777;
 }
 
 .user {
-display: flex;
-align-items: center;
+  display: flex;
+  align-items: center;
 }
 
 .roleBadge {
-padding: 9px 16px;
-border-radius: 20px;
-background: #c96b3c;
-color: white;
-font-size: 13px;
-font-weight: 700;
-letter-spacing: 0.5px;
+  padding: 9px 16px;
+  border-radius: 20px;
+  background: #c96b3c;
+  color: white;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
 }
 
 /* ================================
@@ -59,24 +60,24 @@ ERROR
 ================================ */
 
 .error {
-margin-bottom: 25px;
-padding: 16px 20px;
-border-radius: 10px;
-background: #f8d7da;
-color: #721c24;
-display: flex;
-justify-content: space-between;
-align-items: center;
-gap: 20px;
+  margin-bottom: 25px;
+  padding: 16px 20px;
+  border-radius: 10px;
+  background: #f8d7da;
+  color: #721c24;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
 }
 
 .error button {
-border: none;
-border-radius: 7px;
-padding: 9px 16px;
-background: #27231f;
-color: white;
-cursor: pointer;
+  border: none;
+  border-radius: 7px;
+  padding: 9px 16px;
+  background: #27231f;
+  color: white;
+  cursor: pointer;
 }
 
 /* ================================
@@ -84,41 +85,41 @@ STATISTICS
 ================================ */
 
 .statsGrid {
-display: grid;
-grid-template-columns: repeat(4, 1fr);
-gap: 20px;
-margin-bottom: 42px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 20px;
+  margin-bottom: 42px;
 }
 
 .statCard {
-min-height: 130px;
-padding: 25px;
-box-sizing: border-box;
-border-radius: 14px;
-background: white;
-box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+  min-height: 130px;
+  padding: 25px;
+  box-sizing: border-box;
+  border-radius: 14px;
+  background: white;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
 
-display: flex;
-flex-direction: column;
-justify-content: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 .statValue {
-font-family: "Times New Roman", serif;
-font-size: 42px;
-font-weight: 600;
+  font-family: "Times New Roman", serif;
+  font-size: 42px;
+  font-weight: 600;
 }
 
 .awaitingValue {
-color: #8b5a2b;
+  color: #8b5a2b;
 }
 
 .statLabel {
-margin: 8px 0 0;
-font-size: 12px;
-font-weight: 700;
-letter-spacing: 1.2px;
-color: #777;
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 1.2px;
+  color: #777;
 }
 
 /* ================================
@@ -126,36 +127,36 @@ HOUSEKEEPING SECTION
 ================================ */
 
 .housekeepingSection {
-margin-bottom: 42px;
+  margin-bottom: 42px;
 }
 
 .sectionHeader {
-display: flex;
-justify-content: space-between;
-align-items: flex-end;
-gap: 20px;
-margin-bottom: 20px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 20px;
+  margin-bottom: 20px;
 }
 
 .sectionHeader h2 {
-margin: 0;
-font-family: "Times New Roman", serif;
-font-size: 30px;
-font-weight: 600;
+  margin: 0;
+  font-family: "Times New Roman", serif;
+  font-size: 30px;
+  font-weight: 600;
 }
 
 .sectionHeader p {
-margin: 7px 0 0;
-color: #777;
-font-size: 15px;
+  margin: 7px 0 0;
+  color: #777;
+  font-size: 15px;
 }
 
 .taskCounter {
-padding: 8px 14px;
-border-radius: 20px;
-background: white;
-font-size: 13px;
-font-weight: 700;
+  padding: 8px 14px;
+  border-radius: 20px;
+  background: white;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 /* ================================
@@ -163,48 +164,49 @@ TASK LIST
 ================================ */
 
 .housekeepingList {
-display: grid;
-grid-template-columns: repeat(2, minmax(400px, 1fr));
-gap: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
 }
 
 .housekeepingCard {
-min-height: 270px;
-padding: 22px;
-border-radius: 14px;
-background: white;
-box-sizing: border-box;
+  min-width: 0;
+  min-height: 270px;
+  padding: 22px;
+  border-radius: 14px;
+  background: white;
+  box-sizing: border-box;
 
-display: grid;
-grid-template-columns: 90px 1fr auto;
-grid-template-rows: auto auto 1fr;
-column-gap: 20px;
-row-gap: 14px;
+  display: grid;
+  grid-template-columns: 90px minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr;
+  column-gap: 20px;
+  row-gap: 14px;
 
-box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.06);
 
-transition:
-transform 0.15s ease,
-box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .clickable {
-cursor: pointer;
+  cursor: pointer;
 }
 
 .clickable:hover {
-transform: translateY(-2px);
-box-shadow: 0 7px 20px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 7px 20px rgba(0, 0, 0, 0.1);
 }
 
 .clickable:focus-visible {
-outline: 3px solid #c96b3c;
-outline-offset: 3px;
+  outline: 3px solid #c96b3c;
+  outline-offset: 3px;
 }
 
 .processing {
-opacity: 0.65;
-pointer-events: none;
+  opacity: 0.65;
+  pointer-events: none;
 }
 
 /* ================================
@@ -212,37 +214,37 @@ STATUS
 ================================ */
 
 .taskStatus {
-grid-column: 1 / -1;
+  grid-column: 1 / -1;
 
-display: flex;
-align-items: center;
-gap: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 
-font-size: 13px;
-font-weight: 700;
+  font-size: 13px;
+  font-weight: 700;
 }
 
 .statusDot {
-width: 9px;
-height: 9px;
-border-radius: 50%;
-display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
 }
 
 .status-pending {
-background: #c89d4c;
+  background: #c89d4c;
 }
 
 .status-in_progress {
-background: #5c87a8;
+  background: #5c87a8;
 }
 
 .status-in_review {
-background: #8c69a8;
+  background: #8c69a8;
 }
 
 .status-done {
-background: #5d895f;
+  background: #5d895f;
 }
 
 /* ================================
@@ -250,29 +252,29 @@ ROOM
 ================================ */
 
 .roomInfo {
-grid-column: 1 / 3;
+  grid-column: 1 / 3;
 }
 
 .roomLabel {
-display: block;
-margin-bottom: 4px;
-font-size: 11px;
-font-weight: 700;
-letter-spacing: 1.5px;
-color: #888;
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #888;
 }
 
 .roomInfo h3 {
-margin: 0;
-font-family: "Times New Roman", serif;
-font-size: 38px;
-font-weight: 600;
+  margin: 0;
+  font-family: "Times New Roman", serif;
+  font-size: 38px;
+  font-weight: 600;
 }
 
 .roomInfo p {
-margin: 4px 0 0;
-font-size: 14px;
-color: #777;
+  margin: 4px 0 0;
+  font-size: 14px;
+  color: #777;
 }
 
 /* ================================
@@ -280,13 +282,13 @@ TASK DETAILS
 ================================ */
 
 .taskDetails {
-grid-column: 1 / -1;
+  grid-column: 1 / -1;
 }
 
 .taskDetails p {
-margin: 5px 0;
-font-size: 14px;
-color: #555;
+  margin: 5px 0;
+  font-size: 14px;
+  color: #555;
 }
 
 /* ================================
@@ -294,49 +296,49 @@ PHOTO
 ================================ */
 
 .photoArea {
-grid-column: 1 / -1;
-padding: 12px;
-border-radius: 10px;
-background: #faf8f3;
-border: 1px solid #e7e0d6;
+  grid-column: 1 / -1;
+  padding: 12px;
+  border-radius: 10px;
+  background: #faf8f3;
+  border: 1px solid #e7e0d6;
 }
 
 .photoButton {
-display: inline-block;
-padding: 9px 14px;
-border-radius: 8px;
-background: #27231f;
-color: white;
-font-size: 13px;
-font-weight: 600;
-cursor: pointer;
+  display: inline-block;
+  padding: 9px 14px;
+  border-radius: 8px;
+  background: #27231f;
+  color: white;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 .photoButton input {
-display: none;
+  display: none;
 }
 
 .photoPreviewRow {
-display: flex;
-align-items: center;
-flex-wrap: wrap;
-gap: 8px;
-margin-top: 10px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
 }
 
 .photoPreview {
-width: 58px;
-height: 58px;
-border-radius: 7px;
-object-fit: cover;
+  width: 58px;
+  height: 58px;
+  border-radius: 7px;
+  object-fit: cover;
 }
 
 .removePhotos {
-border: none;
-background: transparent;
-color: #a33;
-font-size: 12px;
-cursor: pointer;
+  border: none;
+  background: transparent;
+  color: #a33;
+  font-size: 12px;
+  cursor: pointer;
 }
 
 /* ================================
@@ -344,35 +346,35 @@ ACTION
 ================================ */
 
 .taskAction {
-grid-column: 1 / -1;
-align-self: end;
-padding-top: 12px;
-border-top: 1px solid #eee;
+  grid-column: 1 / -1;
+  align-self: end;
+  padding-top: 12px;
+  border-top: 1px solid #eee;
 }
 
 .startText,
 .completeText,
 .reviewText,
 .doneText {
-display: block;
-font-size: 14px;
-font-weight: 700;
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
 }
 
 .startText {
-color: #c96b3c;
+  color: #c96b3c;
 }
 
 .completeText {
-color: #4c7a52;
+  color: #4c7a52;
 }
 
 .reviewText {
-color: #8c69a8;
+  color: #8c69a8;
 }
 
 .doneText {
-color: #4c7a52;
+  color: #4c7a52;
 }
 
 /* ================================
@@ -380,12 +382,12 @@ EMPTY
 ================================ */
 
 .emptyMessage {
-grid-column: 1 / -1;
-padding: 60px 20px;
-border-radius: 14px;
-background: white;
-text-align: center;
-color: #777;
+  grid-column: 1 / -1;
+  padding: 60px 20px;
+  border-radius: 14px;
+  background: white;
+  text-align: center;
+  color: #777;
 }
 
 /* ================================
@@ -393,32 +395,32 @@ COMPLETED SUMMARY
 ================================ */
 
 .completedSection {
-margin-top: 10px;
+  margin-top: 10px;
 }
 
 .completedSummary {
-display: grid;
-grid-template-columns: 1fr 1fr;
-gap: 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
 }
 
 .completedSummary > div {
-padding: 22px;
-border-radius: 14px;
-background: white;
-display: flex;
-justify-content: space-between;
-align-items: center;
+  padding: 22px;
+  border-radius: 14px;
+  background: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .completedSummary span {
-font-size: 15px;
-font-weight: 600;
+  font-size: 15px;
+  font-weight: 600;
 }
 
 .completedSummary strong {
-font-family: "Times New Roman", serif;
-font-size: 30px;
+  font-family: "Times New Roman", serif;
+  font-size: 30px;
 }
 
 /* ================================
@@ -426,86 +428,86 @@ MODAL
 ================================ */
 
 .modalOverlay {
-position: fixed;
-inset: 0;
-z-index: 1000;
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
 
-background: rgba(0, 0, 0, 0.45);
+  background: rgba(0, 0, 0, 0.45);
 
-display: flex;
-align-items: center;
-justify-content: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-padding: 20px;
+  padding: 20px;
 }
 
 .modal {
-position: relative;
-width: min(650px, 100%);
-max-height: 90vh;
-overflow-y: auto;
+  position: relative;
+  width: min(650px, 100%);
+  max-height: 90vh;
+  overflow-y: auto;
 
-padding: 30px;
-border-radius: 16px;
-background: white;
-box-sizing: border-box;
+  padding: 30px;
+  border-radius: 16px;
+  background: white;
+  box-sizing: border-box;
 }
 
 .modal h2 {
-margin: 0;
-font-family: "Times New Roman", serif;
-font-size: 30px;
+  margin: 0;
+  font-family: "Times New Roman", serif;
+  font-size: 30px;
 }
 
 .modal p {
-color: #777;
+  color: #777;
 }
 
 .modalClose {
-position: absolute;
-top: 15px;
-right: 18px;
+  position: absolute;
+  top: 15px;
+  right: 18px;
 
-border: none;
-background: transparent;
+  border: none;
+  background: transparent;
 
-font-size: 30px;
-cursor: pointer;
+  font-size: 30px;
+  cursor: pointer;
 }
 
 .modalPhotoGrid {
-display: grid;
-grid-template-columns: repeat(2, 1fr);
-gap: 12px;
-margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-top: 20px;
 }
 
 .modalPhotoGrid img {
-width: 100%;
-aspect-ratio: 1;
-object-fit: cover;
-border-radius: 10px;
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  border-radius: 10px;
 }
 
 .noPhotos {
-padding: 50px 20px;
-text-align: center;
-background: #faf8f3;
-border-radius: 10px;
-color: #777;
+  padding: 50px 20px;
+  text-align: center;
+  background: #faf8f3;
+  border-radius: 10px;
+  color: #777;
 }
 
 .closeButton {
-width: 100%;
-margin-top: 20px;
-padding: 12px;
-border: none;
-border-radius: 9px;
-background: #27231f;
-color: white;
-font-family: "IBM Plex Sans", sans-serif;
-font-weight: 600;
-cursor: pointer;
+  width: 100%;
+  margin-top: 20px;
+  padding: 12px;
+  border: none;
+  border-radius: 9px;
+  background: #27231f;
+  color: white;
+  font-family: "IBM Plex Sans", sans-serif;
+  font-weight: 600;
+  cursor: pointer;
 }
 
 /* ================================
@@ -513,13 +515,13 @@ LOADING
 ================================ */
 
 .loading {
-min-height: 70vh;
-display: flex;
-align-items: center;
-justify-content: center;
+  min-height: 70vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
-font-family: "Times New Roman", serif;
-font-size: 28px;
+  font-family: "Times New Roman", serif;
+  font-size: 28px;
 }
 
 /* ================================
@@ -527,17 +529,17 @@ TABLET
 ================================ */
 
 @media (max-width: 1100px) {
-.main {
-padding: 30px;
-}
+  .main {
+    padding: 30px;
+  }
 
-.statsGrid {
-grid-template-columns: repeat(2, 1fr);
-}
+  .statsGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 
-.housekeepingList {
-grid-template-columns: 1fr;
-}
+  .housekeepingList {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ================================
@@ -545,77 +547,88 @@ MOBILE
 ================================ */
 
 @media (max-width: 650px) {
-.main {
-padding: 18px;
+  .main {
+    padding: 18px;
+  }
+
+  .header {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 15px;
+  }
+
+  .title {
+    font-size: 34px;
+  }
+
+  .statsGrid {
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  .statCard {
+    min-height: 105px;
+    padding: 17px;
+  }
+
+  .statValue {
+    font-size: 32px;
+  }
+
+  .statLabel {
+    font-size: 10px;
+  }
+
+  .sectionHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .sectionHeader h2 {
+    font-size: 27px;
+  }
+
+  .housekeepingList {
+    grid-template-columns: 1fr;
+  }
+
+  .housekeepingCard {
+    grid-template-columns: 1fr;
+    min-height: auto;
+  }
+
+  .taskStatus,
+  .roomInfo,
+  .taskDetails,
+  .photoArea,
+  .taskAction {
+    grid-column: 1;
+  }
+
+  .roomInfo h3 {
+    font-size: 36px;
+  }
+
+  .completedSummary {
+    grid-template-columns: 1fr;
+  }
+
+  .modal {
+    padding: 22px;
+  }
+
+  .modalPhotoGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .error {
+    align-items: flex-start;
+    flex-direction: column;
+  }
 }
 
-.header {
-align-items: flex-start;
-flex-direction: column;
-gap: 15px;
-}
-
-.title {
-font-size: 34px;
-}
-
-.statsGrid {
-grid-template-columns: 1fr 1fr;
-gap: 12px;
-}
-
-.statCard {
-min-height: 105px;
-padding: 17px;
-}
-
-.statValue {
-font-size: 32px;
-}
-
-.statLabel {
-font-size: 10px;
-}
-
-.sectionHeader {
-align-items: flex-start;
-flex-direction: column;
-}
-
-.sectionHeader h2 {
-font-size: 27px;
-}
-
-.housekeepingList {
-grid-template-columns: 1fr;
-}
-
-.housekeepingCard {
-grid-template-columns: 1fr;
-min-height: auto;
-}
-
-.taskStatus,
-.roomInfo,
-.taskDetails,
-.photoArea,
-.taskAction {
-grid-column: 1;
-}
-
-.roomInfo h3 {
-font-size: 36px;
-}
-
-.completedSummary {
-grid-template-columns: 1fr;
-}
-
-.modal {
-padding: 22px;
-}
-
-.modalPhotoGrid {
-grid-template-columns: 1fr;
-}
+@media (max-width: 768px) {
+  .main {
+    padding-top: 72px;
+  }
 }

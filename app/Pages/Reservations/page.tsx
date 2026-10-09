@@ -10,27 +10,17 @@ import {
   dayOnly,
   formatDate,
   guestName,
-  roomBoard,
   roomLabel,
   shiftDate,
   todayInHotel,
   type Reservation,
   type Room,
-  type TileState,
 } from "./frontdesk";
 import { NewReservationDialog } from "../../../components/Reservations/newReservationDialog";
 import { ReservationsBoard } from "../../../components/Reservations/reservationBoard";
+import { RoomAvailabilityChart } from "../../../components/Reservations/RoomAvailabilityChart";
 
 const titleCase = (v: string) => v.charAt(0) + v.slice(1).toLowerCase();
-
-const LEGEND: Record<TileState, string> = {
-  free: "Free",
-  arriving: "Arriving",
-  occupied: "Occupied",
-  departing: "Leaves today",
-  dirty: "Being cleaned",
-  oos: "Out of service",
-};
 
 export default function FrontDeskPage() {
   const [today] = useState(todayInHotel);
@@ -85,17 +75,8 @@ export default function FrontDeskPage() {
     () => bucketDay(items ?? [], date, today),
     [items, date, today],
   );
-  const board = useMemo(
-    () => roomBoard(rooms, day, date, today),
-    [rooms, day, date, today],
-  );
   const isToday = date === today;
   const loading = items === null && !error;
-  const free = board.filter((t) => t.state === "free").length;
-  const tonight = board.filter((t) =>
-    ["arriving", "occupied"].includes(t.state),
-  ).length;
-  const pct = rooms.length ? Math.round((tonight / rooms.length) * 100) : 0;
 
   const merge = (u: Reservation) =>
     setItems((p) => p?.map((x) => (x.id === u.id ? u : x)) ?? p);
@@ -206,42 +187,13 @@ export default function FrontDeskPage() {
         onToast={setToast}
       />
 
-      <section className={s.card} aria-labelledby="rooms-h">
-        <div className={s.cardHead}>
-          <div>
-            <h2 id="rooms-h">Room availability</h2>
-            <p className={s.hint}>
-              {rooms.length
-                ? `${pct}% occupied tonight · tap a free room to book it for ${formatDate(date < today ? today : date, { month: "short", day: "numeric" })}`
-                : "Loading rooms…"}
-            </p>
-          </div>
-          <span className={`${s.badge} ${s.ink}`}>{free} free</span>
-        </div>
-        <ul className={s.legend}>
-          {(Object.keys(LEGEND) as TileState[]).map((k) => (
-            <li key={k}>
-              <i className={`${s.dot} ${s[`t_${k}`]}`} />
-              {LEGEND[k]}
-            </li>
-          ))}
-        </ul>
-        <ul className={s.tiles}>
-          {board.map(({ room, state, guest }) => (
-            <li key={room.id}>
-              <button
-                className={`${s.tile} ${s[`t_${state}`]}`}
-                disabled={state !== "free" || date < today}
-                onClick={() => setBooking({ roomId: room.id })}
-                aria-label={`Room ${room.roomNumber}, ${LEGEND[state]}${guest ? `, ${guest}` : ""}`}
-              >
-                <strong>{room.roomNumber}</strong>
-                <span>{guest ?? room.roomType ?? LEGEND[state]}</span>
-              </button>
-            </li>
-          ))}
-        </ul>
-      </section>
+      <RoomAvailabilityChart
+        rooms={rooms}
+        reservations={items ?? []}
+        date={date}
+        today={today}
+        onSelectRoom={(roomId) => setBooking({ roomId })}
+      />
 
       {booking && (
         <NewReservationDialog

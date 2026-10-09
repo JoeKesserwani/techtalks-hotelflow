@@ -284,7 +284,11 @@
   background: #e2e8dc;
 }
 
-.pendingStatus,
+.actionButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .completedStatus {
   display: inline-flex;
   align-items: center;
@@ -303,11 +307,6 @@
   font-size: 9px;
   font-weight: 600;
   white-space: nowrap;
-}
-
-.pendingStatus {
-  background: #eee8d9;
-  color: #746d5d;
 }
 
 .completedStatus {
@@ -394,200 +393,6 @@
   font-weight: 500;
 }
 
-/* =========================
-   HOUSEKEEPING
-========================= */
-
-.reviewActions {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.approveButton,
-.rejectButton {
-  padding: 6px 9px;
-
-  border-radius: 4px;
-
-  font-family: "IBM Plex Sans", sans-serif;
-  font-size: 9px;
-  font-weight: 600;
-
-  cursor: pointer;
-}
-
-.approveButton {
-  background: #eef1e9;
-  color: #526447;
-  border: 1px solid #d3dacb;
-}
-
-.approveButton:hover {
-  background: #e2e8dc;
-}
-
-.rejectButton {
-  background: #f8e4dc;
-  color: #a84e34;
-  border: 1px solid #ebcfc4;
-}
-
-.rejectButton:hover {
-  background: #f4dcd2;
-}
-
-.approveButton:disabled,
-.rejectButton:disabled,
-.actionButton:disabled {
-  opacity: 0.55;
-  cursor: not-allowed;
-}
-
-.modalOverlay {
-  position: fixed;
-  inset: 0;
-  z-index: 1000;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 24px;
-  background: rgba(31, 42, 46, 0.42);
-}
-
-.modal {
-  width: min(620px, 100%);
-  max-height: calc(100vh - 48px);
-  overflow-y: auto;
-  background: #ffffff;
-  border: 1px solid #ddd8ca;
-  border-radius: 8px;
-  box-shadow: 0 18px 50px rgba(31, 42, 46, 0.18);
-}
-
-.modalHeader {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 20px;
-  padding: 22px 24px;
-  border-bottom: 1px solid #e5e1d7;
-}
-
-.modalHeader h2 {
-  margin: 0;
-  color: #26332a;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 21px;
-  font-weight: 500;
-}
-
-.modalHeader p {
-  margin: 6px 0 0;
-  color: #8a8a80;
-  font-family: "IBM Plex Sans", sans-serif;
-  font-size: 11px;
-}
-
-.modalClose {
-  width: 32px;
-  height: 32px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  padding: 0;
-  background: transparent;
-  color: #6e7168;
-  border: 1px solid #ddd8ca;
-  border-radius: 4px;
-  font-size: 20px;
-  line-height: 1;
-  cursor: pointer;
-}
-
-.modalClose:hover {
-  background: #f7f4ec;
-}
-
-.modalBody {
-  padding: 24px;
-}
-
-.modalPlaceholder {
-  margin: 0;
-  padding: 20px;
-  background: #f7f4ec;
-  color: #77796f;
-  border: 1px dashed #d8d2c3;
-  border-radius: 5px;
-  font-family: "IBM Plex Sans", sans-serif;
-  font-size: 12px;
-  line-height: 1.6;
-  text-align: center;
-}
-
-.modalFooter {
-  display: flex;
-  align-items: center;
-  justify-content: flex-end;
-  gap: 8px;
-  padding: 16px 24px;
-  border-top: 1px solid #e5e1d7;
-}
-
-.modalCancel,
-.modalPrimary {
-  min-height: 36px;
-  padding: 0 14px;
-  border-radius: 4px;
-  font-family: "IBM Plex Sans", sans-serif;
-  font-size: 10px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.modalCancel {
-  background: #ffffff;
-  color: #526447;
-  border: 1px solid #cfd3c5;
-}
-
-.modalCancel:hover {
-  background: #f1f3ec;
-}
-
-.modalPrimary {
-  background: #526447;
-  color: #ffffff;
-  border: 1px solid #526447;
-}
-
-.modalPrimary:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-@media (max-width: 600px) {
-  .modalOverlay {
-    padding: 12px;
-    align-items: flex-end;
-  }
-
-  .modal {
-    max-height: calc(100vh - 24px);
-    border-radius: 8px 8px 6px 6px;
-  }
-
-  .modalHeader,
-  .modalBody {
-    padding: 18px;
-  }
-
-  .modalFooter {
-    padding: 14px 18px;
-  }
-}
 /* =========================
 RESERVATION MODAL
 ========================= */
@@ -1088,6 +893,15 @@ MOBILE MODAL
     padding: 17px 15px;
   }
 
+  .sectionHeader {
+    flex-wrap: wrap;
+  }
+
+  .sectionHeader > div {
+    flex: 1 1 180px;
+    min-width: 0;
+  }
+
   .sectionHeader h2 {
     font-size: 17px;
   }
@@ -1122,7 +936,7 @@ MOBILE MODAL
   }
 
   .sectionHeader {
-    align-items: center;
+    align-items: flex-start;
   }
 
   .viewButton {
@@ -1132,5 +946,11 @@ MOBILE MODAL
 
   .roomStatusGrid {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .main {
+    padding-top: 72px;
   }
 }
