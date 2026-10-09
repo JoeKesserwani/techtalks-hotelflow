@@ -173,25 +173,18 @@ day: "2-digit",
 const todayDate = getHotelDate();
 
 const getNextDate = (dateString: string) => {
-const date = new Date(`${dateString}T00:00:00`);
-
-
-date.setDate(date.getDate() + 1);
-
-return date.toISOString().split("T")[0];
-
-
+  const date = new Date(`${dateString}T00:00:00.000Z`);
+  date.setUTCDate(date.getUTCDate() + 1);
+  return date.toISOString().slice(0, 10);
 };
 
-const today = new Date().toLocaleDateString(
-"en-US",
-{
-weekday: "long",
-year: "numeric",
-month: "long",
-day: "numeric",
-}
-);
+const today = new Intl.DateTimeFormat("en-US", {
+  timeZone: "Asia/Beirut",
+  weekday: "long",
+  year: "numeric",
+  month: "long",
+  day: "numeric",
+}).format(new Date());
 
 // --------------------------------------------------
 // Fetch dashboard
@@ -706,11 +699,11 @@ return ( <div className={styles.page}> <main className={styles.main}>
 
 
     {/* Header */}
-    {Header({
-        title: "Hello, " + (user?.fullName || "there")+"!",
-        subtitle: "Today's hotel operations",
-        userSubtitle: (today),
-      })}
+    <Header
+  title={`Hello, ${user?.fullName || "there"}!`}
+  subtitle="Today's hotel operations"
+  userSubtitle={today}
+/>
     {/* Error */}
     {error && (
       <div className={styles.sectionCard}>
@@ -963,14 +956,13 @@ return ( <div className={styles.page}> <main className={styles.main}>
                   className={
                     styles.actionButton
                   }
-                  onClick={() =>
-                    departure.status ===
-                    "CHECKED_IN"
-                      ? handleCheckOut(
-                          departure.id
-                        )
-                      : undefined
-                  }
+                  onClick={() => {
+  if (departure.status === "CHECKED_IN") {
+    handleCheckOut(departure.id);
+  } else {
+    router.push("/Pages/Reservations");
+  }
+}}
                   disabled={
                     departure.status ===
                       "CHECKED_IN" &&
@@ -1385,16 +1377,13 @@ return ( <div className={styles.page}> <main className={styles.main}>
                 Select a room
               </option>
 
-              {rooms.map((room) => (
-                <option
-                  key={room.id}
-                  value={room.id}
-                >
-                  Room {room.roomNumber} —{" "}
-                  {room.roomType} —{" "}
-                  {room.basePrice} / night
-                </option>
-              ))}
+              {rooms
+  .filter((room) => room.status === "AVAILABLE")
+  .map((room) => (
+    <option key={room.id} value={room.id}>
+      Room {room.roomNumber} — {room.roomType} — {room.basePrice} / night
+    </option>
+  ))}
             </select>
           </div>
 
