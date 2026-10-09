@@ -109,12 +109,13 @@ model Reservation {
   pricePerNight   Decimal           @map("price_per_night") @db.Decimal(10, 2)
   totalPrice      Decimal           @map("total_price") @db.Decimal(10, 2)
   paymentStatus   PaymentStatus     @default(UNPAID) @map("payment_status")
-  createdAt       DateTime          @default(now()) @map("created_at")
-  updatedAt       DateTime          @updatedAt @map("updated_at")
-  createdBy       User              @relation("CreatedBy", fields: [createdByUserId], references: [id])
-  guest           Guest             @relation(fields: [guestId], references: [id])
-  hotel           Hotel             @relation(fields: [hotelId], references: [id])
-  room            Room              @relation(fields: [roomId], references: [id])
+  createdAt       DateTime           @default(now()) @map("created_at")
+  updatedAt       DateTime           @updatedAt @map("updated_at")
+
+  createdBy User  @relation("CreatedBy", fields: [createdByUserId], references: [id])
+  guest     Guest @relation(fields: [guestId], references: [id])
+  hotel     Hotel @relation(fields: [hotelId], references: [id])
+  room      Room  @relation(fields: [roomId], references: [id])
 
   @@index([roomId, checkInDate, checkOutDate])
   @@index([createdByUserId], map: "reservations_created_by_user_id_fkey")
@@ -124,19 +125,25 @@ model Reservation {
 }
 
 model HousekeepingTask {
-  id               String     @id @default(uuid())
-  hotelId          String     @map("hotel_id")
-  roomId           String     @map("room_id")
-  assignedToUserId String     @map("assigned_to_user_id")
+  id               String   @id @default(uuid())
+  hotelId          String   @map("hotel_id")
+  roomId           String   @map("room_id")
+  assignedToUserId String   @map("assigned_to_user_id")
   status           TaskStatus @default(PENDING)
-  startedAt        DateTime?  @map("started_at")
-  completedAt      DateTime?  @map("completed_at")
+  startedAt        DateTime? @map("started_at")
+  completedAt      DateTime? @map("completed_at")
   notes            String?
-  createdAt        DateTime   @default(now()) @map("created_at")
-  photos           Json?      @map("photos")
-  assignedTo       User       @relation("AssignedTo", fields: [assignedToUserId], references: [id])
-  hotel            Hotel      @relation(fields: [hotelId], references: [id])
-  room             Room       @relation(fields: [roomId], references: [id])
+  createdAt        DateTime  @default(now()) @map("created_at")
+
+  assignedTo User                    @relation("AssignedTo", fields: [assignedToUserId], references: [id])
+  hotel      Hotel                   @relation(fields: [hotelId], references: [id])
+  room       Room                    @relation(fields: [roomId], references: [id])
+
+  // Keep the existing photo data
+  photos     Json?
+
+  // New photos stored directly in the database
+  photoFiles HousekeepingTaskPhoto[]
 
   @@index([hotelId, createdAt])
   @@index([hotelId, assignedToUserId, createdAt])
@@ -144,6 +151,20 @@ model HousekeepingTask {
   @@index([assignedToUserId], map: "housekeeping_tasks_assigned_to_user_id_fkey")
   @@index([roomId], map: "housekeeping_tasks_room_id_fkey")
   @@map("housekeeping_tasks")
+}
+
+model HousekeepingTaskPhoto {
+  id        String   @id @default(uuid())
+  taskId    String   @map("task_id")
+  fileName  String   @map("file_name")
+  mimeType  String   @map("mime_type")
+  data      Bytes    @db.LongBlob
+  createdAt DateTime @default(now()) @map("created_at")
+
+  task HousekeepingTask @relation(fields: [taskId], references: [id], onDelete: Cascade)
+
+  @@index([taskId])
+  @@map("housekeeping_task_photos")
 }
 
 model AuditLog {
