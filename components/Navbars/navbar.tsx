@@ -109,7 +109,11 @@ export default function Sidebar() {
 
         <nav className={styles.navigation}>
           {navigation.map((item) => {
-            const isActive = pathname === item.href;
+            const currentPath = pathname?.replace(/\/+$/, "") || "/";
+            const itemPath = item.href.replace(/\/+$/, "") || "/";
+            const isActive =
+              currentPath === itemPath ||
+              currentPath.startsWith(`${itemPath}/`);
 
             return (
               <Link

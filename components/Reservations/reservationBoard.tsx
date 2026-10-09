@@ -20,6 +20,7 @@ import {
   CancelReservationDialog,
   EditReservationDialog,
 } from "../../app/Pages/Reservations/edit-dialogs";
+import AssignTaskModal from "../Housekeeping/AssignTaskModal";
 
 const PAGE_SIZE = 4;
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
@@ -67,6 +68,10 @@ export function ReservationsBoard({
   const [confirm, setConfirm] = useState<Reservation | null>(null);
   const [editing, setEditing] = useState<Reservation | null>(null);
   const [cancelling, setCancelling] = useState<Reservation | null>(null);
+  const [taskReservation, setTaskReservation] = useState<Reservation | null>(
+    null,
+  );
+  const [markPaidAfterTask, setMarkPaidAfterTask] = useState(false);
 
   useEffect(() => setPages(NO_PAGES), [date]);
 
@@ -115,6 +120,30 @@ export function ReservationsBoard({
     run(r, "check-in", { method: "POST" }, `${guestName(r)} checked in.`);
   const checkOut = (r: Reservation) =>
     run(r, "check-out", { method: "POST" }, `${guestName(r)} checked out.`);
+  const checkOutAfterTask = async (r: Reservation) => {
+    if (markPaidAfterTask && !(await markPaid(r))) {
+      throw new Error(
+        "The housekeeping task was created, but payment could not be updated. Retry to continue check-out.",
+      );
+    }
+
+    const checkedOut = await checkOut(r);
+    if (!checkedOut) {
+      throw new Error(
+        "The housekeeping task was created, but check-out failed. Retry check-out or close this dialog.",
+      );
+    }
+    setTaskReservation(null);
+    setMarkPaidAfterTask(false);
+  };
+  const requestCheckout = (r: Reservation) => {
+    if (payment(r).kind === "paid") {
+      setMarkPaidAfterTask(false);
+      setTaskReservation(r);
+    } else {
+      setConfirm(r);
+    }
+  };
   const markPaid = (r: Reservation) =>
     run(
       r,
@@ -140,10 +169,6 @@ export function ReservationsBoard({
       onReload(); // success or failure, show what the server says now
     }
   }
-
-  /** Paid reservations check out straight away; anything else asks first. */
-  const requestCheckout = (r: Reservation) =>
-    payment(r).kind === "paid" ? checkOut(r) : setConfirm(r);
 
   /* Edit: in-house guests (extend / move room) and upcoming bookings. A no-show whose date has passed can only be cancelled. */
   const canEdit = (r: Reservation) =>
@@ -319,14 +344,29 @@ export function ReservationsBoard({
           r={confirm}
           busy={busy === confirm.id}
           onCancel={() => setConfirm(null)}
-          onGo={async () => {
-            await checkOut(confirm);
+          onGo={() => {
+            setMarkPaidAfterTask(false);
+            setTaskReservation(confirm);
             setConfirm(null);
           }}
-          onPayAndGo={async () => {
-            if (await markPaid(confirm)) await checkOut(confirm);
+          onPayAndGo={() => {
+            setMarkPaidAfterTask(true);
+            setTaskReservation(confirm);
             setConfirm(null);
           }}
+        />
+      )}
+
+      {taskReservation && (
+        <AssignTaskModal
+          isOpen
+          roomId={taskReservation.roomId}
+          roomNumber={roomLabel(taskReservation)}
+          onClose={() => {
+            setTaskReservation(null);
+            setMarkPaidAfterTask(false);
+          }}
+          onCreated={() => checkOutAfterTask(taskReservation)}
         />
       )}
     </>

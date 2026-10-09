@@ -52,17 +52,6 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         entityType: 'housekeeping_task',
         metadata: { taskId: id, roomId: task.roomId, photoCount: parsed.data.photos?.length ?? 0 },
       });
-      await createNotification(
-      {
-        hotelId: task.hotelId,
-        userId: task.assignedToUserId,
-        title: "Cleaning task approved",
-        message: `Your cleaning task for Room ${room?.roomNumber ?? task.roomId} has been approved.`,
-        type: "TASK_APPROVED",
-        taskId: task.id,
-      },
-      tx
-      );
       return result;
     });
 

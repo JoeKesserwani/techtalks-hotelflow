@@ -4,6 +4,7 @@
 import React from "react";
 import styles from "./HouseKeepingDash.module.css";
 import { useAuth } from "../Auth/AuthProvider";
+import Header from "../Header/Header";
 
 type TaskStatus =
   | "PENDING"
@@ -547,38 +548,16 @@ const HouseKeepingDash = () => {
       <main className={styles.main}>
 
         {/* HEADER */}
-
-        <header className={styles.header}>
-          <div>
-            <h1 className={styles.title}>
-              Hello, {user?.fullName}!
-            </h1>
-
-            <p
-              className={styles.date}
-              suppressHydrationWarning
-            >
-              {new Date().toLocaleDateString(
-                "en-US",
-                {
-                  weekday: "long",
-                  year: "numeric",
-                  month: "long",
-                  day: "numeric",
-                }
-              )}
-            </p>
-          </div>
-
-          <div className={styles.user}>
-            <span
-              className={styles.roleBadge}
-            >
-              {user?.role}
-            </span>
-          </div>
-        </header>
-
+        <Header
+          title={`Hello, ${user?.fullName || "there"}!`}
+          subtitle="Overview of housekeeping operations"
+          userSubtitle={new Date().toLocaleDateString("en-US", {
+            weekday: "long",
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })}
+        />
         {/* ERROR */}
 
         {error && (

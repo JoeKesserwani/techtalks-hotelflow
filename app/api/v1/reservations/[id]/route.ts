@@ -492,6 +492,17 @@ export async function DELETE(
       );
     }
 
+    if (
+      reservation.status === "CHECKED_OUT" &&
+      user.role !== "ADMIN" &&
+      user.role !== "MANAGER"
+    ) {
+      throw new ApiError(
+        "Only admins and managers can delete completed reservations",
+        403
+      );
+    }
+
     await prisma.$transaction(
       async (tx) => {
         /*
@@ -590,4 +601,3 @@ export async function DELETE(
     return handleRouteError(err);
   }
 }
-

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Sidebar from "@/components/Navbars/navbar";
+import AssignTaskModal from "@/components/Housekeeping/AssignTaskModal";
 import { useParams, useRouter } from "next/navigation";
 import styles from "./viewRoom.module.css";
 import Header from "@/components/Header/Header";
@@ -22,12 +22,6 @@ type Room = {
   capacity: number;
   basePrice: number;
   status: RoomStatus;
-};
-
-type StaffUser = {
-  id: string;
-  fullName: string;
-  role: string;
 };
 
 /* -------------------------------------------------------------------------- */
@@ -96,88 +90,13 @@ const ViewRoomPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
-  const [housekeepers, setHousekeepers] = useState<StaffUser[]>([]);
-  const [selectedHousekeeperId, setSelectedHousekeeperId] = useState("");
-  const [taskComment, setTaskComment] = useState("");
-  const [isLoadingHousekeepers, setIsLoadingHousekeepers] = useState(false);
-  const [isSavingTask, setIsSavingTask] = useState(false);
-  const [taskError, setTaskError] = useState<string | null>(null);
-  const [taskSuccess, setTaskSuccess] = useState<string | null>(null);
 
-  async function openTaskModal() {
+  function openTaskModal() {
     setIsTaskModalOpen(true);
-    setTaskError(null);
-    setTaskSuccess(null);
-
-    if (housekeepers.length > 0) return;
-
-    setIsLoadingHousekeepers(true);
-
-    try {
-      const response = await fetch("/api/v1/users");
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error ?? "Unable to load housekeepers.");
-      }
-
-      const availableHousekeepers = (data as StaffUser[]).filter(
-        (staffUser) => staffUser.role === "HOUSEKEEPING",
-      );
-      setHousekeepers(availableHousekeepers);
-      setSelectedHousekeeperId(availableHousekeepers[0]?.id ?? "");
-    } catch (error) {
-      setTaskError(
-        error instanceof Error
-          ? error.message
-          : "Unable to load housekeepers.",
-      );
-    } finally {
-      setIsLoadingHousekeepers(false);
-    }
   }
 
   function closeTaskModal() {
-    if (isSavingTask) return;
     setIsTaskModalOpen(false);
-    setTaskError(null);
-  }
-
-  async function createTask() {
-    if (!selectedHousekeeperId) {
-      setTaskError("Select a housekeeper before assigning the task.");
-      return;
-    }
-
-    setIsSavingTask(true);
-    setTaskError(null);
-    setTaskSuccess(null);
-
-    try {
-      const response = await fetch("/api/v1/housekeeping/tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          roomId,
-          assignedToUserId: selectedHousekeeperId,
-          notes: taskComment.trim() || undefined,
-        }),
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error ?? "Unable to create the task.");
-      }
-
-      setTaskComment("");
-      setTaskSuccess("Cleaning task assigned successfully.");
-    } catch (error) {
-      setTaskError(
-        error instanceof Error ? error.message : "Unable to create the task.",
-      );
-    } finally {
-      setIsSavingTask(false);
-    }
   }
 
   /* ------------------------------------------------------------------------ */
@@ -447,98 +366,13 @@ const ViewRoomPage = () => {
 
       </main>
 
-      {isTaskModalOpen && (
-        <div className={styles.modalOverlay} onClick={closeTaskModal}>
-          <section
-            className={styles.taskModal}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="assign-task-title"
-            onClick={(event) => event.stopPropagation()}
-          >
-            <div className={styles.modalHeader}>
-              <div>
-                <p className={styles.cardLabel}>HOUSEKEEPING</p>
-                <h2 id="assign-task-title">Assign cleaning task</h2>
-                <p className={styles.modalSubtitle}>
-                  Room {room.roomNumber} will be added to the selected
-                  housekeeper&apos;s queue.
-                </p>
-              </div>
-              <button
-                type="button"
-                className={styles.closeButton}
-                onClick={closeTaskModal}
-                aria-label="Close assign task dialog"
-              >
-                ×
-              </button>
-            </div>
-
-            <label className={styles.modalLabel} htmlFor="housekeeper">
-              Assign to
-            </label>
-            <select
-              id="housekeeper"
-              className={styles.modalInput}
-              value={selectedHousekeeperId}
-              onChange={(event) => setSelectedHousekeeperId(event.target.value)}
-              disabled={isLoadingHousekeepers || isSavingTask}
-            >
-              {isLoadingHousekeepers ? (
-                <option value="">Loading housekeepers...</option>
-              ) : housekeepers.length === 0 ? (
-                <option value="">No active housekeepers found</option>
-              ) : (
-                housekeepers.map((housekeeper) => (
-                  <option key={housekeeper.id} value={housekeeper.id}>
-                    {housekeeper.fullName}
-                  </option>
-                ))
-              )}
-            </select>
-
-            <label className={styles.modalLabel} htmlFor="task-comment">
-              Comment
-            </label>
-            <textarea
-              id="task-comment"
-              className={styles.modalTextarea}
-              placeholder="Add instructions for the housekeeper"
-              maxLength={250}
-              value={taskComment}
-              onChange={(event) => setTaskComment(event.target.value)}
-              disabled={isSavingTask}
-            />
-            <span className={styles.characterCount}>{taskComment.length}/250</span>
-
-            {taskError && <p className={styles.modalError}>{taskError}</p>}
-            {taskSuccess && <p className={styles.modalSuccess}>{taskSuccess}</p>}
-
-            <div className={styles.modalActions}>
-              <button
-                type="button"
-                className={styles.modalCancel}
-                onClick={closeTaskModal}
-                disabled={isSavingTask}
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                className={styles.modalSubmit}
-                onClick={createTask}
-                disabled={
-                  isLoadingHousekeepers ||
-                  isSavingTask ||
-                  housekeepers.length === 0
-                }
-              >
-                {isSavingTask ? "Assigning..." : "Assign task"}
-              </button>
-            </div>
-          </section>
-        </div>
+      {room && (
+        <AssignTaskModal
+          isOpen={isTaskModalOpen}
+          roomId={room.id}
+          roomNumber={room.roomNumber}
+          onClose={closeTaskModal}
+        />
       )}
     </div>
   );
