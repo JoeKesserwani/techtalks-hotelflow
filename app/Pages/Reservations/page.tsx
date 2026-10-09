@@ -127,7 +127,7 @@ export default function FrontDeskPage() {
         <div className={s.error} role="alert">
           <span>{error}</span>
           {expired ? (
-            <a href="/login">Sign in</a>
+            <a href="/">Sign in</a>
           ) : (
             <button onClick={load}>Retry</button>
           )}
