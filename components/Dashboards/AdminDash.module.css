@@ -131,6 +131,7 @@
 
 /* =========================
    SECTION HEADER
+   (used by Room Status)
 ========================= */
 
 .sectionHeader {
@@ -169,466 +170,6 @@
 
 .viewAll:hover {
   text-decoration: underline;
-}
-
-/* =========================
-   HOUSEKEEPING
-========================= */
-
-.housekeepingSection {
-  width: 100%;
-
-  margin-top: 28px;
-}
-
-.housekeepingList {
-  width: 100%;
-
-  display: flex;
-  flex-direction: column;
-
-  gap: 8px;
-}
-
-.housekeepingCard {
-  width: 100%;
-  min-height: 72px;
-
-  padding: 8px 12px;
-
-  display: flex;
-  align-items: center;
-
-  gap: 14px;
-
-  background: #fffdf8;
-
-  border: 1px solid #ddd8ca;
-
-  transition:
-    border-color 0.2s ease,
-    transform 0.2s ease;
-}
-
-.housekeepingCard:hover {
-  border-color: #c9bda7;
-  transform: translateY(-1px);
-}
-
-/* =========================
-   PHOTO
-========================= */
-
-.photo {
-  min-width: 200px;
-  min-height: 100px;
-
-  flex-shrink: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 0;
-
-  border: none;
-  cursor: pointer;
-
-  background: #ebe4d4;
-  color: #aaa39a;
-
-  font-family: var(--font-body);
-  font-size: 10px;
-}
-
-/* =========================
-   ROOM INFORMATION
-========================= */
-
-.roomInfo {
-  flex: 1;
-  min-width: 0;
-}
-
-.roomInfo h3 {
-  margin: 0 0 3px;
-
-  color: #292722;
-
-  font-family: var(--font-heading);
-  font-size: 18px;
-  font-weight: 600;
-}
-
-.roomInfo p {
-  margin: 0;
-
-  color: #77736c;
-
-  font-family: var(--font-body);
-  font-size: 12px;
-}
-
-/* =========================
-   ACTIONS
-========================= */
-
-.actions {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-
-  flex-shrink: 0;
-  flex-wrap: wrap;
-}
-
-.actions button {
-  height: 35px;
-  padding: 0 12px;
-
-  border-radius: 6px;
-  border: 1px solid #ddd8ca;
-
-  background: transparent;
-
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 500;
-
-  cursor: pointer;
-
-  transition:
-    background 0.2s ease,
-    color 0.2s ease,
-    border-color 0.2s ease;
-}
-
-/* =========================
-   COMMENT
-========================= */
-
-.commentButton {
-  height: 35px;
-
-  padding: 0 12px;
-
-  border-radius: 6px;
-  border: 1px solid #e1ddd3 !important;
-
-  background: transparent;
-
-  color: #494640;
-
-  font-family: var(--font-body);
-}
-
-.commentButton:hover {
-  background: #f4f0e7 !important;
-}
-
-/* =========================
-   REJECT
-========================= */
-
-.rejectButton {
-  height: 35px;
-
-  padding: 0 12px;
-
-  border-radius: 6px;
-  border: 1px solid #d98a70 !important;
-
-  background: transparent;
-
-  color: #c1633b;
-
-  font-family: var(--font-body);
-}
-
-.rejectButton:hover {
-  background: #fbede7 !important;
-}
-
-/* =========================
-   APPROVE
-========================= */
-
-.approveButton {
-  height: 35px;
-
-  padding: 0 12px;
-
-  border-radius: 6px;
-  border: 1px solid #aebba5 !important;
-
-  background: #aebba5 !important;
-
-  color: #ffffff;
-}
-
-.approveButton:hover {
-  background: #98a991 !important;
-}
-
-/* =========================
-   EMPTY STATE
-========================= */
-
-.emptyMessage {
-  width: 100%;
-  min-height: 74px;
-
-  padding: 20px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  box-sizing: border-box;
-
-  background: #fffdf8;
-
-  border: 1px solid #ddd8ca;
-
-  color: #aaa6a6;
-
-  font-family: var(--font-body);
-  font-size: 12px;
-}
-
-/* =========================
-   MODAL
-========================= */
-
-.modalOverlay {
-  position: fixed;
-  inset: 0;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  padding: 20px;
-
-  background: rgba(38, 51, 42, 0.35);
-
-  z-index: 1000;
-}
-
-.modal {
-  position: relative;
-
-  width: min(500px, 100%);
-
-  padding: 28px;
-
-  background: #fffdf8;
-
-  border: 1px solid #ddd8ca;
-  border-radius: 10px;
-
-  box-shadow: 0 20px 60px rgba(38, 51, 42, 0.18);
-}
-
-.modalClose {
-  position: absolute;
-
-  top: 12px;
-  right: 15px;
-
-  border: none;
-  background: transparent;
-
-  font-size: 24px;
-  color: #77736c;
-
-  cursor: pointer;
-}
-
-.modal h2 {
-  margin: 0 30px 6px 0;
-
-  font-family: var(--font-heading);
-  font-size: 24px;
-  font-weight: 600;
-
-  color: #292722;
-}
-
-.modalRoom {
-  margin: 0 0 20px;
-
-  font-size: 12px;
-  color: #77736c;
-}
-
-.modalPhoto {
-  width: 100%;
-  height: 280px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  background: #ebe4d4;
-
-  color: #aaa39a;
-
-  font-size: 12px;
-}
-
-.modalTextarea {
-  width: 100%;
-  min-height: 110px;
-
-  padding: 12px;
-
-  resize: vertical;
-
-  border: 1px solid #ddd8ca;
-  border-radius: 6px;
-
-  background: #fffdf8;
-
-  font-family: var(--font-body);
-  font-size: 13px;
-
-  outline: none;
-
-  box-sizing: border-box;
-}
-
-.modalTextarea:focus {
-  border-color: #c9bda7;
-}
-
-.modalText {
-  margin: 0 0 16px;
-
-  font-size: 13px;
-  line-height: 1.5;
-
-  color: #55544e;
-}
-
-.modalRejectButton,
-.modalApproveButton {
-  width: 100%;
-  height: 42px;
-
-  margin-top: 14px;
-
-  border: none;
-  border-radius: 6px;
-
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 600;
-
-  cursor: pointer;
-}
-
-.modalRejectButton {
-  background: #c1633b;
-  color: white;
-}
-
-.modalApproveButton {
-  background: #aebba5;
-  color: white;
-}
-
-.sendCommentButton {
-  width: 100%;
-  height: 42px;
-
-  margin-top: 14px;
-
-  border: none;
-  border-radius: 6px;
-
-  background: #77736c;
-  color: #ffffff;
-
-  font-family: var(--font-body);
-  font-size: 12px;
-  font-weight: 600;
-
-  cursor: pointer;
-
-  transition: background 0.2s ease;
-}
-
-.sendCommentButton:hover {
-  background: #625f59;
-}
-
-.resultIcon {
-  width: 58px;
-  height: 58px;
-
-  margin: 8px auto 14px;
-
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  border-radius: 50%;
-
-  font-size: 28px;
-  font-weight: 500;
-}
-
-.approvedIcon {
-  background: #aebba5;
-  color: #ffffff;
-}
-
-.rejectedIcon {
-  background: #fbede7;
-  color: #c1633b;
-
-  border: 1px solid #d98a70;
-}
-
-.commentIcon {
-  background: #f4f0e7;
-  color: #77736c;
-
-  border: 1px solid #ddd8ca;
-}
-
-.resultTitle {
-  margin: 0 0 8px;
-
-  text-align: center;
-
-  font-family: var(--font-heading);
-  font-size: 22px;
-  font-weight: 600;
-}
-
-.approvedTitle {
-  color: #65765e;
-}
-
-.rejectedTitle {
-  color: #c1633b;
-}
-
-.commentTitle {
-  color: #494640;
-}
-
-.modalSuccessText {
-  margin: 0 0 20px;
-
-  text-align: center;
-
-  font-family: var(--font-body);
-  font-size: 13px;
-
-  color: #77736c;
 }
 
 /* =========================
@@ -684,7 +225,7 @@
 }
 
 .roomStatusCard.inReview {
-  border-left: 5px solid #B08A3E;
+  border-left: 5px solid #b08a3e;
 }
 
 .roomStatusCard.needsCleaning {
@@ -784,7 +325,7 @@
 
 /* Awaiting review — muted gold */
 .approvalDot {
-  background: #B08A3E;
+  background: #b08a3e;
 }
 
 /* Cleaning in progress — soft amber */
@@ -823,28 +364,6 @@
 
   .statsGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .housekeepingCard {
-    gap: 10px;
-  }
-
-  .photo {
-    min-width: 150px;
-    width: 150px;
-    min-height: 85px;
-  }
-
-  .roomInfo {
-    min-width: 120px;
-  }
-
-  .actions {
-    gap: 5px;
-  }
-
-  .actions button {
-    padding: 0 9px;
   }
 
   .roomStatusGrid {
@@ -899,58 +418,6 @@
 
   .statValue {
     font-size: 34px;
-  }
-
-  /* Housekeeping */
-
-  .housekeepingCard {
-    display: grid;
-
-    grid-template-columns: 90px 1fr;
-    grid-template-rows: auto auto;
-
-    gap: 10px;
-    padding: 10px;
-  }
-
-  .photo {
-    grid-row: 1 / 3;
-
-    width: 90px;
-    min-width: 90px;
-
-    height: 70px;
-    min-height: 70px;
-  }
-
-  .roomInfo {
-    min-width: 0;
-  }
-
-  .roomInfo h3 {
-    font-size: 15px;
-  }
-
-  .roomInfo p {
-    font-size: 11px;
-    line-height: 1.4;
-  }
-
-  .actions {
-    grid-column: 2;
-
-    display: flex;
-
-    gap: 5px;
-    flex-wrap: wrap;
-  }
-
-  .actions button {
-    height: 32px;
-
-    padding: 0 9px;
-
-    font-size: 10px;
   }
 
   /* Room status */
@@ -1011,7 +478,6 @@
     font-size: 32px;
   }
 
-  .housekeepingSection,
   .roomStatusSection {
     margin-top: 22px;
   }
@@ -1025,54 +491,6 @@
   .sectionHeader h2 {
     font-size: 15px;
     line-height: 1.3;
-  }
-
-  /* Housekeeping */
-
-  .housekeepingCard {
-    display: grid;
-
-    grid-template-columns: 70px 1fr;
-    grid-template-rows: auto auto;
-
-    gap: 8px;
-    padding: 8px;
-  }
-
-  .photo {
-    grid-row: 1 / 3;
-
-    width: 70px;
-    min-width: 70px;
-
-    height: 60px;
-    min-height: 60px;
-  }
-
-  .roomInfo h3 {
-    font-size: 13px;
-  }
-
-  .roomInfo p {
-    font-size: 10px;
-    line-height: 1.4;
-  }
-
-  .actions {
-    grid-column: 2;
-
-    display: flex;
-
-    flex-wrap: wrap;
-    gap: 4px;
-  }
-
-  .actions button {
-    height: 30px;
-
-    padding: 0 7px;
-
-    font-size: 9px;
   }
 
   /* Room status */
@@ -1101,27 +519,6 @@
     gap: 7px 12px;
 
     font-size: 11px;
-  }
-
-  /* Modal */
-
-  .modalOverlay {
-    padding: 14px;
-  }
-
-  .modal {
-    width: 100%;
-    max-width: 100%;
-
-    padding: 22px;
-  }
-
-  .modal h2 {
-    font-size: 20px;
-  }
-
-  .modalPhoto {
-    height: 220px;
   }
 }
 
@@ -1183,49 +580,6 @@
     font-size: 9px;
   }
 
-  /* Housekeeping */
-
-  .housekeepingCard {
-    display: grid;
-
-    grid-template-columns: 55px 1fr;
-
-    gap: 7px;
-    padding: 7px;
-  }
-
-  .photo {
-    grid-row: 1 / 3;
-
-    width: 55px;
-    min-width: 55px;
-
-    height: 48px;
-    min-height: 48px;
-  }
-
-  .roomInfo h3 {
-    font-size: 11px;
-  }
-
-  .roomInfo p {
-    font-size: 8px;
-  }
-
-  .actions {
-    grid-column: 2;
-
-    gap: 3px;
-  }
-
-  .actions button {
-    height: 27px;
-
-    padding: 0 5px;
-
-    font-size: 8px;
-  }
-
   /* Room status */
 
   .roomStatusCard {
@@ -1246,41 +600,5 @@
     gap: 6px 10px;
 
     font-size: 10px;
-  }
-
-  /* Modal */
-
-  .modalOverlay {
-    padding: 10px;
-  }
-
-  .modal {
-    padding: 20px 16px;
-
-    border-radius: 8px;
-  }
-
-  .modal h2 {
-    font-size: 18px;
-  }
-
-  .modalRoom {
-    font-size: 10px;
-  }
-
-  .modalPhoto {
-    height: 180px;
-  }
-
-  .modalTextarea {
-    min-height: 90px;
-
-    font-size: 12px;
-  }
-
-  .modalRejectButton,
-  .modalApproveButton,
-  .sendCommentButton {
-    height: 40px;
   }
 }

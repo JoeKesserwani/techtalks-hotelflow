@@ -7,6 +7,9 @@ import { useRouter } from "next/navigation";
 import Header from "../Header/Header";
 import { ReservationsBoard } from "../Reservations/reservationBoard";
 import { NewReservationDialog } from "../Reservations/newReservationDialog";
+import HousekeepingReview, {
+  HousekeepingTask as ReviewHousekeepingTask,
+} from "../Housekeeping/housekeepingApproval";
 
 type Arrival = {
   id: string;
@@ -40,9 +43,11 @@ type Departure = {
   };
 };
 
-type HousekeepingTask = {
+type HousekeepingAttentionTask = {
   id: string;
   status: string;
+  completedAt?: string | null;
+  photos?: unknown;
   room: {
     id: string;
     roomNumber: string;
@@ -77,7 +82,7 @@ type DashboardData = {
 
   arrivals: Arrival[];
   departures: Departure[];
-  housekeepingAttention: HousekeepingTask[];
+  housekeepingAttention: HousekeepingAttentionTask[];
 };
 
 // Reservations shown on the dashboard are limited to today.
@@ -89,7 +94,6 @@ const ReceptionistDash = () => {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [reservations, setReservations] = useState<any[]>([]);
   const [reservationRooms, setReservationRooms] = useState<any[]>([]);
   const [reservationsLoading, setReservationsLoading] = useState(true);
@@ -258,44 +262,11 @@ const ReceptionistDash = () => {
   };
 
   // --------------------------------------------------
-  // Room status labels
-  // --------------------------------------------------
-
-  const getRoomStatusLabel = (status: string) => {
-    switch (status) {
-      case "AVAILABLE":
-        return "Available";
-
-      case "RESERVED":
-        return "Upcoming";
-
-      case "OCCUPIED":
-        return "In stay";
-
-      case "IN_REVIEW":
-        return "In review";
-
-      case "NEEDS_CLEANING":
-        return "Needs cleaning";
-
-      case "CLEANING":
-        return "Cleaning";
-
-      case "OUT_OF_SERVICE":
-        return "Out of service";
-
-      default:
-        return status;
-    }
-  };
-
-  // --------------------------------------------------
   // Check In
   // --------------------------------------------------
 
   const handleCheckIn = async (reservationId: string) => {
     try {
-      setActionLoading(reservationId);
       setError("");
 
       const response = await fetch(
@@ -319,8 +290,6 @@ const ReceptionistDash = () => {
       setError(
         err instanceof Error ? err.message : "Unable to check in reservation.",
       );
-    } finally {
-      setActionLoading(null);
     }
   };
 
@@ -330,7 +299,6 @@ const ReceptionistDash = () => {
 
   const handleCheckOut = async (reservationId: string) => {
     try {
-      setActionLoading(reservationId);
       setError("");
 
       const response = await fetch(
@@ -354,59 +322,29 @@ const ReceptionistDash = () => {
       setError(
         err instanceof Error ? err.message : "Unable to check out reservation.",
       );
-    } finally {
-      setActionLoading(null);
     }
   };
 
-  // --------------------------------------------------
-  // Housekeeping Review
-  // --------------------------------------------------
+  const housekeepingReviewTasks: ReviewHousekeepingTask[] = (
+    dashboard?.housekeepingAttention ?? []
+  )
+    .filter((task) => task.status === "IN_REVIEW")
+    .map((task) => ({
+      id: task.id,
+      room: {
+        roomNumber: task.room.roomNumber,
+        roomType: task.room.roomType,
+      },
+      assignedTo: { fullName: task.assignedTo.fullName },
+      completedAt: task.completedAt ?? "",
+      photoUrl:
+        Array.isArray(task.photos) && typeof task.photos[0] === "string"
+          ? task.photos[0]
+          : undefined,
+    }));
 
-  const handleHousekeepingReview = async (
-    taskId: string,
-    action: "APPROVE" | "REJECT",
-  ) => {
-    try {
-      setActionLoading(taskId);
-      setError("");
-
-      const response = await fetch(
-        `/api/v1/housekeeping/tasks/${taskId}/review`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          credentials: "include",
-          body: JSON.stringify({
-            action,
-          }),
-        },
-      );
-
-      const data = await response.json().catch(() => null);
-
-      if (!response.ok) {
-        throw new Error(
-          data?.message ||
-            data?.error ||
-            `Failed to ${action.toLowerCase()} housekeeping task.`,
-        );
-      }
-
-      await fetchDashboard();
-    } catch (err) {
-      console.error("Housekeeping review error:", err);
-
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to update housekeeping task.",
-      );
-    } finally {
-      setActionLoading(null);
-    }
+  const handleHousekeepingReviewed = async () => {
+    await fetchDashboard();
   };
 
   // --------------------------------------------------
@@ -561,89 +499,16 @@ const ReceptionistDash = () => {
           </div>
         </section>
 
-        {/* Housekeeping Attention */}
-        <section className={styles.sectionCard}>
-          <div className={styles.sectionHeader}>
-            <div>
-              <h2>Housekeeping Attention</h2>
-
-              <p>Rooms that need reception action</p>
-            </div>
-
-            <button
-              className={styles.viewButton}
-              onClick={() => router.push("/Pages/HousekeepingReview")}
-            >
-              View all
-            </button>
-          </div>
-
-          <div className={styles.table}>
-            <div className={styles.tableHeader}>
-              <span>Room</span>
-              <span>Status</span>
-              <span>Assigned To</span>
-              <span>Action</span>
-            </div>
-
-            {loading ? (
-              <div className={styles.tableRow}>
-                <span>Loading...</span>
-              </div>
-            ) : dashboard?.housekeepingAttention.length === 0 ? (
-              <div className={styles.tableRow}>
-                <span>No housekeeping attention required</span>
-              </div>
-            ) : (
-              dashboard?.housekeepingAttention.map((task) => (
-                <div className={styles.tableRow} key={task.id}>
-                  <span>{task.room.roomNumber}</span>
-
-                  <span className={styles.pendingStatus}>
-                    {task.status === "IN_REVIEW"
-                      ? "In review"
-                      : getRoomStatusLabel(task.room.status)}
-                  </span>
-
-                  <span>{task.assignedTo.fullName}</span>
-
-                  <div className={styles.reviewActions}>
-                    {task.status === "IN_REVIEW" ? (
-                      <>
-                        <button
-                          className={styles.approveButton}
-                          onClick={() =>
-                            handleHousekeepingReview(task.id, "APPROVE")
-                          }
-                          disabled={actionLoading === task.id}
-                        >
-                          {actionLoading === task.id ? "..." : "Approve"}
-                        </button>
-
-                        <button
-                          className={styles.rejectButton}
-                          onClick={() =>
-                            handleHousekeepingReview(task.id, "REJECT")
-                          }
-                          disabled={actionLoading === task.id}
-                        >
-                          {actionLoading === task.id ? "..." : "Reject"}
-                        </button>
-                      </>
-                    ) : (
-                      <button
-                        className={styles.actionButton}
-                        onClick={() => router.push("/Pages/HousekeepingReview")}
-                      >
-                        View
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </section>
+        <HousekeepingReview
+          title="Housekeeping Attention"
+          tasks={housekeepingReviewTasks}
+          emptyMessage={
+            loading
+              ? "Loading housekeeping tasks..."
+              : "No housekeeping tasks awaiting approval."
+          }
+          onTaskReviewed={handleHousekeepingReviewed}
+        />
       </main>
       {reservationToast && (
         <div className={styles.sectionCard} role="status">
