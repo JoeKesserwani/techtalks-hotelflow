@@ -276,6 +276,7 @@
 
 .roomStatusLegend {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
 
   gap: 13px;
@@ -336,6 +337,12 @@
 /* Out of service — muted plum */
 .outOfServiceDot {
   background: #766878;
+}
+
+@media (max-width: 1100px) {
+  .statsGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
 }
 
 /* =========================
@@ -600,5 +607,11 @@
     gap: 6px 10px;
 
     font-size: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  .main {
+    padding-top: 72px;
   }
 }

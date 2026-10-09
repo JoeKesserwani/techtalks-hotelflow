@@ -893,6 +893,15 @@ MOBILE MODAL
     padding: 17px 15px;
   }
 
+  .sectionHeader {
+    flex-wrap: wrap;
+  }
+
+  .sectionHeader > div {
+    flex: 1 1 180px;
+    min-width: 0;
+  }
+
   .sectionHeader h2 {
     font-size: 17px;
   }
@@ -927,7 +936,7 @@ MOBILE MODAL
   }
 
   .sectionHeader {
-    align-items: center;
+    align-items: flex-start;
   }
 
   .viewButton {
@@ -937,5 +946,11 @@ MOBILE MODAL
 
   .roomStatusGrid {
     grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .main {
+    padding-top: 72px;
   }
 }
