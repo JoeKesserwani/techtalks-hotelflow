@@ -129,6 +129,14 @@ export async function GET() {
         include: {
           room: true,
           assignedTo: true,
+          photoFiles: {
+            select: {
+              id: true,
+            },
+            orderBy: {
+              createdAt: "asc",
+            },
+          },
         },
         orderBy: {
           completedAt: "desc",

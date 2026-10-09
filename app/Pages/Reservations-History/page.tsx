@@ -409,27 +409,7 @@ export default function ReservationHistoryPage() {
     <div className={styles.page}>
       <main className={styles.content} aria-busy={loading}>
         {/* HEADER */}
-        <header className={styles.header}>
-          <div className={styles.title}>
-            <h1>Reservation history</h1>
-            <p>
-              {loading
-                ? "Loading completed stays…"
-                : `${history.length} completed ${history.length === 1 ? "stay" : "stays"} on record`}
-            </p>
-          </div>
-
-          <div className={styles.userInfo}>
-            <span className={styles.avatar} aria-hidden>
-              {userName ? initialsOf(userName) : "–"}
-            </span>
-            <span className={styles.userText}>
-              <strong>{userName || "…"}</strong>
-              <small>{me ? titleCase(me.role) : ""}</small>
-            </span>
-          </div>
-        </header>
-
+        {Header({title: "Reservation history", subtitle: loading ? "Loading completed stays…" : `${history.length} completed ${history.length === 1 ? "stay" : "stays"} on record`,userSubtitle:"Checking reservation history" })}
         {/* STATS */}
         <section
           className={styles.stats}

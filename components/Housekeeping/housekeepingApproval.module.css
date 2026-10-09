@@ -1,0 +1,957 @@
+/* Stable hk-* names are global on purpose.
+   CSS-module exports are easy to drop (empty styles object, .default interop,
+   or a host reset that beats a single hashed class). Every rule is therefore
+   attached to both the local class and a global hk-* class. */
+
+.housekeepingSection,
+:global(.hk-housekeepingSection),
+.modalOverlay,
+:global(.hk-modalOverlay) {
+  --hk-font-heading: var(
+    --font-heading,
+    "Fraunces",
+    "Iowan Old Style",
+    Palatino,
+    Georgia,
+    serif
+  );
+  --hk-font-body: var(
+    --font-body,
+    "IBM Plex Sans",
+    "Segoe UI",
+    Helvetica,
+    Arial,
+    sans-serif
+  );
+}
+
+.housekeepingSection,
+.housekeepingSection *,
+.housekeepingSection *::before,
+.housekeepingSection *::after,
+:global(.hk-housekeepingSection),
+:global(.hk-housekeepingSection) *,
+:global(.hk-housekeepingSection) *::before,
+:global(.hk-housekeepingSection) *::after,
+.modalOverlay,
+.modalOverlay *,
+.modalOverlay *::before,
+.modalOverlay *::after,
+:global(.hk-modalOverlay),
+:global(.hk-modalOverlay) *,
+:global(.hk-modalOverlay) *::before,
+:global(.hk-modalOverlay) *::after {
+  box-sizing: border-box;
+}
+
+/* =========================
+   SECTION HEADER
+========================= */
+
+.housekeepingSection,
+:global(.hk-housekeepingSection) {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  margin-top: 28px;
+  color: #292722;
+  text-align: start;
+  container-type: inline-size;
+  container-name: hk;
+}
+
+.sectionHeader,
+:global(.hk-sectionHeader) {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.sectionTitle,
+:global(.hk-sectionTitle.hk-sectionTitle) {
+  margin: 0;
+  color: #292722 !important;
+  font-family: var(--hk-font-heading) !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  letter-spacing: -0.02em;
+}
+
+.viewAll,
+:global(.hk-viewAll.hk-viewAll) {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  margin: 0;
+  padding: 0 !important;
+  border: none !important;
+  border-radius: 0 !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #c1633b !important;
+  font-family: var(--hk-font-body) !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+  line-height: 1.2 !important;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.viewAll:hover,
+:global(.hk-viewAll.hk-viewAll):hover {
+  text-decoration: underline;
+}
+
+/* =========================
+   HOUSEKEEPING LIST
+========================= */
+
+.housekeepingList,
+:global(.hk-housekeepingList) {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.housekeepingCard,
+:global(.hk-housekeepingCard) {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 72px;
+  padding: 8px 12px;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px;
+  background: #fffdf8;
+  border: 1px solid #ddd8ca;
+  border-radius: 0;
+  transition:
+    border-color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.housekeepingCard:hover,
+:global(.hk-housekeepingCard):hover {
+  border-color: #c9bda7;
+  transform: translateY(-1px);
+}
+
+/* =========================
+   PHOTO
+========================= */
+
+.photoStrip,
+:global(.hk-photoStrip) {
+  width: 260px;
+  max-width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  flex: 0 1 260px;
+  scrollbar-width: thin;
+}
+
+.singlePhotoStrip,
+:global(.hk-singlePhotoStrip) {
+  overflow-x: hidden;
+}
+
+.photo,
+:global(.hk-photo.hk-photo) {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  width: 200px;
+  height: 100px;
+  min-width: 72px;
+  max-width: 100%;
+  flex: 0 1 200px;
+  margin: 0;
+  padding: 0 !important;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  border: none !important;
+  border-radius: 0 !important;
+  background: #ebe4d4 !important;
+  background-color: #ebe4d4 !important;
+  color: #aaa39a !important;
+  font-family: var(--hk-font-body) !important;
+  font-size: 10px !important;
+  font-weight: 500 !important;
+  line-height: 1 !important;
+  cursor: pointer;
+}
+
+.photoStrip .photo,
+:global(.hk-photoStrip .hk-photo.hk-photo) {
+  width: 110px;
+  height: 90px;
+  min-width: 110px;
+  max-width: none;
+  flex: 0 0 110px;
+  border-radius: 6px !important;
+}
+
+.singlePhotoStrip .photo,
+:global(.hk-singlePhotoStrip .hk-photo.hk-photo) {
+  width: 100%;
+  min-width: 0;
+  flex: 1 0 100%;
+}
+
+.photoImg,
+:global(.hk-photoImg.hk-photoImg) {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  object-position: center;
+  display: block !important;
+  pointer-events: none;
+}
+
+.photoLoading,
+:global(.hk-photoLoading) {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #77736c;
+  font-family: var(--hk-font-body);
+  font-size: 12px;
+}
+
+.photoSpinner,
+:global(.hk-photoSpinner) {
+  width: 15px;
+  height: 15px;
+  border: 2px solid #d9d3c8;
+  border-top-color: #77736c;
+  border-radius: 50%;
+  animation: hk-photo-spin 0.7s linear infinite;
+}
+
+@keyframes hk-photo-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photoSpinner,
+  :global(.hk-photoSpinner) {
+    animation-duration: 1.8s;
+  }
+}
+
+.modalImg,
+:global(.hk-modalImg.hk-modalImg) {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  object-fit: contain !important;
+  object-position: center;
+  display: block !important;
+  pointer-events: auto;
+  cursor: zoom-in;
+  transition: transform 0.2s ease;
+}
+
+.zoomedPhoto,
+:global(.hk-zoomedPhoto) {
+  cursor: zoom-out;
+}
+
+.photoControls,
+:global(.hk-photoControls) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 12px;
+  color: #77736c;
+  font-family: var(--hk-font-body);
+  font-size: 12px;
+}
+
+.photoNavButton,
+:global(.hk-photoNavButton) {
+  padding: 6px 10px;
+  border: 1px solid #ddd8ca;
+  border-radius: 6px;
+  background: transparent;
+  color: #494640;
+  font-family: var(--hk-font-body);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.photoNavButton:hover,
+:global(.hk-photoNavButton):hover {
+  background: #f4f0e7;
+}
+
+.photoFallback,
+:global(.hk-photoFallback) {
+  color: #aaa39a;
+  font-family: var(--hk-font-body);
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+/* =========================
+   ROOM INFORMATION
+========================= */
+
+.roomInfo,
+:global(.hk-roomInfo) {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.roomTitle,
+:global(.hk-roomTitle.hk-roomTitle) {
+  margin: 0 0 3px !important;
+  color: #292722 !important;
+  font-family: var(--hk-font-heading) !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+.roomMeta,
+:global(.hk-roomMeta.hk-roomMeta) {
+  margin: 0 !important;
+  color: #77736c !important;
+  font-family: var(--hk-font-body) !important;
+  font-size: 12px !important;
+  font-weight: 400 !important;
+  line-height: 1.4 !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* =========================
+   ACTIONS
+   Colors live on the button classes themselves.
+   A parent ".actions button" rule is more specific than a single
+   class and was wiping Approve / Reject / Comment.
+========================= */
+
+.actions,
+:global(.hk-actions) {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+  flex: 1 1 auto;
+  margin-left: auto;
+  min-width: 0;
+}
+
+.commentButton,
+.rejectButton,
+.approveButton,
+:global(.hk-comment),
+:global(.hk-reject),
+:global(.hk-approve) {
+  height: 35px;
+  padding: 0 12px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.commentButton,
+:global(.hk-comment.hk-comment) {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  border: 1px solid #e1ddd3 !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #494640 !important;
+  font-family: var(--hk-font-body) !important;
+}
+
+.commentButton:hover,
+:global(.hk-comment.hk-comment):hover {
+  background: #f4f0e7 !important;
+  background-color: #f4f0e7 !important;
+}
+
+.rejectButton,
+:global(.hk-reject.hk-reject) {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  border: 1px solid #d98a70 !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  color: #c1633b !important;
+  font-family: var(--hk-font-body) !important;
+}
+
+.rejectButton:hover,
+:global(.hk-reject.hk-reject):hover {
+  background: #fbede7 !important;
+  background-color: #fbede7 !important;
+}
+
+.approveButton,
+:global(.hk-approve.hk-approve) {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  border: 1px solid #aebba5 !important;
+  border-radius: 6px !important;
+  background: #aebba5 !important;
+  background-color: #aebba5 !important;
+  color: #ffffff !important;
+  font-family: var(--hk-font-body) !important;
+}
+
+.approveButton:hover,
+:global(.hk-approve.hk-approve):hover {
+  background: #98a991 !important;
+  background-color: #98a991 !important;
+  border-color: #98a991 !important;
+}
+
+/* =========================
+   EMPTY STATE
+========================= */
+
+.emptyMessage,
+:global(.hk-emptyMessage) {
+  width: 100%;
+  min-height: 74px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fffdf8;
+  border: 1px solid #ddd8ca;
+  color: #aaa6a6;
+  font-family: var(--hk-font-body);
+  font-size: 12px;
+  text-align: center;
+}
+
+/* =========================
+   MODAL
+========================= */
+
+.modalOverlay,
+:global(.hk-modalOverlay) {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: rgba(38, 51, 42, 0.35);
+  z-index: 10000;
+}
+
+.modal,
+:global(.hk-modal) {
+  position: relative;
+  width: min(500px, 100%);
+  max-height: min(90vh, 760px);
+  overflow: auto;
+  padding: 28px;
+  background: #fffdf8;
+  border: 1px solid #ddd8ca;
+  border-radius: 10px;
+  box-shadow: 0 20px 60px rgba(38, 51, 42, 0.18);
+  color: #292722;
+}
+
+.modalClose,
+:global(.hk-modalClose.hk-modalClose) {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  position: absolute;
+  top: 12px;
+  right: 15px;
+  width: 32px;
+  height: 32px;
+  margin: 0;
+  padding: 0 !important;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: none !important;
+  border-radius: 6px !important;
+  background: transparent !important;
+  background-color: transparent !important;
+  font-family: var(--hk-font-body) !important;
+  font-size: 24px !important;
+  line-height: 1 !important;
+  color: #77736c !important;
+  cursor: pointer;
+}
+
+.modalClose:hover,
+:global(.hk-modalClose.hk-modalClose):hover {
+  background: #f4f0e7 !important;
+  background-color: #f4f0e7 !important;
+}
+
+.modalTitle,
+:global(.hk-modalTitle.hk-modalTitle) {
+  margin: 0 36px 6px 0 !important;
+  font-family: var(--hk-font-heading) !important;
+  font-size: 24px !important;
+  font-weight: 600 !important;
+  line-height: 1.2 !important;
+  color: #292722 !important;
+}
+
+.modalRoom,
+:global(.hk-modalRoom.hk-modalRoom) {
+  margin: 0 0 20px !important;
+  font-family: var(--hk-font-body) !important;
+  font-size: 12px !important;
+  line-height: 1.4 !important;
+  color: #77736c !important;
+}
+
+.modalPhoto,
+:global(.hk-modalPhoto) {
+  position: relative;
+  width: 100%;
+  height: 280px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
+  background: #ebe4d4;
+  color: #aaa39a;
+  font-family: var(--hk-font-body);
+  font-size: 12px;
+}
+
+.modalTextarea,
+:global(.hk-modalTextarea.hk-modalTextarea) {
+  width: 100%;
+  min-height: 110px;
+  margin: 0;
+  padding: 12px !important;
+  resize: vertical;
+  border: 1px solid #ddd8ca !important;
+  border-radius: 6px !important;
+  background: #fffdf8 !important;
+  background-color: #fffdf8 !important;
+  color: #292722 !important;
+  font-family: var(--hk-font-body) !important;
+  font-size: 13px !important;
+  line-height: 1.45 !important;
+  outline: none;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+}
+
+.modalTextarea:focus,
+:global(.hk-modalTextarea.hk-modalTextarea):focus {
+  border-color: #c9bda7 !important;
+}
+
+.modalText,
+:global(.hk-modalText.hk-modalText) {
+  margin: 0 0 16px !important;
+  font-family: var(--hk-font-body) !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
+  color: #55544e !important;
+}
+
+.modalCommentLabel,
+:global(.hk-modalCommentLabel) {
+  display: block;
+  margin: 0 0 6px;
+  font-family: var(--hk-font-body);
+  font-size: 13px;
+  line-height: 1.5;
+  color: #55544e;
+}
+
+.errorMessage,
+:global(.hk-errorMessage) {
+  margin: 10px 0 0;
+  font-family: var(--hk-font-body);
+  font-size: 12px;
+  line-height: 1.4;
+  color: #c1633b;
+}
+
+.modalRejectButton,
+.modalApproveButton,
+.sendCommentButton,
+:global(.hk-modalRejectButton),
+:global(.hk-modalApproveButton),
+:global(.hk-sendCommentButton) {
+  width: 100%;
+  height: 42px;
+  margin-top: 14px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modalRejectButton:disabled,
+.modalApproveButton:disabled,
+:global(.hk-modalRejectButton):disabled,
+:global(.hk-modalApproveButton):disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.modalRejectButton,
+:global(.hk-modalRejectButton.hk-modalRejectButton) {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  border: none !important;
+  background: #c1633b !important;
+  background-color: #c1633b !important;
+  color: #ffffff !important;
+  font-family: var(--hk-font-body) !important;
+}
+
+.sendCommentButton,
+:global(.hk-sendCommentButton.hk-sendCommentButton) {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  border: none !important;
+  background: #77736c !important;
+  background-color: #77736c !important;
+  color: #ffffff !important;
+  font-family: var(--hk-font-body) !important;
+}
+
+.sendCommentButton:hover,
+:global(.hk-sendCommentButton.hk-sendCommentButton):hover {
+  background: #625f59 !important;
+  background-color: #625f59 !important;
+}
+
+.modalApproveButton,
+:global(.hk-modalApproveButton.hk-modalApproveButton) {
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  border: none !important;
+  background: #aebba5 !important;
+  background-color: #aebba5 !important;
+  color: #ffffff !important;
+  font-family: var(--hk-font-body) !important;
+}
+
+.resultIcon,
+:global(.hk-resultIcon) {
+  width: 58px;
+  height: 58px;
+  margin: 8px auto 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-family: var(--hk-font-body);
+  font-size: 28px;
+  font-weight: 500;
+  line-height: 1;
+}
+
+.approvedIcon,
+:global(.hk-approvedIcon.hk-approvedIcon) {
+  background: #aebba5 !important;
+  background-color: #aebba5 !important;
+  color: #ffffff !important;
+  border: none !important;
+}
+
+.rejectedIcon,
+:global(.hk-rejectedIcon.hk-rejectedIcon) {
+  background: #fbede7 !important;
+  background-color: #fbede7 !important;
+  color: #c1633b !important;
+  border: 1px solid #d98a70 !important;
+}
+
+.commentIcon,
+:global(.hk-commentIcon.hk-commentIcon) {
+  background: #f4f0e7 !important;
+  background-color: #f4f0e7 !important;
+  color: #77736c !important;
+  border: 1px solid #ddd8ca !important;
+}
+
+.resultTitle,
+:global(.hk-resultTitle.hk-resultTitle) {
+  margin: 0 0 8px !important;
+  text-align: center !important;
+  font-family: var(--hk-font-heading) !important;
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  line-height: 1.25 !important;
+}
+
+.approvedTitle,
+:global(.hk-approvedTitle) {
+  color: #65765e !important;
+}
+
+.rejectedTitle,
+:global(.hk-rejectedTitle) {
+  color: #c1633b !important;
+}
+
+.commentTitle,
+:global(.hk-commentTitle) {
+  color: #494640 !important;
+}
+
+.modalSuccessText,
+:global(.hk-modalSuccessText) {
+  margin: 0 0 20px;
+  text-align: center;
+  font-family: var(--hk-font-body);
+  font-size: 13px;
+  line-height: 1.45;
+  color: #77736c;
+}
+
+/* =========================
+   NARROW CONTAINER / VIEWPORT
+========================= */
+
+@container hk (max-width: 900px) {
+  .photo,
+  :global(.hk-photo.hk-photo) {
+    width: 150px;
+    height: 85px;
+    flex-basis: 150px;
+  }
+}
+
+@media (max-width: 900px) {
+  .photo,
+  :global(.hk-photo.hk-photo) {
+    width: 150px;
+    height: 85px;
+    flex-basis: 150px;
+  }
+}
+
+@container hk (max-width: 700px) {
+  .housekeepingCard,
+  :global(.hk-housekeepingCard) {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    grid-template-areas:
+      "shot meta"
+      "btns btns";
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .photo,
+  :global(.hk-photo.hk-photo) {
+    grid-area: shot;
+    width: 88px;
+    height: 72px;
+    flex: none;
+    max-width: none;
+  }
+
+  .roomInfo,
+  :global(.hk-roomInfo) {
+    grid-area: meta;
+    min-width: 0;
+  }
+
+  .roomTitle,
+  :global(.hk-roomTitle.hk-roomTitle) {
+    font-size: 16px !important;
+  }
+
+  .actions,
+  :global(.hk-actions) {
+    grid-area: btns;
+    margin-left: 0;
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .commentButton,
+  .rejectButton,
+  .approveButton,
+  :global(.hk-comment),
+  :global(.hk-reject),
+  :global(.hk-approve) {
+    flex: 1 1 0;
+    height: 34px;
+    padding: 0 8px;
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 700px) {
+  .housekeepingCard,
+  :global(.hk-housekeepingCard) {
+    display: grid;
+    grid-template-columns: 88px minmax(0, 1fr);
+    grid-template-areas:
+      "shot meta"
+      "btns btns";
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+  }
+
+  .photo,
+  :global(.hk-photo.hk-photo) {
+    grid-area: shot;
+    width: 88px;
+    height: 72px;
+    flex: none;
+    max-width: none;
+  }
+
+  .roomInfo,
+  :global(.hk-roomInfo) {
+    grid-area: meta;
+    min-width: 0;
+  }
+
+  .roomTitle,
+  :global(.hk-roomTitle.hk-roomTitle) {
+    font-size: 16px !important;
+  }
+
+  .actions,
+  :global(.hk-actions) {
+    grid-area: btns;
+    margin-left: 0;
+    width: 100%;
+    justify-content: stretch;
+  }
+
+  .commentButton,
+  .rejectButton,
+  .approveButton,
+  :global(.hk-comment),
+  :global(.hk-reject),
+  :global(.hk-approve) {
+    flex: 1 1 0;
+    height: 34px;
+    padding: 0 8px;
+    font-size: 12px;
+  }
+}
+
+@container hk (max-width: 420px) {
+  .housekeepingSection,
+  :global(.hk-housekeepingSection) {
+    margin-top: 22px;
+  }
+
+  .sectionHeader,
+  :global(.hk-sectionHeader) {
+    align-items: flex-start;
+  }
+
+  .sectionTitle,
+  :global(.hk-sectionTitle.hk-sectionTitle) {
+    font-size: 20px !important;
+  }
+
+  .roomTitle,
+  :global(.hk-roomTitle.hk-roomTitle) {
+    font-size: 15px !important;
+  }
+
+  .roomMeta,
+  :global(.hk-roomMeta.hk-roomMeta) {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 420px) {
+  .housekeepingSection,
+  :global(.hk-housekeepingSection) {
+    margin-top: 22px;
+  }
+
+  .sectionHeader,
+  :global(.hk-sectionHeader) {
+    align-items: flex-start;
+  }
+
+  .sectionTitle,
+  :global(.hk-sectionTitle.hk-sectionTitle) {
+    font-size: 20px !important;
+  }
+
+  .roomTitle,
+  :global(.hk-roomTitle.hk-roomTitle) {
+    font-size: 15px !important;
+  }
+
+  .roomMeta,
+  :global(.hk-roomMeta.hk-roomMeta) {
+    white-space: normal;
+  }
+
+  .modalOverlay,
+  :global(.hk-modalOverlay) {
+    padding: 12px;
+  }
+
+  .modal,
+  :global(.hk-modal) {
+    padding: 22px 16px;
+  }
+
+  .modalTitle,
+  :global(.hk-modalTitle.hk-modalTitle) {
+    font-size: 20px !important;
+  }
+
+  .modalPhoto,
+  :global(.hk-modalPhoto) {
+    height: 200px;
+  }
+}
