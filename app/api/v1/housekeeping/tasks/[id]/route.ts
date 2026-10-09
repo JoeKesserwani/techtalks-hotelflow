@@ -3,6 +3,7 @@ import { requireAuth } from '../../../../../../lib/middleware/requireAuth';
 import { updateHousekeepingTaskSchema } from '../../../../../../lib/validators/housekeeping';
 import { writeAuditLog } from '../../../../../../lib/services/audit.service';
 import { ApiError, handleRouteError } from '../../../../../../lib/api/errors';
+import { createNotification } from '@/lib/notifications';
 
 export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -29,7 +30,7 @@ export async function GET(req: Request, { params }: { params: Promise<{ id: stri
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params;
-    const user = await requireAuth({ roles: ['MANAGER', 'RECEPTIONIST'] });
+    const user = await requireAuth({ roles: ['ADMIN', 'MANAGER', 'RECEPTIONIST'] });
     if (!user) throw new ApiError('Unauthorized', 401);
 
     const body = await req.json();
@@ -59,7 +60,7 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
     const updated = await prisma.$transaction(async (tx) => {
       const result = await tx.housekeepingTask.update({ where: { id }, data: parsed.data });
-
+      
       await writeAuditLog(tx, {
         hotelId: user.hotelId,
         userId: user.userId,

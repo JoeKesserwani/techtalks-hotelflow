@@ -1,0 +1,15 @@
+/* Design tokens shared by the page and the reservation components. */
+:global(:root),
+.tokens {
+  --bg: #faf2e5;
+  --card: #fffdf9;
+  --line: #e4dacb;
+  --ink: #29342c;
+  --muted: #6b6a5c;
+  --clay: #be6346;
+  --clay-dark: #a9553a;
+  --slate: #637583;
+  --olive: #5b6b3c;
+  --sage: #7b904f;
+  --chip: #f0e8d6;
+}
