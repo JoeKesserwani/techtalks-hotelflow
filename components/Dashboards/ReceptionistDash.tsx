@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styles from "./ReceptionistDash.module.css";
 import { useAuth } from "../Auth/AuthProvider";
 import { useRouter } from "next/navigation";
@@ -10,44 +10,16 @@ import { NewReservationDialog } from "../Reservations/newReservationDialog";
 import HousekeepingReview, {
   HousekeepingTask as ReviewHousekeepingTask,
 } from "../Housekeeping/housekeepingApproval";
-
-type Arrival = {
-  id: string;
-  checkInDate: string;
-  status: string;
-  guest: {
-    id: string;
-    fullName: string;
-    phone: string | null;
-  };
-  room: {
-    id: string;
-    roomNumber: string;
-    roomType: string;
-  };
-};
-
-type Departure = {
-  id: string;
-  checkOutDate: string;
-  status: string;
-  guest: {
-    id: string;
-    fullName: string;
-    phone: string | null;
-  };
-  room: {
-    id: string;
-    roomNumber: string;
-    roomType: string;
-  };
-};
+import type { Reservation, Room } from "../../app/Pages/Reservations/frontdesk";
 
 type HousekeepingAttentionTask = {
   id: string;
   status: string;
   completedAt?: string | null;
   photos?: unknown;
+  photoFiles: {
+    id: string;
+  }[];
   room: {
     id: string;
     roomNumber: string;
@@ -63,6 +35,7 @@ type HousekeepingAttentionTask = {
 
 type DashboardData = {
   success: boolean;
+  message?: string;
 
   summary: {
     arrivalsToday: number;
@@ -80,8 +53,8 @@ type DashboardData = {
     outOfService: number;
   };
 
-  arrivals: Arrival[];
-  departures: Departure[];
+  reservations: Reservation[];
+  rooms: Room[];
   housekeepingAttention: HousekeepingAttentionTask[];
 };
 
@@ -94,9 +67,10 @@ const ReceptionistDash = () => {
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [reservations, setReservations] = useState<any[]>([]);
-  const [reservationRooms, setReservationRooms] = useState<any[]>([]);
+  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [reservationRooms, setReservationRooms] = useState<Room[]>([]);
   const [reservationsLoading, setReservationsLoading] = useState(true);
+  const dashboardRequest = useRef<Promise<void> | null>(null);
   const [showNewReservation, setShowNewReservation] = useState(false);
   const [reservationToast, setReservationToast] = useState("");
 
@@ -134,89 +108,54 @@ const ReceptionistDash = () => {
   // Fetch dashboard
   // --------------------------------------------------
 
-  const fetchDashboard = async () => {
-    try {
-      setLoading(true);
-      setError("");
+  const fetchDashboard = () => {
+    if (dashboardRequest.current) return dashboardRequest.current;
 
-      const response = await fetch("/api/v1/Dashboard/stats/Receptionist", {
-        method: "GET",
-        credentials: "include",
-        cache: "no-store",
-      });
+    const request = (async () => {
+      try {
+        setLoading(true);
+        setReservationsLoading(true);
+        setError("");
 
-      const data = await response.json();
-
-      if (!response.ok || !data.success) {
-        throw new Error(
-          data.message || "Failed to load receptionist dashboard.",
-        );
-      }
-
-      setDashboard(data);
-    } catch (err) {
-      console.error("Receptionist dashboard error:", err);
-
-      setError(
-        err instanceof Error ? err.message : "Unable to load dashboard data.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const fetchReservations = async () => {
-    try {
-      setReservationsLoading(true);
-      const [reservationsResponse, roomsResponse] = await Promise.all([
-        fetch("/api/v1/reservations", {
+        const response = await fetch("/api/v1/Dashboard/stats/Receptionist", {
+          method: "GET",
           credentials: "include",
           cache: "no-store",
-        }),
-        fetch("/api/v1/rooms", { credentials: "include", cache: "no-store" }),
-      ]);
-      const reservationsData = await reservationsResponse.json();
-      const roomsData = await roomsResponse.json();
-      if (!reservationsResponse.ok)
-        throw new Error(
-          reservationsData?.message ||
-            reservationsData?.error ||
-            "Failed to load reservations.",
+        });
+        const data: DashboardData = await response.json();
+
+        if (!response.ok || !data.success) {
+          throw new Error(
+            data.message || "Failed to load receptionist dashboard.",
+          );
+        }
+
+        setDashboard(data);
+        setReservations(data.reservations);
+        setReservationRooms(data.rooms);
+      } catch (err) {
+        console.error("Receptionist dashboard error:", err);
+        setError(
+          err instanceof Error ? err.message : "Unable to load dashboard data.",
         );
-      if (!roomsResponse.ok)
-        throw new Error(
-          roomsData?.message || roomsData?.error || "Failed to load rooms.",
-        );
-      const allReservations = Array.isArray(reservationsData)
-        ? reservationsData
-        : (reservationsData?.data ?? reservationsData?.reservations ?? []);
-      const allRooms = Array.isArray(roomsData)
-        ? roomsData
-        : (roomsData?.data ?? roomsData?.rooms ?? []);
-      const todaysReservations = allReservations.filter((r: any) => {
-        const checkIn = String(r?.checkInDate ?? "").slice(0, 10);
-        const checkOut = String(r?.checkOutDate ?? "").slice(0, 10);
-        return (
-          checkIn === todayDate ||
-          checkOut === todayDate ||
-          (checkIn < todayDate && checkOut > todayDate)
-        );
-      });
-      setReservations(todaysReservations);
-      setReservationRooms(allRooms);
-    } catch (err) {
-      console.error("Receptionist reservations error:", err);
-      setError(
-        err instanceof Error ? err.message : "Unable to load reservations.",
-      );
-    } finally {
-      setReservationsLoading(false);
-    }
+      } finally {
+        setLoading(false);
+        setReservationsLoading(false);
+      }
+    })();
+
+    dashboardRequest.current = request;
+    void request.finally(() => {
+      if (dashboardRequest.current === request) {
+        dashboardRequest.current = null;
+      }
+    });
+
+    return request;
   };
 
   useEffect(() => {
     fetchDashboard();
-    fetchReservations();
   }, []);
 
   const showReservationToast = (message: string) => {
@@ -231,15 +170,14 @@ const ReceptionistDash = () => {
 
   const closeNewReservation = () => setShowNewReservation(false);
 
-  const handleReservationCreated = (reservation: any) => {
+  const handleReservationCreated = (reservation: Reservation) => {
     setReservations((current) => [...current, reservation]);
     setShowNewReservation(false);
     showReservationToast("Reservation created successfully.");
     fetchDashboard();
-    fetchReservations();
   };
 
-  const handleReservationUpdate = (reservation: any) => {
+  const handleReservationUpdate = (reservation: Reservation) => {
     setReservations((current) =>
       current.map((item) => (item.id === reservation.id ? reservation : item)),
     );
@@ -337,10 +275,8 @@ const ReceptionistDash = () => {
       },
       assignedTo: { fullName: task.assignedTo.fullName },
       completedAt: task.completedAt ?? "",
-      photoUrl:
-        Array.isArray(task.photos) && typeof task.photos[0] === "string"
-          ? task.photos[0]
-          : undefined,
+      photos: task.photos,
+      photoFiles: task.photoFiles,
     }));
 
   const handleHousekeepingReviewed = async () => {
@@ -418,7 +354,7 @@ const ReceptionistDash = () => {
             loading={reservationsLoading}
             onUpdate={handleReservationUpdate}
             onRemove={handleReservationRemove}
-            onReload={fetchReservations}
+            onReload={fetchDashboard}
             onToast={showReservationToast}
           />
         </section>
@@ -523,7 +459,7 @@ const ReceptionistDash = () => {
           reservations={reservations}
           onClose={closeNewReservation}
           onCreated={handleReservationCreated}
-          onConflict={fetchReservations}
+          onConflict={fetchDashboard}
         />
       )}
     </div>

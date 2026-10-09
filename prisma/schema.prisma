@@ -121,6 +121,8 @@ model Reservation {
   @@index([createdByUserId], map: "reservations_created_by_user_id_fkey")
   @@index([guestId], map: "reservations_guest_id_fkey")
   @@index([hotelId], map: "reservations_hotel_id_fkey")
+  @@index([hotelId, checkInDate])
+  @@index([hotelId, checkOutDate])
   @@map("reservations")
 }
 
@@ -250,5 +252,4 @@ enum PaymentStatus {
   PARTIAL
   PAID
 }
-
 

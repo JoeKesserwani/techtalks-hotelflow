@@ -21,6 +21,9 @@ export interface HousekeepingTask {
   completedAt: string;
   photoUrl?: string;
   photos?: unknown;
+  photoFiles?: {
+    id: string;
+  }[];
 }
 
 export type ReviewAction = "approve" | "reject";
@@ -53,13 +56,10 @@ export interface HousekeepingReviewProps {
 
   /** Limit the number of rows rendered (renders all when omitted). */
   maxItems?: number;
-
-  /** Show the Comment button on each row. Defaults to true. */
-  showComment?: boolean;
 }
 
-type ModalType = "photo" | "comment" | "reject" | "approve" | "success" | null;
-type ResultType = "approved" | "rejected" | "comment" | null;
+type ModalType = "photo" | "reject" | "approve" | "success" | null;
+type ResultType = "approved" | "rejected" | null;
 
 const REVIEW_ENDPOINT = (taskId: string) =>
   `/api/v1/housekeeping/tasks/${taskId}/review`;
@@ -86,12 +86,22 @@ function hk(localKey: string, globalName: string) {
   return local ? `${local} ${globalName}` : globalName;
 }
 
-function getTaskPhotoUrl(task: HousekeepingTask) {
-  if (task.photoUrl) return task.photoUrl;
-  if (!Array.isArray(task.photos)) return undefined;
-  return task.photos.find(
-    (photo): photo is string => typeof photo === "string",
+function getTaskPhotoUrls(task: HousekeepingTask) {
+  const photoFileUrls = (task.photoFiles ?? []).map(
+    ({ id }) =>
+      `/api/v1/housekeeping/tasks/${encodeURIComponent(task.id)}/photos/${encodeURIComponent(id)}`,
   );
+  const legacyPhotoUrls = Array.isArray(task.photos)
+    ? task.photos.filter((photo): photo is string => typeof photo === "string")
+    : [];
+
+  return [
+    ...new Set(
+      [...photoFileUrls, task.photoUrl, ...legacyPhotoUrls].filter(
+        (url): url is string => Boolean(url),
+      ),
+    ),
+  ];
 }
 
 // --------------------------------------------------
@@ -106,7 +116,6 @@ const HousekeepingReview = ({
   viewAllHref = "/Pages/HousekeepingReview",
   emptyMessage = "No housekeeping tasks awaiting approval.",
   maxItems,
-  showComment = true,
 }: HousekeepingReviewProps) => {
   const router = useRouter();
 
@@ -115,9 +124,14 @@ const HousekeepingReview = ({
 
   const [activeModal, setActiveModal] = React.useState<ModalType>(null);
   const [resultType, setResultType] = React.useState<ResultType>(null);
+  const [selectedPhotoIndex, setSelectedPhotoIndex] = React.useState(0);
+  const [photoLoadState, setPhotoLoadState] = React.useState<
+    "loading" | "loaded" | "error"
+  >("loading");
+  const [photoZoom, setPhotoZoom] = React.useState(1);
+  const [photoZoomOrigin, setPhotoZoomOrigin] = React.useState("50% 50%");
 
   const [commentText, setCommentText] = React.useState("");
-  const [rejectionReason, setRejectionReason] = React.useState("");
 
   // Prevent duplicate approve/reject requests
   const [isUpdatingTask, setIsUpdatingTask] = React.useState(false);
@@ -144,9 +158,10 @@ const HousekeepingReview = ({
 
   const visibleTasks =
     typeof maxItems === "number" ? tasks.slice(0, maxItems) : tasks;
-  const selectedPhotoUrl = selectedTask
-    ? getTaskPhotoUrl(selectedTask)
-    : undefined;
+  const selectedPhotoUrls = selectedTask
+    ? getTaskPhotoUrls(selectedTask)
+    : [];
+  const selectedPhotoUrl = selectedPhotoUrls[selectedPhotoIndex];
 
   // --------------------------------------------------
   // API HELPER (with access-token refresh on 401)
@@ -188,45 +203,16 @@ const HousekeepingReview = ({
   };
 
   // --------------------------------------------------
-  // APPROVE
-  //   Backend: Task IN_REVIEW -> DONE, Room IN_REVIEW -> AVAILABLE
+  // REVIEW
   // --------------------------------------------------
 
-  const handleApprove = async () => {
+  const handleReview = async (action: ReviewAction) => {
     if (!selectedTask || isUpdatingTask) return;
 
-    setIsUpdatingTask(true);
-    setTaskActionError(null);
+    const comment = commentText.trim();
 
-    try {
-      await sendReview(selectedTask.id, { action: "approve" });
-      await onTaskReviewed?.(selectedTask, "approve");
-
-      setResultType("approved");
-      setActiveModal("success");
-    } catch (error) {
-      setTaskActionError(
-        error instanceof Error
-          ? error.message
-          : "Unable to approve housekeeping task.",
-      );
-    } finally {
-      setIsUpdatingTask(false);
-    }
-  };
-
-  // --------------------------------------------------
-  // REJECT
-  //   Backend: Task IN_REVIEW -> PENDING, Room IN_REVIEW -> NEEDS_CLEANING
-  // --------------------------------------------------
-
-  const handleReject = async () => {
-    if (!selectedTask || isUpdatingTask) return;
-
-    const reason = rejectionReason.trim();
-
-    if (!reason) {
-      setTaskActionError("A reason is required before rejecting a task.");
+    if (action === "reject" && !comment) {
+      setTaskActionError("A comment is required before rejecting a task.");
       return;
     }
 
@@ -235,35 +221,22 @@ const HousekeepingReview = ({
 
     try {
       await sendReview(selectedTask.id, {
-        action: "reject",
-        comment: reason,
+        action,
+        comment: comment || undefined,
       });
-      await onTaskReviewed?.(selectedTask, "reject");
+      await onTaskReviewed?.(selectedTask, action);
 
-      setResultType("rejected");
+      setResultType(action === "approve" ? "approved" : "rejected");
       setActiveModal("success");
     } catch (error) {
       setTaskActionError(
         error instanceof Error
           ? error.message
-          : "Unable to reject housekeeping task.",
+          : `Unable to ${action} housekeeping task.`,
       );
     } finally {
       setIsUpdatingTask(false);
     }
-  };
-
-  // --------------------------------------------------
-  // SEND COMMENT
-  // --------------------------------------------------
-
-  const handleSendComment = async () => {
-    if (!selectedTask) return;
-
-    // Optional: connect this to a comments API later.
-
-    setResultType("comment");
-    setActiveModal("success");
   };
 
   // --------------------------------------------------
@@ -276,16 +249,48 @@ const HousekeepingReview = ({
     setActiveModal(null);
     setSelectedTask(null);
     setResultType(null);
+    setSelectedPhotoIndex(0);
+    setPhotoZoom(1);
+    setPhotoZoomOrigin("50% 50%");
     setCommentText("");
-    setRejectionReason("");
     setTaskActionError(null);
   };
 
-  const openModal = (task: HousekeepingTask, modal: ModalType) => {
+  const openModal = (
+    task: HousekeepingTask,
+    modal: ModalType,
+    photoIndex = 0,
+  ) => {
     setSelectedTask(task);
     setTaskActionError(null);
-    if (modal === "reject") setRejectionReason("");
+    if (modal === "photo") {
+      setSelectedPhotoIndex(photoIndex);
+      setPhotoLoadState("loading");
+      setPhotoZoom(1);
+      setPhotoZoomOrigin("50% 50%");
+    }
+    if (modal === "reject" || modal === "approve") setCommentText("");
     setActiveModal(modal);
+  };
+
+  const togglePhotoZoomAt = (x: number, y: number) => {
+    if (photoZoom >= 3) {
+      setPhotoZoom(1);
+      setPhotoZoomOrigin("50% 50%");
+      return;
+    }
+
+    if (photoZoom === 1) {
+      setPhotoZoomOrigin(`${x}% ${y}%`);
+    }
+    setPhotoZoom((zoom) => Math.min(3, zoom + 1));
+  };
+
+  const togglePhotoZoom = (event: React.MouseEvent<HTMLImageElement>) => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - bounds.left) / bounds.width) * 100;
+    const y = ((event.clientY - bounds.top) / bounds.height) * 100;
+    togglePhotoZoomAt(x, y);
   };
 
   const modal =
@@ -313,7 +318,6 @@ const HousekeepingReview = ({
           {activeModal !== "success" && (
             <h2 className={hk("modalTitle", "hk-modalTitle")}>
               {activeModal === "photo" && "Housekeeping Photo"}
-              {activeModal === "comment" && "Add Comment"}
               {activeModal === "reject" && "Reject Task"}
               {activeModal === "approve" && "Approve Task"}
             </h2>
@@ -328,54 +332,135 @@ const HousekeepingReview = ({
 
           {/* PHOTO MODAL */}
           {activeModal === "photo" && (
-            <div className={hk("modalPhoto", "hk-modalPhoto")}>
-              {selectedPhotoUrl ? (
-                <img
-                  className={hk("modalImg", "hk-modalImg")}
-                  src={selectedPhotoUrl}
-                  alt={`Room ${selectedTask.room?.roomNumber}`}
-                />
-              ) : (
-                "Photo preview"
-              )}
-            </div>
-          )}
-
-          {/* COMMENT MODAL */}
-          {activeModal === "comment" && (
             <>
-              <textarea
-                className={hk("modalTextarea", "hk-modalTextarea")}
-                placeholder="Write your comment..."
-                value={commentText}
-                onChange={(e) => setCommentText(e.target.value)}
-              />
-
-              <button
-                type="button"
-                className={hk("sendCommentButton", "hk-sendCommentButton")}
-                onClick={handleSendComment}
-              >
-                Send Comment
-              </button>
+              <div className={hk("modalPhoto", "hk-modalPhoto")}>
+                {selectedPhotoUrl && photoLoadState === "loading" && (
+                  <div
+                    className={hk("photoLoading", "hk-photoLoading")}
+                    role="status"
+                    aria-label="Loading photo"
+                  >
+                    <span
+                      className={hk("photoSpinner", "hk-photoSpinner")}
+                      aria-hidden="true"
+                    />
+                    <span>Loading photo...</span>
+                  </div>
+                )}
+                {selectedPhotoUrl ? (
+                  <img
+                    className={`${hk("modalImg", "hk-modalImg")} ${
+                      photoZoom >= 3
+                        ? hk("zoomedPhoto", "hk-zoomedPhoto")
+                        : ""
+                    }`}
+                    src={selectedPhotoUrl}
+                    alt={`Housekeeping photo ${selectedPhotoIndex + 1} of ${selectedPhotoUrls.length} for room ${selectedTask.room?.roomNumber}`}
+                    onLoad={() => setPhotoLoadState("loaded")}
+                    onError={() => setPhotoLoadState("error")}
+                    onClick={togglePhotoZoom}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        togglePhotoZoomAt(50, 50);
+                      }
+                    }}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={
+                      photoZoom >= 3
+                        ? "Reset photo zoom"
+                        : "Zoom in at pointer location"
+                    }
+                    style={{
+                      visibility: photoLoadState === "loaded" ? "visible" : "hidden",
+                      transform: `scale(${photoZoom})`,
+                      transformOrigin: photoZoomOrigin,
+                    }}
+                  />
+                ) : (
+                  "Photo preview"
+                )}
+                {selectedPhotoUrl && photoLoadState === "error" && (
+                  <span role="alert">Unable to load photo.</span>
+                )}
+              </div>
+              {selectedPhotoUrls.length > 1 && (
+                <div className={hk("photoControls", "hk-photoControls")}>
+                  <button
+                    type="button"
+                    className={hk("photoNavButton", "hk-photoNavButton")}
+                    onClick={() =>
+                      {
+                        setPhotoLoadState("loading");
+                        setPhotoZoom(1);
+                        setPhotoZoomOrigin("50% 50%");
+                        setSelectedPhotoIndex(
+                          (index) =>
+                            (index - 1 + selectedPhotoUrls.length) %
+                            selectedPhotoUrls.length,
+                        );
+                      }
+                    }
+                    aria-label="Previous photo"
+                  >
+                    Previous
+                  </button>
+                  <span>
+                    {selectedPhotoIndex + 1} / {selectedPhotoUrls.length}
+                  </span>
+                  <button
+                    type="button"
+                    className={hk("photoNavButton", "hk-photoNavButton")}
+                    onClick={() =>
+                      {
+                        setPhotoLoadState("loading");
+                        setPhotoZoom(1);
+                        setPhotoZoomOrigin("50% 50%");
+                        setSelectedPhotoIndex(
+                          (index) => (index + 1) % selectedPhotoUrls.length,
+                        );
+                      }
+                    }
+                    aria-label="Next photo"
+                  >
+                    Next
+                  </button>
+                </div>
+              )}
             </>
           )}
 
-          {/* REJECT MODAL */}
-          {activeModal === "reject" && (
+          {/* REVIEW MODAL */}
+          {(activeModal === "reject" || activeModal === "approve") && (
             <>
               <p className={hk("modalText", "hk-modalText")}>
-                Are you sure you want to reject this housekeeping task?
+                {activeModal === "reject"
+                  ? "Are you sure you want to reject this housekeeping task?"
+                  : "Are you sure you want to approve this housekeeping task?"}
               </p>
 
+              <label
+                className={hk("modalCommentLabel", "hk-modalCommentLabel")}
+                htmlFor={`hk-review-comment-${selectedTask.id}`}
+              >
+                Comment {activeModal === "reject" ? "(required)" : "(optional)"}
+              </label>
               <textarea
                 className={hk("modalTextarea", "hk-modalTextarea")}
-                placeholder="Reason for rejection..."
-                value={rejectionReason}
+                id={`hk-review-comment-${selectedTask.id}`}
+                placeholder={
+                  activeModal === "reject"
+                    ? "Explain what needs to be corrected..."
+                    : "Leave a note for the housekeeper..."
+                }
+                value={commentText}
                 onChange={(e) => {
-                  setRejectionReason(e.target.value);
+                  setCommentText(e.target.value);
                   setTaskActionError(null);
                 }}
+                required={activeModal === "reject"}
+                maxLength={250}
                 disabled={isUpdatingTask}
               />
 
@@ -387,35 +472,23 @@ const HousekeepingReview = ({
 
               <button
                 type="button"
-                className={hk("modalRejectButton", "hk-modalRejectButton")}
-                onClick={handleReject}
+                className={
+                  activeModal === "reject"
+                    ? hk("modalRejectButton", "hk-modalRejectButton")
+                    : hk("modalApproveButton", "hk-modalApproveButton")
+                }
+                onClick={() =>
+                  handleReview(activeModal === "reject" ? "reject" : "approve")
+                }
                 disabled={isUpdatingTask}
               >
-                {isUpdatingTask ? "Rejecting..." : "Reject Task"}
-              </button>
-            </>
-          )}
-
-          {/* APPROVE MODAL */}
-          {activeModal === "approve" && (
-            <>
-              <p className={hk("modalText", "hk-modalText")}>
-                Are you sure you want to approve this housekeeping task?
-              </p>
-
-              {taskActionError && (
-                <p className={hk("errorMessage", "hk-errorMessage")}>
-                  {taskActionError}
-                </p>
-              )}
-
-              <button
-                type="button"
-                className={hk("modalApproveButton", "hk-modalApproveButton")}
-                onClick={handleApprove}
-                disabled={isUpdatingTask}
-              >
-                {isUpdatingTask ? "Approving..." : "Approve Task"}
+                {isUpdatingTask
+                  ? activeModal === "reject"
+                    ? "Rejecting..."
+                    : "Approving..."
+                  : activeModal === "reject"
+                    ? "Reject Task"
+                    : "Approve Task"}
               </button>
             </>
           )}
@@ -427,9 +500,7 @@ const HousekeepingReview = ({
                 className={`${hk("resultIcon", "hk-resultIcon")} ${
                   resultType === "approved"
                     ? hk("approvedIcon", "hk-approvedIcon")
-                    : resultType === "rejected"
-                      ? hk("rejectedIcon", "hk-rejectedIcon")
-                      : hk("commentIcon", "hk-commentIcon")
+                    : hk("rejectedIcon", "hk-rejectedIcon")
                 }`}
               >
                 {resultType === "rejected" ? "×" : "✓"}
@@ -439,24 +510,18 @@ const HousekeepingReview = ({
                 className={`${hk("resultTitle", "hk-resultTitle")} ${
                   resultType === "approved"
                     ? hk("approvedTitle", "hk-approvedTitle")
-                    : resultType === "rejected"
-                      ? hk("rejectedTitle", "hk-rejectedTitle")
-                      : hk("commentTitle", "hk-commentTitle")
+                    : hk("rejectedTitle", "hk-rejectedTitle")
                 }`}
               >
                 {resultType === "approved"
                   ? "Task Approved"
-                  : resultType === "rejected"
-                    ? "Task Rejected"
-                    : "Comment Sent"}
+                  : "Task Rejected"}
               </h3>
 
               <p className={hk("modalSuccessText", "hk-modalSuccessText")}>
                 {resultType === "approved"
                   ? "The housekeeping task has been approved."
-                  : resultType === "rejected"
-                    ? "The housekeeping task has been rejected."
-                    : "Your comment has been sent to the cleaner."}
+                  : "The housekeeping task has been rejected."}
               </p>
 
               <button
@@ -503,31 +568,48 @@ const HousekeepingReview = ({
           </div>
         ) : (
           visibleTasks.map((task) => {
-            const photoUrl = getTaskPhotoUrl(task);
+            const photoUrls = getTaskPhotoUrls(task);
 
             return (
               <article
                 key={task.id}
                 className={hk("housekeepingCard", "hk-housekeepingCard")}
               >
-                <button
-                  type="button"
-                  className={hk("photo", "hk-photo")}
-                  onClick={() => openModal(task, "photo")}
-                  aria-label={`View housekeeping photo for room ${task.room?.roomNumber ?? ""}`}
-                >
-                  {photoUrl ? (
-                    <img
-                      className={hk("photoImg", "hk-photoImg")}
-                      src={photoUrl}
-                      alt=""
-                    />
-                  ) : (
+                {photoUrls.length > 0 ? (
+                  <div
+                    className={`${hk("photoStrip", "hk-photoStrip")} ${
+                      photoUrls.length === 1
+                        ? hk("singlePhotoStrip", "hk-singlePhotoStrip")
+                        : ""
+                    }`}
+                    role="group"
+                    aria-label={`${photoUrls.length} housekeeping photo${photoUrls.length === 1 ? "" : "s"} for room ${task.room?.roomNumber ?? ""}`}
+                  >
+                    {photoUrls.map((url, index) => (
+                      <button
+                        key={url}
+                        type="button"
+                        className={hk("photo", "hk-photo")}
+                        onClick={() => openModal(task, "photo", index)}
+                        aria-label={`View housekeeping photo ${index + 1} of ${photoUrls.length} for room ${task.room?.roomNumber ?? ""}`}
+                      >
+                        <img
+                          className={hk("photoImg", "hk-photoImg")}
+                          src={url}
+                          alt=""
+                          loading="lazy"
+                          decoding="async"
+                        />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className={hk("photo", "hk-photo")}>
                     <span className={hk("photoFallback", "hk-photoFallback")}>
                       Photo
                     </span>
-                  )}
-                </button>
+                  </div>
+                )}
 
                 <div className={hk("roomInfo", "hk-roomInfo")}>
                   <h3 className={hk("roomTitle", "hk-roomTitle")}>
@@ -549,16 +631,6 @@ const HousekeepingReview = ({
                 </div>
 
                 <div className={hk("actions", "hk-actions")}>
-                  {showComment && (
-                    <button
-                      type="button"
-                      className={hk("commentButton", "hk-comment")}
-                      onClick={() => openModal(task, "comment")}
-                    >
-                      Comment
-                    </button>
-                  )}
-
                   <button
                     type="button"
                     className={hk("rejectButton", "hk-reject")}

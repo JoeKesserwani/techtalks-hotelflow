@@ -155,33 +155,29 @@ export async function POST(req: Request) {
             },
           });
 
+        await createNotification(
+          {
+            hotelId: user.hotelId,
+            userId: assignedToUserId,
+            title: 'New housekeeping task',
+            message: `You have been assigned to clean Room ${room.roomNumber}.`,
+            type: 'TASK_ASSIGNED',
+            taskId: created.id,
+          },
+          tx
+        );
         await writeAuditLog(tx, {
           hotelId: user.hotelId,
-          roomId,
-          assignedToUserId,
-          notes,
-          status: 'PENDING',
-        },
-      });
-      await createNotification({
-        hotelId: user.hotelId,
-        userId: assignedToUserId,
-        title: "New housekeeping task",
-        message: `You have been assigned to clean Room ${room.roomNumber}.`,
-        type: "TASK_ASSIGNED",
-        taskId: created.id,
-      }, tx);
-      await writeAuditLog(tx, {
-        hotelId: user.hotelId,
-        userId: user.userId,
-        action: 'HOUSEKEEPING_TASK_CREATED',
-        entityType: 'housekeeping_task',
-        metadata: { taskId: created.id, roomId, assignedToUserId },
-      });
-        
-      return created;
-    });
-    
+          userId: user.userId,
+          action: 'HOUSEKEEPING_TASK_CREATED',
+          entityType: 'housekeeping_task',
+          metadata: { taskId: created.id, roomId, assignedToUserId },
+        });
+
+        return created;
+      }
+    );
+
     return Response.json(task, { status: 201 });
   } catch (err) {
     return handleRouteError(err);
