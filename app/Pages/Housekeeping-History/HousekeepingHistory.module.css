@@ -100,14 +100,16 @@
 }
 
 /* =========================================================
-   HISTORY CONTENT
+   HISTORY CONTENT — SCROLLABLE AREA
 ========================================================= */
 
 .historyContent {
   min-height: 0;
-  flex: 1;
+  min-width: 0;
+  flex: 1 1 0;
   overflow-y: auto;
-  padding-right: 8px;
+  overflow-x: hidden;
+  padding: 2px 8px 0 0;
   scrollbar-width: thin;
   scrollbar-color: var(--color-border) transparent;
 }
@@ -759,6 +761,85 @@
   border-color: var(--color-border-input);
 }
 
+
+/* =========================================
+   STICKY HISTORY TABS
+========================================= */
+
+/* =========================================================
+   HISTORY NAVIGATION TABS
+========================================================= */
+
+.historyTabs {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  gap: 0;
+  width: 100%;
+  margin: 0 0 20px;
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg);
+}
+
+.historyTab {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 20px;
+  border: none;
+  border-radius: 0;
+  background: transparent;
+  color: var(--color-muted);
+  font: inherit;
+  font-size: 14px;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.historyTab:hover {
+  color: var(--color-primary);
+}
+
+.activeHistoryTab {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+.activeHistoryTab::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 3px;
+  background: var(--color-primary);
+}
+
+.tabCount {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 22px;
+  height: 22px;
+  padding: 0 6px;
+  border-radius: 12px;
+  background: rgba(128, 128, 128, 0.12);
+  color: inherit;
+  font-size: 12px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.historyTab:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -3px;
+}
+
 /* =========================================================
    DETAIL SECTIONS
 ========================================================= */
@@ -1188,9 +1269,18 @@
 ========================================================= */
 
 @media (max-width: 768px) {
-  .container {
-    height: auto;
+    .container {
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
     padding: 80px 24px 32px;
+  }
+
+  .historyContent {
+    flex: 1 1 0;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior-y: contain;
   }
 
   .header {
@@ -1396,6 +1486,15 @@
 
   .photoGrid {
     grid-template-columns: 1fr;
+  }
+   .historyTabs {
+    margin-bottom: 16px;
+  }
+
+  .historyTab {
+    gap: 6px;
+    padding: 13px 12px;
+    font-size: 13px;
   }
 }
 
