@@ -3,60 +3,14 @@
 import React from "react";
 import styles from "./AdminDash.module.css";
 import { useAuth } from "../Auth/AuthProvider";
-import { useRouter } from "next/navigation";
 import Header from "../Header/Header";
 import HousekeepingReview, {
   HousekeepingTask,
 } from "../Housekeeping/housekeepingApproval";
-
-type RoomStatus =
-  | "AVAILABLE"
-  | "RESERVED"
-  | "OCCUPIED"
-  | "IN_REVIEW"
-  | "NEEDS_CLEANING"
-  | "CLEANING"
-  | "OUT_OF_SERVICE";
-
-interface Room {
-  id: string;
-  roomNumber: string;
-  roomType: string;
-  updatedAt: string;
-  status: RoomStatus;
-}
-
-const getRoomStatusLabel = (status: RoomStatus) => {
-  switch (status) {
-    case "AVAILABLE":
-      return "Available";
-
-    case "RESERVED":
-      return "Reserved";
-
-    case "OCCUPIED":
-      return "Occupied";
-
-    case "IN_REVIEW":
-      return "In review";
-
-    case "NEEDS_CLEANING":
-      return "Needs cleaning";
-
-    case "CLEANING":
-      return "Cleaning in progress";
-
-    case "OUT_OF_SERVICE":
-      return "Out of service";
-
-    default:
-      return "Unknown";
-  }
-};
+import { DashboardRoomAvailability } from "./DashboardRoomAvailability";
 
 const AdminDash = () => {
   const { user } = useAuth();
-  const router = useRouter();
 
   // --------------------------------------------------
   // DASHBOARD STATISTICS
@@ -68,12 +22,6 @@ const AdminDash = () => {
   const [awaitingApproval, setAwaitingApproval] = React.useState<number | null>(
     null,
   );
-
-  // --------------------------------------------------
-  // ROOMS
-  // --------------------------------------------------
-
-  const [rooms, setRooms] = React.useState<Room[]>([]);
 
   // --------------------------------------------------
   // HOUSEKEEPING REVIEW (list only — UI/actions live in <HousekeepingReview />)
@@ -102,14 +50,13 @@ const AdminDash = () => {
       setDepartures(data.departures ?? null);
       setAwaitingApproval(data.awaitingApproval ?? null);
       setHousekeepingReview(data.housekeepingReview ?? []);
-      setRooms(data.rooms ?? []);
     } catch (error) {
       console.error("Failed to load dashboard stats:", error);
     }
   }, []);
 
   React.useEffect(() => {
-    fetchStats();
+    void Promise.resolve().then(fetchStats);
   }, [fetchStats]);
 
   // --------------------------------------------------
@@ -202,109 +149,7 @@ const AdminDash = () => {
         ================================================== */}
 
         <section className={styles.roomStatusSection}>
-          <div className={styles.sectionHeader}>
-            <h2>Room Status — All floors</h2>
-
-            <button
-              className={styles.viewAll}
-              onClick={() => router.push("/Pages/Rooms")}
-            >
-              View all
-            </button>
-          </div>
-
-          <div className={styles.roomStatusGrid}>
-            {rooms.slice(0, 10).map((room) => {
-              let statusClass = styles.available;
-
-              switch (room.status) {
-                case "RESERVED":
-                  statusClass = styles.reserved;
-                  break;
-
-                case "OCCUPIED":
-                  statusClass = styles.occupied;
-                  break;
-
-                case "IN_REVIEW":
-                  statusClass = styles.inReview;
-                  break;
-
-                case "NEEDS_CLEANING":
-                  statusClass = styles.needsCleaning;
-                  break;
-
-                case "CLEANING":
-                  statusClass = styles.cleaning;
-                  break;
-
-                case "OUT_OF_SERVICE":
-                  statusClass = styles.outOfService;
-                  break;
-
-                case "AVAILABLE":
-                default:
-                  statusClass = styles.available;
-                  break;
-              }
-
-              return (
-                <div
-                  key={room.id}
-                  className={`${styles.roomStatusCard} ${statusClass}`}
-                >
-                  <strong>{room.roomNumber}</strong>
-
-                  <span>{getRoomStatusLabel(room.status)}</span>
-                </div>
-              );
-            })}
-          </div>
-
-          {/* ==================================================
-              ROOM STATUS LEGEND
-          ================================================== */}
-
-          <div className={styles.roomStatusLegend}>
-            <div>
-              <span className={`${styles.legendDot} ${styles.availableDot}`} />
-              Available
-            </div>
-
-            <div>
-              <span className={`${styles.legendDot} ${styles.reservedDot}`} />
-              Reserved
-            </div>
-
-            <div>
-              <span className={`${styles.legendDot} ${styles.occupiedDot}`} />
-              Occupied
-            </div>
-
-            <div>
-              <span className={`${styles.legendDot} ${styles.cleaningDot}`} />
-              Needs cleaning
-            </div>
-
-            <div>
-              <span className={`${styles.legendDot} ${styles.approvalDot}`} />
-              In review
-            </div>
-
-            <div>
-              <span
-                className={`${styles.legendDot} ${styles.cleaningProgressDot}`}
-              />
-              Cleaning
-            </div>
-
-            <div>
-              <span
-                className={`${styles.legendDot} ${styles.outOfServiceDot}`}
-              />
-              Out of service
-            </div>
-          </div>
+          <DashboardRoomAvailability onReservationCreated={fetchStats} />
         </section>
       </main>
     </div>

@@ -25,6 +25,7 @@ export function NewReservationDialog({
   rooms,
   reservations,
   initialRoomId,
+  initialGuestId,
   onClose,
   onCreated,
   onConflict,
@@ -34,13 +35,14 @@ export function NewReservationDialog({
   rooms: Room[];
   reservations: Reservation[];
   initialRoomId?: string;
+  initialGuestId?: string;
   onClose: () => void;
   onCreated: (r: Reservation) => void;
   onConflict: () => void;
 }) {
   const [guests, setGuests] = useState<Guest[] | null>(null);
   const [q, setQ] = useState("");
-  const [guestId, setGuestId] = useState("");
+  const [guestId, setGuestId] = useState(initialGuestId ?? "");
   const [inD, setIn] = useState(defaultDate < today ? today : defaultDate); // takes the page's date
   const [outD, setOut] = useState(
     shiftDate(defaultDate < today ? today : defaultDate, 1),

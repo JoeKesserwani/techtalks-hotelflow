@@ -34,6 +34,8 @@
 
 .searchInput,
 .select {
+  box-sizing: border-box;
+  max-width: 100%;
   height: 40px;
   padding: 0 12px;
   font: inherit;
@@ -273,6 +275,7 @@
   font-size: 12.5px;
   line-height: 1.45;
   color: var(--color-muted);
+  overflow-wrap: anywhere;
 }
 
 .tag {
@@ -314,18 +317,110 @@
 @media (max-width: 720px) {
   .page {
     padding: 20px 16px 32px;
+    min-width: 0;
   }
   .header h1 {
     font-size: 24px;
   }
   .toolbar > * {
     flex: 1 1 100%;
+    min-width: 0;
+  }
+  .searchInput,
+  .select {
+    width: 100%;
+  }
+  .resetButton {
+    flex: 0 0 auto;
+    width: auto;
+    align-self: flex-start;
+  }
+  .tableScroll {
+    overflow: visible;
+  }
+  .table {
+    min-width: 0;
+    table-layout: fixed;
+  }
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
+  }
+  .table tbody {
+    display: block;
+  }
+  .table tbody tr:not(.dayRow) {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 6px 0;
+    border-bottom: 1px solid var(--color-border-soft);
+  }
+  .table tbody td {
+    display: grid;
+    grid-template-columns: 76px minmax(0, 1fr);
+    align-items: start;
+    gap: 10px;
+    min-width: 0;
+    padding: 8px 12px;
+    border-bottom: 0;
+  }
+  .table tbody td::before {
+    content: attr(data-label);
+    padding-top: 2px;
+    font-size: 10px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+  .dayRow,
+  .dayRow th {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+  }
+  .staff,
+  .staff > div,
+  .activity,
+  .activity > div {
+    min-width: 0;
   }
   .activity {
     flex-direction: column;
     gap: 6px;
   }
+  .activity > div {
+    width: 100%;
+  }
   .tag {
     min-width: 0;
+    max-width: 100%;
+    white-space: normal;
+  }
+  .staffName,
+  .summary {
+    overflow-wrap: anywhere;
+  }
+}
+
+@media (max-width: 400px) {
+  .page {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+  .table tbody td {
+    grid-template-columns: 66px minmax(0, 1fr);
+    gap: 8px;
+    padding-right: 10px;
+    padding-left: 10px;
+  }
+  .staff {
+    gap: 8px;
   }
 }
