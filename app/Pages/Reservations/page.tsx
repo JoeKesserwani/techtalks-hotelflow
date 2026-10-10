@@ -1,6 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import s from "./page.module.css";
 import t from "../../../components/Reservations/tokens.module.css";
 import {
@@ -22,6 +24,16 @@ import { RoomAvailabilityChart } from "../../../components/Reservations/RoomAvai
 import Header from "../../../components/Header/Header";
 
 export default function FrontDeskPage() {
+  return (
+    <Suspense fallback={null}>
+      <FrontDeskContent />
+    </Suspense>
+  );
+}
+
+function FrontDeskContent() {
+  const searchParams = useSearchParams();
+  const initialGuestId = searchParams.get("guestId") ?? undefined;
   const [today] = useState(todayInHotel);
   const [date, setDate] = useState(today);
   const [items, setItems] = useState<Reservation[] | null>(null);
@@ -29,7 +41,23 @@ export default function FrontDeskPage() {
   const [error, setError] = useState<string | null>(null);
   const [expired, setExpired] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
-  const [booking, setBooking] = useState<{ roomId?: string } | null>(null);
+  const [booking, setBooking] = useState<{
+    roomId?: string;
+    guestId?: string;
+  } | null>(() => (initialGuestId ? { guestId: initialGuestId } : null));
+
+  useEffect(() => {
+    const url = new URL(window.location.href);
+    if (!initialGuestId || url.searchParams.get("guestId") !== initialGuestId)
+      return;
+
+    url.searchParams.delete("guestId");
+    window.history.replaceState(
+      window.history.state,
+      "",
+      `${url.pathname}${url.search}${url.hash}`,
+    );
+  }, [initialGuestId]);
 
   /* List endpoints have no date filter: refetch on every date change and on focus, filter client-side. */
   const load = useCallback(async () => {
@@ -127,7 +155,7 @@ export default function FrontDeskPage() {
         <div className={s.error} role="alert">
           <span>{error}</span>
           {expired ? (
-            <a href="/">Sign in</a>
+            <Link href="/">Sign in</Link>
           ) : (
             <button onClick={load}>Retry</button>
           )}
@@ -180,6 +208,7 @@ export default function FrontDeskPage() {
           rooms={rooms}
           reservations={items ?? []}
           initialRoomId={booking.roomId}
+          initialGuestId={booking.guestId}
           onClose={() => setBooking(null)}
           onConflict={load}
           onCreated={(r) => {
