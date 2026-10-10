@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState,useRef} from "react";
 import styles from "./ReceptionistDash.module.css";
 import { useAuth } from "../Auth/AuthProvider";
 import Header from "../Header/Header";
@@ -130,12 +130,9 @@ const ReceptionistDash = () => {
   }).format(new Date());
 
   const fetchDashboard = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError("");
-
-  const fetchDashboard = () => {
-    if (dashboardRequest.current) return dashboardRequest.current;
+    if (dashboardRequest.current) {
+      return dashboardRequest.current;
+    }
 
     const request = (async () => {
       try {
@@ -167,19 +164,12 @@ const ReceptionistDash = () => {
       } finally {
         setLoading(false);
         setReservationsLoading(false);
+        dashboardRequest.current = null;
       }
     })();
 
-      setDashboard(data);
-    } catch (err) {
-      console.error("Receptionist dashboard error:", err);
-
-      setError(
-        err instanceof Error ? err.message : "Unable to load dashboard data.",
-      );
-    } finally {
-      setLoading(false);
-    }
+    dashboardRequest.current = request;
+    await request;
   }, []);
 
   const fetchReservations = useCallback(async () => {
