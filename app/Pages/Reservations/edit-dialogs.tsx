@@ -52,6 +52,7 @@ export function EditReservationDialog({
   onClose,
   onSaved,
   onConflict,
+  onFailure,
 }: {
   r: Reservation;
   today: string;
@@ -60,6 +61,7 @@ export function EditReservationDialog({
   onClose: () => void;
   onSaved: (updated: Reservation) => void;
   onConflict: () => void;
+  onFailure?: (message: string) => void;
 }) {
   const inHouse = r.status === "CHECKED_IN";
   const curIn = dayOnly(r.checkInDate);
@@ -191,7 +193,9 @@ export function EditReservationDialog({
         }),
       );
     } catch (e) {
-      setErr((e as Error).message);
+      const message = e instanceof Error ? e.message : "Please try again.";
+      setErr(message);
+      onFailure?.(message);
       onConflict(); // refresh so the lists show what changed under us
     } finally {
       setSaving(false);

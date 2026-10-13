@@ -1,12 +1,16 @@
 "use client";
 
-import React, { useCallback, useEffect, useState,useRef} from "react";
+import React, { useCallback, useEffect, useState, useRef } from "react";
 import styles from "./ReceptionistDash.module.css";
 import { useAuth } from "../Auth/AuthProvider";
 import Header from "../Header/Header";
 import { ReservationsBoard } from "../Reservations/reservationBoard";
 import { NewReservationDialog } from "../Reservations/newReservationDialog";
 import { RoomAvailabilityChart } from "../Reservations/RoomAvailabilityChart";
+import {
+  ReservationFeedbackPopup,
+  type ReservationFeedback,
+} from "../Reservations/ReservationFeedbackPopup";
 import HousekeepingReview, {
   HousekeepingTask as ReviewHousekeepingTask,
 } from "../Housekeeping/housekeepingApproval";
@@ -104,11 +108,12 @@ const ReceptionistDash = () => {
   const dashboardRequest = useRef<Promise<void> | null>(null);
   const [showNewReservation, setShowNewReservation] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
-  const [reservationToast, setReservationToast] = useState("");
+  const [reservationToast, setReservationToast] =
+    useState<ReservationFeedback | null>(null);
 
-// --------------------------------------------------
-// Dates
-// --------------------------------------------------
+  // --------------------------------------------------
+  // Dates
+  // --------------------------------------------------
 
   const getHotelDate = (date = new Date()) => {
     return new Intl.DateTimeFormat("en-CA", {
@@ -228,13 +233,16 @@ const ReceptionistDash = () => {
     });
   }, [fetchDashboard, fetchReservations]);
 
-  const showReservationToast = (message: string) => {
-    setReservationToast(message);
-    window.setTimeout(() => setReservationToast(""), 2500);
+  const showReservationToast = (feedback: ReservationFeedback) => {
+    setReservationToast(feedback);
   };
+  const dismissReservationToast = useCallback(
+    () => setReservationToast(null),
+    [],
+  );
 
   const openNewReservation = () => {
-    setReservationToast("");
+    setReservationToast(null);
     setSelectedRoomId(null);
     setShowNewReservation(true);
   };
@@ -248,7 +256,10 @@ const ReceptionistDash = () => {
     setReservations((current) => [...current, reservation]);
     setSelectedRoomId(null);
     setShowNewReservation(false);
-    showReservationToast("Reservation created successfully.");
+    showReservationToast({
+      status: "success",
+      title: "Reservation created successfully",
+    });
     fetchDashboard();
   };
 
@@ -456,11 +467,10 @@ const ReceptionistDash = () => {
           onTaskReviewed={handleHousekeepingReviewed}
         />
       </main>
-      {reservationToast && (
-        <div className={styles.sectionCard} role="status">
-          <p>{reservationToast}</p>
-        </div>
-      )}
+      <ReservationFeedbackPopup
+        feedback={reservationToast}
+        onDismiss={dismissReservationToast}
+      />
       {showNewReservation && (
         <NewReservationDialog
           defaultDate={todayDate}
@@ -471,6 +481,13 @@ const ReceptionistDash = () => {
           onClose={closeNewReservation}
           onCreated={handleReservationCreated}
           onConflict={fetchDashboard}
+          onFailure={(message) =>
+            showReservationToast({
+              status: "error",
+              title: "Reservation creation failed",
+              message,
+            })
+          }
         />
       )}
     </div>
