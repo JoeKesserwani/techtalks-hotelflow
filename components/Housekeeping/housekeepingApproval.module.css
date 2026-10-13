@@ -321,19 +321,19 @@
 :global(.hk-approve.hk-approve) {
   appearance: none !important;
   -webkit-appearance: none !important;
-  border: 1px solid #aebba5 !important;
+  border: 1px solid #4f7549 !important;
   border-radius: 6px !important;
-  background: #aebba5 !important;
-  background-color: #aebba5 !important;
+  background: #4f7549 !important;
+  background-color: #4f7549 !important;
   color: #ffffff !important;
   font-family: var(--hk-font-body) !important;
 }
 
 .approveButton:hover,
 :global(.hk-approve.hk-approve):hover {
-  background: #98a991 !important;
-  background-color: #98a991 !important;
-  border-color: #98a991 !important;
+  background: #84ac80 !important;
+  background-color: #81c07a !important;
+  border-color: #558150 !important;
 }
 
 /* =========================
