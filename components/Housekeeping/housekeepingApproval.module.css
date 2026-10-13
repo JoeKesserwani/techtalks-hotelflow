@@ -147,6 +147,24 @@
    PHOTO
 ========================= */
 
+.photoStrip,
+:global(.hk-photoStrip) {
+  width: 260px;
+  max-width: 100%;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  flex: 0 1 260px;
+  scrollbar-width: thin;
+}
+
+.singlePhotoStrip,
+:global(.hk-singlePhotoStrip) {
+  overflow-x: hidden;
+}
+
 .photo,
 :global(.hk-photo.hk-photo) {
   appearance: none !important;
@@ -161,6 +179,7 @@
   display: flex !important;
   align-items: center;
   justify-content: center;
+  position: relative;
   overflow: hidden;
   border: none !important;
   border-radius: 0 !important;
@@ -172,6 +191,23 @@
   font-weight: 500 !important;
   line-height: 1 !important;
   cursor: pointer;
+}
+
+.photoStrip .photo,
+:global(.hk-photoStrip .hk-photo.hk-photo) {
+  width: 110px;
+  height: 90px;
+  min-width: 110px;
+  max-width: none;
+  flex: 0 0 110px;
+  border-radius: 6px !important;
+}
+
+.singlePhotoStrip .photo,
+:global(.hk-singlePhotoStrip .hk-photo.hk-photo) {
+  width: 100%;
+  min-width: 0;
+  flex: 1 0 100%;
 }
 
 .photoImg,
@@ -186,6 +222,42 @@
   pointer-events: none;
 }
 
+.photoLoading,
+:global(.hk-photoLoading) {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #77736c;
+  font-family: var(--hk-font-body);
+  font-size: 12px;
+}
+
+.photoSpinner,
+:global(.hk-photoSpinner) {
+  width: 15px;
+  height: 15px;
+  border: 2px solid #d9d3c8;
+  border-top-color: #77736c;
+  border-radius: 50%;
+  animation: hk-photo-spin 0.7s linear infinite;
+}
+
+@keyframes hk-photo-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .photoSpinner,
+  :global(.hk-photoSpinner) {
+    animation-duration: 1.8s;
+  }
+}
+
 .modalImg,
 :global(.hk-modalImg.hk-modalImg) {
   width: 100% !important;
@@ -195,7 +267,43 @@
   object-fit: contain !important;
   object-position: center;
   display: block !important;
-  pointer-events: none;
+  pointer-events: auto;
+  cursor: zoom-in;
+  transition: transform 0.2s ease;
+}
+
+.zoomedPhoto,
+:global(.hk-zoomedPhoto) {
+  cursor: zoom-out;
+}
+
+.photoControls,
+:global(.hk-photoControls) {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 12px;
+  color: #77736c;
+  font-family: var(--hk-font-body);
+  font-size: 12px;
+}
+
+.photoNavButton,
+:global(.hk-photoNavButton) {
+  padding: 6px 10px;
+  border: 1px solid #ddd8ca;
+  border-radius: 6px;
+  background: transparent;
+  color: #494640;
+  font-family: var(--hk-font-body);
+  font-size: 12px;
+  cursor: pointer;
+}
+
+.photoNavButton:hover,
+:global(.hk-photoNavButton):hover {
+  background: #f4f0e7;
 }
 
 .photoFallback,
@@ -438,12 +546,13 @@
 
 .modalPhoto,
 :global(.hk-modalPhoto) {
+  position: relative;
   width: 100%;
   height: 280px;
   display: flex;
   align-items: center;
   justify-content: center;
-  overflow: hidden;
+  overflow: auto;
   background: #ebe4d4;
   color: #aaa39a;
   font-family: var(--hk-font-body);
@@ -482,6 +591,16 @@
   font-size: 13px !important;
   line-height: 1.5 !important;
   color: #55544e !important;
+}
+
+.modalCommentLabel,
+:global(.hk-modalCommentLabel) {
+  display: block;
+  margin: 0 0 6px;
+  font-family: var(--hk-font-body);
+  font-size: 13px;
+  line-height: 1.5;
+  color: #55544e;
 }
 
 .errorMessage,
