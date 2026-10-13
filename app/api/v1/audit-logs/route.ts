@@ -200,7 +200,10 @@ export async function GET(req: Request) {
             task?.room.roomNumber ??
             room?.roomNumber ??
             asString(meta.roomNumber),
-          guestName: reservation?.guest.fullName ?? guest?.fullName,
+          guestName:
+            reservation?.guest.fullName ??
+            guest?.fullName ??
+            asString(meta.guestName),
           checkInDate: (reservation?.checkInDate ??
             asString(meta.checkInDate)) as Date | string | undefined,
           checkOutDate: (reservation?.checkOutDate ??

@@ -173,6 +173,39 @@ export function describeActivity(item: ActivityLogItem): ActivityDescription {
       };
     }
 
+    case "RESERVATION_DELETED": {
+      const status =
+        typeof meta.previousStatus === "string"
+          ? `Status: ${meta.previousStatus}`
+          : undefined;
+      const total =
+        typeof meta.totalPrice === "string" ||
+        typeof meta.totalPrice === "number"
+          ? `Total: ${meta.totalPrice}`
+          : undefined;
+      const payment =
+        typeof meta.paymentStatus === "string"
+          ? `Payment: ${meta.paymentStatus}`
+          : undefined;
+      const reason =
+        typeof meta.reason === "string" ? `Reason: ${meta.reason}` : undefined;
+
+      return {
+        ...base,
+        summary: `${meta.cancelled === true ? "Cancelled" : "Deleted"} reservation for ${guest} (${room})`,
+        detail: [
+          stayDetail(ctx.checkInDate, ctx.checkOutDate),
+          status,
+          total,
+          payment,
+          reason,
+        ]
+          .filter((value): value is string => Boolean(value))
+          .join(" · "),
+        notable: true,
+      };
+    }
+
     case "RESERVATION_CHECKED_IN":
       return { ...base, summary: `Checked in ${guest} to ${room}` };
 
