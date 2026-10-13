@@ -21,6 +21,7 @@ export type CategoryKey =
   | "room"
   | "housekeeping"
   | "staff"
+  | "hotel"
   | "other";
 
 export type ActivityDescription = {
@@ -34,13 +35,15 @@ export type ActivityDescription = {
   notable: boolean;
 };
 
-const CATEGORY_BY_ENTITY: Record<string, { key: CategoryKey; label: string }> = {
-  reservation: { key: "reservation", label: "Reservation" },
-  guest: { key: "guest", label: "Guest" },
-  room: { key: "room", label: "Room" },
-  housekeeping_task: { key: "housekeeping", label: "Housekeeping" },
-  user: { key: "staff", label: "Staff account" },
-};
+const CATEGORY_BY_ENTITY: Record<string, { key: CategoryKey; label: string }> =
+  {
+    reservation: { key: "reservation", label: "Reservation" },
+    guest: { key: "guest", label: "Guest" },
+    room: { key: "room", label: "Room" },
+    housekeeping_task: { key: "housekeeping", label: "Housekeeping" },
+    user: { key: "staff", label: "Staff account" },
+    hotel: { key: "hotel", label: "Hotel settings" },
+  };
 
 const ROOM_STATUS_LABELS: Record<string, string> = {
   AVAILABLE: "Available",
@@ -68,6 +71,11 @@ const FIELD_LABELS: Record<string, string> = {
   checkInDate: "check-in date",
   checkOutDate: "check-out date",
   assignedToUserId: "assigned staff member",
+  name: "hotel name",
+  address: "hotel address",
+  checkInTime: "check-in time",
+  checkOutTime: "check-out time",
+  currency: "currency",
 };
 
 function asRecord(value: unknown): Record<string, unknown> {
@@ -79,7 +87,8 @@ function asRecord(value: unknown): Record<string, unknown> {
 /** `changes` is an object (rooms, guests, reservations) or a plain list of field names (users). */
 function changedFieldKeys(meta: Record<string, unknown>): string[] {
   const changes = meta.changes;
-  if (Array.isArray(changes)) return changes.filter((c): c is string => typeof c === "string");
+  if (Array.isArray(changes))
+    return changes.filter((c): c is string => typeof c === "string");
   return Object.keys(asRecord(changes));
 }
 
@@ -102,7 +111,7 @@ function stayDetail(checkIn?: string, checkOut?: string): string | undefined {
   if (!from || !to || !checkIn || !checkOut) return undefined;
 
   const nights = Math.round(
-    (new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86_400_000
+    (new Date(checkOut).getTime() - new Date(checkIn).getTime()) / 86_400_000,
   );
   return `${from} → ${to} · ${nights} ${nights === 1 ? "night" : "nights"}`;
 }
@@ -115,14 +124,21 @@ function prettifyAction(action: string): string {
 export function describeActivity(item: ActivityLogItem): ActivityDescription {
   const meta = asRecord(item.metadata);
   const ctx = item.context;
-  const category = CATEGORY_BY_ENTITY[item.entityType] ?? { key: "other" as const, label: "Other" };
+  const category = CATEGORY_BY_ENTITY[item.entityType] ?? {
+    key: "other" as const,
+    label: "Other",
+  };
 
   const room = ctx.roomNumber ? `Room ${ctx.roomNumber}` : "a room";
   const guest = ctx.guestName ?? "a guest";
   const changes = asRecord(meta.changes);
   const fields = changedFieldKeys(meta);
 
-  const base = { category: category.key, categoryLabel: category.label, notable: false };
+  const base = {
+    category: category.key,
+    categoryLabel: category.label,
+    notable: false,
+  };
 
   switch (item.action) {
     // ---- Reservations ----
@@ -134,12 +150,21 @@ export function describeActivity(item: ActivityLogItem): ActivityDescription {
       };
 
     case "RESERVATION_UPDATED": {
-      const status = typeof changes.status === "string" ? changes.status : undefined;
+      const status =
+        typeof changes.status === "string" ? changes.status : undefined;
       if (status === "CANCELLED") {
-        return { ...base, summary: `Cancelled the reservation for ${guest} (${room})`, notable: true };
+        return {
+          ...base,
+          summary: `Cancelled the reservation for ${guest} (${room})`,
+          notable: true,
+        };
       }
       if (status === "NO_SHOW") {
-        return { ...base, summary: `Marked ${guest} as a no-show (${room})`, notable: true };
+        return {
+          ...base,
+          summary: `Marked ${guest} as a no-show (${room})`,
+          notable: true,
+        };
       }
       return {
         ...base,
@@ -159,7 +184,8 @@ export function describeActivity(item: ActivityLogItem): ActivityDescription {
       return { ...base, summary: `Added ${room} to the hotel` };
 
     case "ROOM_UPDATED": {
-      const status = typeof changes.status === "string" ? changes.status : undefined;
+      const status =
+        typeof changes.status === "string" ? changes.status : undefined;
       if (status && fields.length === 1) {
         return {
           ...base,
@@ -189,11 +215,16 @@ export function describeActivity(item: ActivityLogItem): ActivityDescription {
       return { ...base, summary: `Added a new guest: ${guest}` };
 
     case "GUEST_UPDATED":
-      return { ...base, summary: `Updated details for ${guest}`, detail: fieldList(fields) };
+      return {
+        ...base,
+        summary: `Updated details for ${guest}`,
+        detail: fieldList(fields),
+      };
 
     // ---- Staff accounts ----
     case "USER_CREATED": {
-      const role = typeof meta.role === "string" ? meta.role.toLowerCase() : "staff";
+      const role =
+        typeof meta.role === "string" ? meta.role.toLowerCase() : "staff";
       return {
         ...base,
         summary: `Created a ${role} account for ${ctx.targetUserName ?? "a new staff member"}`,
@@ -206,11 +237,21 @@ export function describeActivity(item: ActivityLogItem): ActivityDescription {
       const resetPassword = fields.includes("password");
       return {
         ...base,
-        summary: resetPassword ? `Reset the password for ${name}` : `Updated the account of ${name}`,
+        summary: resetPassword
+          ? `Reset the password for ${name}`
+          : `Updated the account of ${name}`,
         detail: fieldList(fields.filter((f) => f !== "password")),
         notable: true,
       };
     }
+
+    // ---- Hotel settings ----
+    case "HOTEL_SETTINGS_UPDATED":
+      return {
+        ...base,
+        summary: "Updated hotel settings",
+        detail: fieldList(fields),
+      };
 
     // ---- Housekeeping ----
     case "HOUSEKEEPING_TASK_CREATED":
@@ -223,7 +264,9 @@ export function describeActivity(item: ActivityLogItem): ActivityDescription {
       return {
         ...base,
         summary: `Changed who cleans ${room}`,
-        detail: ctx.assigneeName ? `Now assigned to ${ctx.assigneeName}` : fieldList(fields),
+        detail: ctx.assigneeName
+          ? `Now assigned to ${ctx.assigneeName}`
+          : fieldList(fields),
       };
 
     case "HOUSEKEEPING_TASK_STARTED":
@@ -234,7 +277,10 @@ export function describeActivity(item: ActivityLogItem): ActivityDescription {
       return {
         ...base,
         summary: `Finished cleaning ${room}`,
-        detail: photos > 0 ? `${photos} ${photos === 1 ? "photo" : "photos"} attached` : undefined,
+        detail:
+          photos > 0
+            ? `${photos} ${photos === 1 ? "photo" : "photos"} attached`
+            : undefined,
       };
     }
 

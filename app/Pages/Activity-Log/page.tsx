@@ -15,6 +15,7 @@ const CATEGORY_OPTIONS = [
   { value: "room", label: "Rooms" },
   { value: "housekeeping_task", label: "Housekeeping" },
   { value: "user", label: "Staff accounts" },
+  { value: "hotel", label: "Hotel settings" },
 ];
 
 const RANGE_OPTIONS = [
@@ -22,6 +23,7 @@ const RANGE_OPTIONS = [
   { value: "today", label: "Today" },
   { value: "7d", label: "Last 7 days" },
   { value: "30d", label: "Last 30 days" },
+  { value: "custom", label: "Custom range" },
 ];
 
 const AVATAR_CLASSES = [
@@ -30,16 +32,38 @@ const AVATAR_CLASSES = [
   "avatarOlive",
 ] as const;
 
-/** Start of the selected range, as an ISO string the API understands. */
-function rangeToFrom(range: string): string | undefined {
+function localDayStart(value: string) {
+  const [year, month, day] = value.split("-").map(Number);
+  return new Date(year, month - 1, day);
+}
+
+/** Inclusive calendar dates become local-midnight ISO bounds for the API. */
+function rangeToBounds(
+  range: string,
+  customFrom: string,
+  customTo: string,
+): { from?: string; to?: string } {
+  if (range === "custom") {
+    const from = customFrom
+      ? localDayStart(customFrom).toISOString()
+      : undefined;
+    let to: string | undefined;
+    if (customTo) {
+      const end = localDayStart(customTo);
+      end.setDate(end.getDate() + 1);
+      to = end.toISOString();
+    }
+    return { from, to };
+  }
+
   const daysBack =
     range === "today" ? 0 : range === "7d" ? 6 : range === "30d" ? 29 : null;
-  if (daysBack === null) return undefined;
+  if (daysBack === null) return {};
 
   const start = new Date();
   start.setHours(0, 0, 0, 0);
   start.setDate(start.getDate() - daysBack);
-  return start.toISOString();
+  return { from: start.toISOString() };
 }
 
 function dayKey(iso: string) {
@@ -110,8 +134,13 @@ export default function ActivityLogPage() {
   const [page, setPage] = useState(1);
   const [category, setCategory] = useState("");
   const [range, setRange] = useState("all");
+  const [customFrom, setCustomFrom] = useState("");
+  const [customTo, setCustomTo] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
+  const customRangeReady =
+    range !== "custom" ||
+    (!!customFrom && !!customTo && customFrom <= customTo);
 
   // Debounce the staff-name search so we don't hit the API on every keystroke.
   useEffect(() => {
@@ -124,6 +153,7 @@ export default function ActivityLogPage() {
 
   useEffect(() => {
     const controller = new AbortController();
+    if (!customRangeReady) return () => controller.abort();
 
     async function load() {
       setIsLoading(true);
@@ -136,8 +166,9 @@ export default function ActivityLogPage() {
         });
         if (category) params.set("entityType", category);
         if (search) params.set("search", search);
-        const from = rangeToFrom(range);
-        if (from) params.set("from", from);
+        const bounds = rangeToBounds(range, customFrom, customTo);
+        if (bounds.from) params.set("from", bounds.from);
+        if (bounds.to) params.set("to", bounds.to);
 
         const res = await fetch(`/api/v1/audit-logs?${params}`, {
           signal: controller.signal,
@@ -161,7 +192,16 @@ export default function ActivityLogPage() {
 
     load();
     return () => controller.abort();
-  }, [page, category, search, range, reloadKey]);
+  }, [
+    page,
+    category,
+    search,
+    range,
+    customFrom,
+    customTo,
+    reloadKey,
+    customRangeReady,
+  ]);
 
   const isFiltered = Boolean(category || search || range !== "all");
   const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
@@ -185,6 +225,8 @@ export default function ActivityLogPage() {
   function resetFilters() {
     setCategory("");
     setRange("all");
+    setCustomFrom("");
+    setCustomTo("");
     setSearchInput("");
     setSearch("");
     setPage(1);
@@ -241,6 +283,39 @@ export default function ActivityLogPage() {
           ))}
         </select>
 
+        {range === "custom" && (
+          <div className={styles.customRange}>
+            <label className={styles.dateField}>
+              From
+              <input
+                className={styles.dateInput}
+                type="date"
+                value={customFrom}
+                max={customTo || undefined}
+                onChange={(event) => {
+                  setCustomFrom(event.target.value);
+                  setPage(1);
+                }}
+                aria-label="Start date"
+              />
+            </label>
+            <label className={styles.dateField}>
+              Through
+              <input
+                className={styles.dateInput}
+                type="date"
+                value={customTo}
+                min={customFrom || undefined}
+                onChange={(event) => {
+                  setCustomTo(event.target.value);
+                  setPage(1);
+                }}
+                aria-label="End date"
+              />
+            </label>
+          </div>
+        )}
+
         {isFiltered && (
           <button
             type="button"
@@ -259,7 +334,11 @@ export default function ActivityLogPage() {
       </p>
 
       <section className={styles.tableCard}>
-        {error ? (
+        {!customRangeReady ? (
+          <div className={styles.stateBox}>
+            Choose a valid start and end date for the custom range.
+          </div>
+        ) : error ? (
           <div className={styles.stateBox} role="alert">
             <p>{error}</p>
             <button
@@ -365,7 +444,7 @@ export default function ActivityLogPage() {
           </div>
         )}
 
-        {!error && total > 0 && (
+        {customRangeReady && !error && total > 0 && (
           <Pagination
             currentPage={page}
             totalPages={totalPages}

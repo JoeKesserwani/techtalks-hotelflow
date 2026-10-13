@@ -29,9 +29,10 @@ function intParam(
  * Query params (all optional):
  *   page        1-based page number            (default 1)
  *   pageSize    rows per page, max 100         (default 20)
- *   entityType  reservation | room | guest | user | housekeeping_task
+ *   entityType  reservation | room | guest | user | housekeeping_task | hotel
  *   search      matches the staff member's name
- *   from        ISO date-time; only events at/after this moment
+ *   from        ISO date-time; inclusive lower bound
+ *   to          ISO date-time; exclusive upper bound
  *
  * Returns { items, total, page, pageSize }. Each item carries a `context`
  * object with human-readable names (room number, guest name, assignee...)
@@ -49,18 +50,35 @@ export async function GET(req: Request) {
     const entityType = url.searchParams.get("entityType") || undefined;
     const search = url.searchParams.get("search")?.trim() || undefined;
     const fromRaw = url.searchParams.get("from");
+    const toRaw = url.searchParams.get("to");
 
     let from: Date | undefined;
+    let to: Date | undefined;
     if (fromRaw) {
       from = new Date(fromRaw);
       if (Number.isNaN(from.getTime()))
         throw new ApiError('Invalid "from" date', 400);
     }
+    if (toRaw) {
+      to = new Date(toRaw);
+      if (Number.isNaN(to.getTime()))
+        throw new ApiError('Invalid "to" date', 400);
+    }
+    if (from && to && from >= to) {
+      throw new ApiError('The "to" date must be after the "from" date', 400);
+    }
 
     const where = {
       hotelId: user.hotelId,
       ...(entityType ? { entityType } : {}),
-      ...(from ? { createdAt: { gte: from } } : {}),
+      ...(from || to
+        ? {
+            createdAt: {
+              ...(from ? { gte: from } : {}),
+              ...(to ? { lt: to } : {}),
+            },
+          }
+        : {}),
       ...(search ? { user: { fullName: { contains: search } } } : {}),
     };
 
