@@ -199,7 +199,9 @@ export type TileState =
   | "arriving"
   | "occupied"
   | "departing"
-  | "dirty"
+  | "needsCleaning"
+  | "cleaning"
+  | "inReview"
   | "oos"
   | "free";
 export interface Tile {
@@ -219,24 +221,33 @@ export function roomBoard(
     day.arriving.filter((r) => ["BOOKED", "CHECKED_IN"].includes(r.status)),
   );
   const stay = index(day.staying);
-  const dep = index(day.departing);
+  const dep = index(
+    day.departing.filter((r) => date !== today || r.status !== "CHECKED_OUT"),
+  );
   return rooms
     .map((room): Tile => {
       const a = arr.get(room.id),
         s = stay.get(room.id),
         d = dep.get(room.id);
-      if (s) return { room, state: "occupied", guest: guestName(s) };
-      if (a) return { room, state: "arriving", guest: guestName(a) };
+
       if (room.status === "OUT_OF_SERVICE" && date >= today)
         return { room, state: "oos" };
+
+      if (date === today) {
+        if (room.status === "NEEDS_CLEANING")
+          return { room, state: "needsCleaning" };
+        if (room.status === "CLEANING") return { room, state: "cleaning" };
+        if (room.status === "IN_REVIEW") return { room, state: "inReview" };
+        if (d?.status === "CHECKED_IN")
+          return { room, state: "departing", guest: guestName(d) };
+        if (s) return { room, state: "occupied", guest: guestName(s) };
+        if (room.status === "OCCUPIED") return { room, state: "occupied" };
+        if (a) return { room, state: "arriving", guest: guestName(a) };
+      }
+
+      if (s) return { room, state: "occupied", guest: guestName(s) };
+      if (a) return { room, state: "arriving", guest: guestName(a) };
       if (d) return { room, state: "departing", guest: guestName(d) };
-      if (
-        date === today &&
-        ["NEEDS_CLEANING", "CLEANING", "IN_REVIEW"].includes(
-          String(room.status),
-        )
-      )
-        return { room, state: "dirty" };
       return { room, state: "free" };
     })
     .sort((x, y) =>
