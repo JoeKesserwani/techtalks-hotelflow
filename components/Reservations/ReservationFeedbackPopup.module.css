@@ -1,0 +1,97 @@
+.popup {
+  position: fixed;
+  z-index: 1200;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: 28px minmax(0, 1fr) 32px;
+  align-items: start;
+  gap: 12px;
+  width: min(440px, calc(100vw - 40px));
+  padding: 16px;
+  border: 1px solid;
+  border-radius: 12px;
+  box-shadow: 0 16px 44px rgb(25 32 26 / 18%);
+  animation: arrive 180ms ease-out both;
+}
+
+.success {
+  color: #214f39;
+  background: #f1faf4;
+  border-color: #a9d5b8;
+}
+
+.error {
+  color: #762f26;
+  background: #fff5f1;
+  border-color: #e7b5a7;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+}
+
+.copy {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.copy strong {
+  display: block;
+  font-size: 14px;
+  line-height: 1.4;
+}
+
+.copy p {
+  margin: 4px 0 0;
+  color: #4f514b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.dismiss {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin: -4px -4px 0 0;
+  border: 0;
+  border-radius: 7px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.dismiss:hover {
+  background: rgb(0 0 0 / 6%);
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 560px) {
+  .popup {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    width: auto;
+    left: max(12px, env(safe-area-inset-left));
+    padding: 14px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .popup {
+    animation: none;
+  }
+}

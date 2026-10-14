@@ -83,7 +83,7 @@
 
 .statusStats {
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
   margin: 0;
   padding: 0 18px 14px;
@@ -187,8 +187,18 @@
   background: #f6e1d8;
 }
 
-.t_dirty {
+.t_needsCleaning {
+  border-color: #39796f;
+  background: #e0efeb;
+}
+
+.t_cleaning {
   background: var(--chip);
+}
+
+.t_inReview {
+  border-color: var(--slate);
+  background: #e5ebef;
 }
 
 .t_oos {

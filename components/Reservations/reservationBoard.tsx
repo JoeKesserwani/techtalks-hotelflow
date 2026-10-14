@@ -21,6 +21,7 @@ import {
   EditReservationDialog,
 } from "../../app/Pages/Reservations/edit-dialogs";
 import AssignTaskModal from "../Housekeeping/AssignTaskModal";
+import type { ReservationFeedback } from "./ReservationFeedbackPopup";
 
 const PAGE_SIZE = 4;
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
@@ -47,8 +48,8 @@ export interface ReservationsBoardProps {
   onRemove: (id: string) => void;
   /** Refetch reservations and rooms (room statuses change after most actions). */
   onReload: () => void;
-  /** Show a message in the owner's toast. */
-  onToast: (message: string) => void;
+  /** Show the outcome of a reservation action in the owner's popup. */
+  onToast: (feedback: ReservationFeedback) => void;
 }
 
 /** Arriving / Departing / Staying columns with check-in, check-out, payment, edit and cancel actions. */
@@ -101,25 +102,42 @@ export function ReservationsBoard({
     r: Reservation,
     path: string,
     init: RequestInit,
-    message: string,
+    successTitle: string,
+    failureTitle: string,
   ) {
     setBusy(r.id);
     try {
       onUpdate(await api<Reservation>(`/reservations/${r.id}/${path}`, init));
-      onToast(message);
+      onToast({ status: "success", title: successTitle });
       onReload(); // room statuses changed too (occupied / needs cleaning): keep the board truthful
       return true;
     } catch (e) {
-      onToast((e as Error).message);
+      onToast({
+        status: "error",
+        title: failureTitle,
+        message: e instanceof Error ? e.message : "Please try again.",
+      });
       return false;
     } finally {
       setBusy(null);
     }
   }
   const checkIn = (r: Reservation) =>
-    run(r, "check-in", { method: "POST" }, `${guestName(r)} checked in.`);
+    run(
+      r,
+      "check-in",
+      { method: "POST" },
+      `${guestName(r)} checked in`,
+      "Check-in failed",
+    );
   const checkOut = (r: Reservation) =>
-    run(r, "check-out", { method: "POST" }, `${guestName(r)} checked out.`);
+    run(
+      r,
+      "check-out",
+      { method: "POST" },
+      `${guestName(r)} checked out`,
+      "Check-out failed",
+    );
   const checkOutAfterTask = async (r: Reservation) => {
     if (markPaidAfterTask && !(await markPaid(r))) {
       throw new Error(
@@ -149,7 +167,8 @@ export function ReservationsBoard({
       r,
       "payment",
       { method: "PATCH", body: JSON.stringify({ paymentStatus: "PAID" }) },
-      `${guestName(r)} marked as paid.`,
+      `${guestName(r)} marked as paid`,
+      "Payment update failed",
     );
 
   async function cancelReservation(r: Reservation, reason: string) {
@@ -160,9 +179,16 @@ export function ReservationsBoard({
         body: JSON.stringify({ reason }),
       });
       onRemove(r.id);
-      onToast(`Reservation for ${guestName(r)} cancelled.`);
+      onToast({
+        status: "success",
+        title: `Reservation for ${guestName(r)} cancelled`,
+      });
     } catch (e) {
-      onToast((e as Error).message);
+      onToast({
+        status: "error",
+        title: "Cancellation failed",
+        message: e instanceof Error ? e.message : "Please try again.",
+      });
     } finally {
       setBusy(null);
       setCancelling(null);
@@ -319,12 +345,21 @@ export function ReservationsBoard({
           reservations={items ?? []}
           onClose={() => setEditing(null)}
           onConflict={onReload}
+          onFailure={(message) =>
+            onToast({
+              status: "error",
+              title: "Reservation update failed",
+              message,
+            })
+          }
           onSaved={(u) => {
             onUpdate(u);
             setEditing(null);
-            onToast(
-              `Reservation updated for ${guestName(u)} · Room ${roomLabel(u)}.`,
-            );
+            onToast({
+              status: "success",
+              title: `Reservation updated for ${guestName(u)}`,
+              message: `Room ${roomLabel(u)}`,
+            });
             onReload(); // a room move changes two rooms' statuses
           }}
         />

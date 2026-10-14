@@ -34,7 +34,13 @@ type Reservation = {
   room?: Room;
 };
 
-type Period = "all" | "this_month" | "last_30" | "this_year" | "custom";
+type Period =
+  | "today"
+  | "all"
+  | "this_month"
+  | "last_30"
+  | "this_year"
+  | "custom";
 type PayFilter = "all" | "PAID" | "PARTIAL" | "UNPAID";
 type SortKey = "newest" | "oldest" | "highest" | "guest";
 type PayKind = "PAID" | "PARTIAL" | "UNPAID";
@@ -150,7 +156,7 @@ export default function ReservationHistoryPage() {
   const [notice, setNotice] = useState("");
 
   const [search, setSearch] = useState("");
-  const [period, setPeriod] = useState<Period>("all");
+  const [period, setPeriod] = useState<Period>("today");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [payFilter, setPayFilter] = useState<PayFilter>("all");
@@ -232,6 +238,8 @@ export default function ReservationHistoryPage() {
       let start: string | undefined;
       let end: string | undefined;
       switch (period) {
+        case "today":
+          return dayOnly(r.checkOutDate) === today;
         case "this_month":
           start = `${today.slice(0, 7)}-01`;
           end = today;
@@ -328,12 +336,12 @@ export default function ReservationHistoryPage() {
   );
 
   const hasFilters =
-    search.trim() !== "" || period !== "all" || payFilter !== "all";
+    search.trim() !== "" || period !== "today" || payFilter !== "all";
 
   const resetPage = () => setCurrentPage(1);
   const clearFilters = () => {
     setSearch("");
-    setPeriod("all");
+    setPeriod("today");
     setFrom("");
     setTo("");
     setPayFilter("all");
@@ -482,6 +490,7 @@ export default function ReservationHistoryPage() {
               resetPage();
             }}
           >
+            <option value="today">Today</option>
             <option value="all">All time</option>
             <option value="this_month">This month</option>
             <option value="last_30">Last 30 days</option>

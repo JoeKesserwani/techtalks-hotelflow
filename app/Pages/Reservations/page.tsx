@@ -20,6 +20,10 @@ import {
 } from "./frontdesk";
 import { NewReservationDialog } from "../../../components/Reservations/newReservationDialog";
 import { ReservationsBoard } from "../../../components/Reservations/reservationBoard";
+import {
+  ReservationFeedbackPopup,
+  type ReservationFeedback,
+} from "../../../components/Reservations/ReservationFeedbackPopup";
 import { RoomAvailabilityChart } from "../../../components/Reservations/RoomAvailabilityChart";
 import Header from "../../../components/Header/Header";
 
@@ -40,7 +44,7 @@ function FrontDeskContent() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [expired, setExpired] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<ReservationFeedback | null>(null);
   const [booking, setBooking] = useState<{
     roomId?: string;
     guestId?: string;
@@ -86,11 +90,7 @@ function FrontDeskContent() {
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, [load]);
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 4000);
-    return () => clearTimeout(t);
-  }, [toast]);
+  const dismissToast = useCallback(() => setToast(null), []);
 
   const day = useMemo(
     () => bucketDay(items ?? [], date, today),
@@ -211,19 +211,26 @@ function FrontDeskContent() {
           initialGuestId={booking.guestId}
           onClose={() => setBooking(null)}
           onConflict={load}
+          onFailure={(message) =>
+            setToast({
+              status: "error",
+              title: "Reservation creation failed",
+              message,
+            })
+          }
           onCreated={(r) => {
             setItems((p) => [r, ...(p ?? [])]);
             setDate(dayOnly(r.checkInDate)); // jump to the booking's arrival day
-            setToast(
-              `Reservation created for ${guestName(r)} · Room ${roomLabel(r)}.`,
-            );
+            setToast({
+              status: "success",
+              title: `Reservation created for ${guestName(r)}`,
+              message: `Room ${roomLabel(r)}`,
+            });
           }}
         />
       )}
 
-      <div className={s.toast} role="status" aria-live="polite">
-        {toast}
-      </div>
+      <ReservationFeedbackPopup feedback={toast} onDismiss={dismissToast} />
     </main>
   );
 }

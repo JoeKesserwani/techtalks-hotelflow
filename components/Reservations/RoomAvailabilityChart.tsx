@@ -18,7 +18,9 @@ const STATUS_INFO: { state: TileState; label: string }[] = [
   { state: "arriving", label: "Arriving" },
   { state: "occupied", label: "Occupied" },
   { state: "departing", label: "Leaves today" },
-  { state: "dirty", label: "Being cleaned" },
+  { state: "needsCleaning", label: "Needs cleaning" },
+  { state: "cleaning", label: "Being cleaned" },
+  { state: "inReview", label: "Awaiting review" },
   { state: "oos", label: "Out of service" },
 ];
 
@@ -64,7 +66,9 @@ export function RoomAvailabilityChart({
       arriving: 0,
       occupied: 0,
       departing: 0,
-      dirty: 0,
+      needsCleaning: 0,
+      cleaning: 0,
+      inReview: 0,
       oos: 0,
     },
   );
@@ -135,8 +139,10 @@ export function RoomAvailabilityChart({
               <strong>{room.roomNumber}</strong>
               <span>
                 {guest ??
-                  room.roomType ??
-                  STATUS_INFO.find((item) => item.state === state)?.label}
+                  (state === "free"
+                    ? (room.roomType ??
+                      STATUS_INFO.find((item) => item.state === state)?.label)
+                    : STATUS_INFO.find((item) => item.state === state)?.label)}
               </span>
             </button>
           </li>

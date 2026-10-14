@@ -116,20 +116,21 @@ export async function POST(
        * cannot accept a guest.
        */
 
-      const unavailableStatuses = [
-        "OCCUPIED",
-        "NEEDS_CLEANING",
-        "CLEANING",
-        "OUT_OF_SERVICE",
-        "MAINTENANCE",
-      ] as const;
+      const unavailableReasons: Record<string, string> = {
+        OCCUPIED: "The previous guest has not checked out yet.",
+        NEEDS_CLEANING: "The room has not been cleaned yet.",
+        CLEANING: "Housekeeping is currently cleaning the room.",
+        IN_REVIEW: "The room is awaiting housekeeping inspection.",
+        OUT_OF_SERVICE: "The room is out of service.",
+        MAINTENANCE: "The room is under maintenance.",
+      };
+      const unavailableReason = unavailableReasons[room.status];
 
-      if (
-        unavailableStatuses.includes(
-          room.status as (typeof unavailableStatuses)[number],
-        )
-      ) {
-        throw new ApiError("This room is not available for check-in", 409);
+      if (unavailableReason) {
+        throw new ApiError(
+          `Room ${room.roomNumber} cannot be checked in: ${unavailableReason}`,
+          409,
+        );
       }
 
       /*

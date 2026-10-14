@@ -29,6 +29,7 @@ export function NewReservationDialog({
   onClose,
   onCreated,
   onConflict,
+  onFailure,
 }: {
   defaultDate: string;
   today: string;
@@ -39,6 +40,7 @@ export function NewReservationDialog({
   onClose: () => void;
   onCreated: (r: Reservation) => void;
   onConflict: () => void;
+  onFailure?: (message: string) => void;
 }) {
   const [guests, setGuests] = useState<Guest[] | null>(null);
   const [q, setQ] = useState("");
@@ -118,7 +120,9 @@ export function NewReservationDialog({
       );
       dlg.current?.closest("dialog")?.close();
     } catch (e) {
-      setErr((e as Error).message);
+      const message = e instanceof Error ? e.message : "Please try again.";
+      setErr(message);
+      onFailure?.(message);
       if ((e as ApiError).status === 409) {
         setRoomId("");
         onConflict();

@@ -40,6 +40,10 @@ export async function POST(
     await prisma.$transaction(async (tx) => {
       const reservation = await tx.reservation.findFirst({
         where: { id, hotelId: user.hotelId },
+        include: {
+          room: { select: { roomNumber: true } },
+          guest: { select: { fullName: true } },
+        },
       });
       if (!reservation) throw new ApiError("Reservation not found", 404);
 
@@ -62,7 +66,9 @@ export async function POST(
           cancelled: true,
           reason,
           roomId: reservation.roomId,
+          roomNumber: reservation.room.roomNumber,
           guestId: reservation.guestId,
+          guestName: reservation.guest.fullName,
           previousStatus: reservation.status,
           checkInDate: reservation.checkInDate.toISOString().slice(0, 10),
           checkOutDate: reservation.checkOutDate.toISOString().slice(0, 10),
