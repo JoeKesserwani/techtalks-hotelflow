@@ -1,8 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import styles from "./HousekeepingHistory.module.css";
 import { useAuth } from "@/components/Auth/AuthProvider";
+import Pagination from "@/components/Pagination";
 
 type HistoryStatus = "AWAITING_APPROVAL" | "COMPLETED";
 
@@ -39,8 +40,13 @@ function HousekeepingHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<HistoryItem | null>(null);
 
-  const [awaitingPage, setAwaitingPage] = useState(1);
-  const [completedPage, setCompletedPage] = useState(1);
+
+const [activeTab, setActiveTab] =
+  useState<HistoryStatus>("AWAITING_APPROVAL");
+
+const [awaitingPage, setAwaitingPage] = useState(1);
+const [completedPage, setCompletedPage] = useState(1);
+
 
   useEffect(() => {
     async function loadHistory() {
@@ -79,13 +85,13 @@ function HousekeepingHistoryPage() {
                     id: task.id,
 
                     room:
-                      task.room?.roomNumber ?? "—",
+                      task.room?.roomNumber ?? "â€”",
 
                     type:
-                      task.room?.roomType ?? "—",
+                      task.room?.roomType ?? "â€”",
 
                     housekeeper:
-                      task.assignedTo?.fullName ?? "—",
+                      task.assignedTo?.fullName ?? "â€”",
 
                     startedAt: task.startedAt,
                     completedAt: task.completedAt,
@@ -209,66 +215,116 @@ function HousekeepingHistoryPage() {
         {/* Header */}
         <HistoryHeader user={user} />
 
-        {/* Content */}
-        {loading ? (
-          <div className={styles.emptyState}>
-            <p>Loading cleaning history...</p>
-          </div>
+{/* Content */}
+{loading ? (
+  <div className={styles.emptyState}>
+    <p>Loading cleaning history...</p>
+  </div>
+) : totalTasks === 0 ? (
+  <div className={styles.emptyState}>
+    <div className={styles.emptyIcon}>âœ“</div>
+    <h2>No housekeeping records yet</h2>
+    <p>
+      Completed and pending approval housekeeping
+      tasks will appear here.
+    </p>
+  </div>
+) : (
+  <>
+    {/* Navigation tabs â€” outside the scrolling area */}
+    <nav
+      className={styles.historyTabs}
+      role="tablist"
+      aria-label="Housekeeping history status"
+    >
+      <button
+        type="button"
+        role="tab"
+        id="awaiting-tab"
+        aria-selected={activeTab === "AWAITING_APPROVAL"}
+        aria-controls="history-panel"
+        className={`${styles.historyTab} ${
+          activeTab === "AWAITING_APPROVAL"
+            ? styles.activeHistoryTab
+            : ""
+        }`}
+        onClick={() => setActiveTab("AWAITING_APPROVAL")}
+      >
+        <span>Awaiting Approval</span>
+        <span className={styles.tabCount}>
+          {awaitingApproval.length}
+        </span>
+      </button>
+
+      <button
+        type="button"
+        role="tab"
+        id="completed-tab"
+        aria-selected={activeTab === "COMPLETED"}
+        aria-controls="history-panel"
+        className={`${styles.historyTab} ${
+          activeTab === "COMPLETED"
+            ? styles.activeHistoryTab
+            : ""
+        }`}
+        onClick={() => setActiveTab("COMPLETED")}
+      >
+        <span>Completed</span>
+        <span className={styles.tabCount}>
+          {completed.length}
+        </span>
+      </button>
+    </nav>
+
+    {/* Scrollable history records */}
+    <div className={styles.historyContent}>
+      <div
+        id="history-panel"
+        role="tabpanel"
+        aria-labelledby={
+          activeTab === "AWAITING_APPROVAL"
+            ? "awaiting-tab"
+            : "completed-tab"
+        }
+      >
+        {activeTab === "AWAITING_APPROVAL" ? (
+          <HistorySection
+            title="Awaiting Approval"
+            description="Cleaning tasks completed by housekeeping and waiting for inspection."
+            count={awaitingApproval.length}
+            items={paginatedAwaiting}
+            totalItems={awaitingApproval.length}
+            currentPage={awaitingPage}
+            totalPages={awaitingTotalPages}
+            onPageChange={setAwaitingPage}
+            emptyTitle="No tasks awaiting approval"
+            emptyDescription="All completed housekeeping tasks have been reviewed."
+            emptyIcon="waiting"
+            variant="awaiting"
+            onView={setSelected}
+          />
         ) : (
-          <div className={styles.historyContent}>
-
-            {/* Awaiting Approval */}
-            <HistorySection
-              title="Awaiting Approval"
-              description="Cleaning tasks completed by housekeeping and waiting for inspection."
-              count={awaitingApproval.length}
-              items={paginatedAwaiting}
-              totalItems={awaitingApproval.length}
-              currentPage={awaitingPage}
-              totalPages={awaitingTotalPages}
-              onPageChange={setAwaitingPage}
-              emptyTitle="No tasks awaiting approval"
-              emptyDescription="All completed housekeeping tasks have been reviewed."
-              emptyIcon="waiting"
-              variant="awaiting"
-              onView={setSelected}
-            />
-
-            {/* Completed */}
-            <HistorySection
-              title="Completed"
-              description="Cleaning tasks that were approved after inspection."
-              count={completed.length}
-              items={paginatedCompleted}
-              totalItems={completed.length}
-              currentPage={completedPage}
-              totalPages={completedTotalPages}
-              onPageChange={setCompletedPage}
-              emptyTitle="No completed tasks yet"
-              emptyDescription="Approved housekeeping tasks will appear here."
-              emptyIcon="✓"
-              variant="completed"
-              onView={setSelected}
-            />
-
-            {totalTasks === 0 && (
-              <div className={styles.emptyState}>
-                <div className={styles.emptyIcon}>
-                  ✓
-                </div>
-
-                <h2>
-                  No housekeeping records yet
-                </h2>
-
-                <p>
-                  Completed and pending approval
-                  housekeeping tasks will appear here.
-                </p>
-              </div>
-            )}
-          </div>
+          <HistorySection
+            title="Completed"
+            description="Cleaning tasks that were approved after inspection."
+            count={completed.length}
+            items={paginatedCompleted}
+            totalItems={completed.length}
+            currentPage={completedPage}
+            totalPages={completedTotalPages}
+            onPageChange={setCompletedPage}
+            emptyTitle="No completed tasks yet"
+            emptyDescription="Approved housekeeping tasks will appear here."
+            emptyIcon="âœ“"
+            variant="completed"
+            onView={setSelected}
+          />
         )}
+      </div>
+    </div>
+  </>
+)}
+
       </div>
 
       {/* Details Modal */}
@@ -281,7 +337,6 @@ function HousekeepingHistoryPage() {
     </main>
   );
 }
-
 /* =========================================================
    HEADER
 ========================================================= */
@@ -311,7 +366,7 @@ function HistoryHeader({
       <div className={styles.role}>
         <div className={styles.roleInfo}>
           <strong>
-            {user?.fullName ?? "—"}
+            {user?.fullName ?? "â€”"}
           </strong>
 
           <span>
@@ -320,7 +375,7 @@ function HistoryHeader({
         </div>
 
         <div className={styles.roleBadge}>
-          {user?.role ?? "—"}
+          {user?.role ?? "â€”"}
         </div>
       </div>
     </header>
@@ -401,7 +456,7 @@ function HistorySection({
                   className={styles.awaitingIcon}
                 />
               ) : (
-                "✓"
+                "âœ“"
               )}
             </span>
 
@@ -486,67 +541,15 @@ function HistorySection({
             )}
           </div>
 
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className={styles.pagination}>
-              <span className={styles.paginationInfo}>
-                Showing {startItem}–{endItem} of{" "}
-                {totalItems}
-              </span>
+  {/* Pagination */}
+  <Pagination
+    currentPage={currentPage}
+    totalPages={totalPages}
+    onPageChange={onPageChange}
+    totalItems={totalItems}
+    itemsPerPage={ROWS_PER_PAGE}
+  />
 
-              <div className={styles.paginationControls}>
-                <button
-                  type="button"
-                  className={styles.paginationButton}
-                  disabled={currentPage === 1}
-                  onClick={() =>
-                    onPageChange(
-                      currentPage - 1
-                    )
-                  }
-                  aria-label="Previous page"
-                >
-                  ←
-                </button>
-
-                {Array.from(
-                  { length: totalPages },
-                  (_, index) => index + 1
-                ).map((page) => (
-                  <button
-                    key={page}
-                    type="button"
-                    className={`${styles.paginationButton} ${
-                      currentPage === page
-                        ? styles.paginationActive
-                        : ""
-                    }`}
-                    onClick={() =>
-                      onPageChange(page)
-                    }
-                  >
-                    {page}
-                  </button>
-                ))}
-
-                <button
-                  type="button"
-                  className={styles.paginationButton}
-                  disabled={
-                    currentPage === totalPages
-                  }
-                  onClick={() =>
-                    onPageChange(
-                      currentPage + 1
-                    )
-                  }
-                  aria-label="Next page"
-                >
-                  →
-                </button>
-              </div>
-            </div>
-          )}
         </>
       )}
     </section>
@@ -603,7 +606,7 @@ function HistoryRow({
 
         <p className={styles.strongText}>
           {formatTime(item.startedAt)}
-          {" — "}
+          {" â€” "}
           {formatTime(item.completedAt)}
         </p>
 
@@ -701,7 +704,7 @@ function HistoryDetails({
             className={styles.closeButton}
             aria-label="Close"
           >
-            ×
+            Ã—
           </button>
         </div>
 
@@ -929,7 +932,7 @@ function getApprovedReviews(
       {
         action: "APPROVED",
         reviewedBy:
-          task.review.reviewedBy ?? "—",
+          task.review.reviewedBy ?? "â€”",
         reviewedAt:
           task.review.reviewedAt ?? "",
         reviewNote:
@@ -950,7 +953,7 @@ function calculateDuration(
   completedAt?: string
 ): string {
   if (!startedAt || !completedAt) {
-    return "—";
+    return "â€”";
   }
 
   const start =
@@ -964,7 +967,7 @@ function calculateDuration(
     Number.isNaN(end) ||
     end < start
   ) {
-    return "—";
+    return "â€”";
   }
 
   const minutes = Math.round(
@@ -995,7 +998,7 @@ function formatTime(
   value?: string
 ): string {
   if (!value) {
-    return "—";
+    return "â€”";
   }
 
   const date = new Date(value);
@@ -1003,7 +1006,7 @@ function formatTime(
   if (
     Number.isNaN(date.getTime())
   ) {
-    return "—";
+    return "â€”";
   }
 
   return date.toLocaleTimeString([], {
@@ -1020,7 +1023,7 @@ function formatDateTime(
   value?: string
 ): string {
   if (!value) {
-    return "—";
+    return "â€”";
   }
 
   const date = new Date(value);
@@ -1028,7 +1031,7 @@ function formatDateTime(
   if (
     Number.isNaN(date.getTime())
   ) {
-    return "—";
+    return "â€”";
   }
 
   return date.toLocaleString([], {
@@ -1112,11 +1115,11 @@ function groupHistoryByDate(
     let label: string;
 
     if (isSameDay(date, today)) {
-      label = `Today · ${formattedDate}`;
+      label = `Today Â· ${formattedDate}`;
     } else if (
       isSameDay(date, yesterday)
     ) {
-      label = `Yesterday · ${formattedDate}`;
+      label = `Yesterday Â· ${formattedDate}`;
     } else {
       label = formattedDate;
     }

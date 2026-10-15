@@ -229,19 +229,32 @@ export default function ReservationHistoryPage() {
     const query = search.trim().toLowerCase();
 
     const inPeriod = (r: Reservation) => {
-      const out = dayOnly(r.checkOutDate);
+      let start: string | undefined;
+      let end: string | undefined;
       switch (period) {
         case "this_month":
-          return out.slice(0, 7) === today.slice(0, 7);
+          start = `${today.slice(0, 7)}-01`;
+          end = today;
+          break;
         case "last_30":
-          return out >= shiftDay(today, -30) && out <= today;
+          start = shiftDay(today, -29);
+          end = today;
+          break;
         case "this_year":
-          return out.slice(0, 4) === today.slice(0, 4);
+          start = `${today.slice(0, 4)}-01-01`;
+          end = today;
+          break;
         case "custom":
-          return (!from || out >= from) && (!to || out <= to);
+          start = from || undefined;
+          end = to || undefined;
+          break;
         default:
           return true;
       }
+
+      const checkIn = dayOnly(r.checkInDate);
+      const checkOut = dayOnly(r.checkOutDate);
+      return (!start || checkIn >= start) && (!end || checkOut <= end);
     };
 
     const rows = history.filter((r) => {
@@ -409,7 +422,13 @@ export default function ReservationHistoryPage() {
     <div className={styles.page}>
       <main className={styles.content} aria-busy={loading}>
         {/* HEADER */}
-        {Header({title: "Reservation history", subtitle: loading ? "Loading completed stays…" : `${history.length} completed ${history.length === 1 ? "stay" : "stays"} on record`,userSubtitle:"Checking reservation history" })}
+        {Header({
+          title: "Reservation history",
+          subtitle: loading
+            ? "Loading completed stays…"
+            : `${history.length} completed ${history.length === 1 ? "stay" : "stays"} on record`,
+          userSubtitle: "Checking reservation history",
+        })}
         {/* STATS */}
         <section
           className={styles.stats}
@@ -456,7 +475,7 @@ export default function ReservationHistoryPage() {
 
           <select
             className={styles.select}
-            aria-label="Check-out period"
+            aria-label="Check-in to check-out date range"
             value={period}
             onChange={(event) => {
               setPeriod(event.target.value as Period);
@@ -512,7 +531,7 @@ export default function ReservationHistoryPage() {
         {period === "custom" && (
           <div className={styles.range}>
             <label>
-              Checked out from
+              Check-in from
               <input
                 type="date"
                 value={from}
@@ -524,7 +543,7 @@ export default function ReservationHistoryPage() {
               />
             </label>
             <label>
-              to
+              Check-out through
               <input
                 type="date"
                 value={to}

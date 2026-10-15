@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import styles from "./HousekeepingReview.module.css";
 import { useAuth } from "@/components/Auth/AuthProvider";
 import  Header  from "@/components/Header/Header";
@@ -26,6 +26,9 @@ type ApiHousekeepingTask = {
   completedAt: string | null;
   notes: string | null;
   photos: unknown;
+  photoFiles?: {
+    id: string;
+  }[];
   createdAt: string;
   room: {
     roomNumber: string;
@@ -57,9 +60,14 @@ function loadHousekeepingTasks() {
 }
 
 function mapApiTask(task: ApiHousekeepingTask): HousekeepingTask {
-  const pictures = Array.isArray(task.photos)
+  const storedPictures = (task.photoFiles ?? []).map(
+    ({ id }) =>
+      `/api/v1/housekeeping/tasks/${encodeURIComponent(task.id)}/photos/${encodeURIComponent(id)}`,
+  );
+  const legacyPictures = Array.isArray(task.photos)
     ? task.photos.filter((photo): photo is string => typeof photo === "string")
     : [];
+  const pictures = [...new Set([...storedPictures, ...legacyPictures])];
 
   return {
     id: task.id,
@@ -94,8 +102,12 @@ export default function HousekeepingReviewPage() {
   const [reviewError, setReviewError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Status>("awaiting");
   const { user } = useAuth();
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [selectedImages, setSelectedImages] = useState<string[]>([]);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [selectedPhotoTask, setSelectedPhotoTask] =
+    useState<HousekeepingTask | null>(null);
   const [zoom, setZoom] = useState(1);
+  const [zoomOrigin, setZoomOrigin] = useState("50% 50%");
 
   const [reviewTask, setReviewTask] = useState<HousekeepingTask | null>(null);
 
@@ -224,14 +236,30 @@ export default function HousekeepingReviewPage() {
     setActiveTab(reviewAction === "approved" ? "approved" : "active");
   }
 
-  function openImage(image: string) {
-    setSelectedImage(image);
+  function openImage(
+    images: string[],
+    index: number,
+    task: HousekeepingTask,
+  ) {
+    setSelectedImages(images);
+    setSelectedImageIndex(index);
+    setSelectedPhotoTask(task);
     setZoom(1);
+    setZoomOrigin("50% 50%");
   }
 
   function closeImage() {
-    setSelectedImage(null);
+    setSelectedImages([]);
+    setSelectedImageIndex(0);
+    setSelectedPhotoTask(null);
     setZoom(1);
+    setZoomOrigin("50% 50%");
+  }
+
+  function changeImage(index: number) {
+    setSelectedImageIndex((index + selectedImages.length) % selectedImages.length);
+    setZoom(1);
+    setZoomOrigin("50% 50%");
   }
 
   return (
@@ -314,11 +342,17 @@ export default function HousekeepingReviewPage() {
       </div>
 
       {/* Image popup */}
-      {selectedImage && (
+      {selectedImages.length > 0 && (
         <ImageModal
-          image={selectedImage}
+          images={selectedImages}
+          imageIndex={selectedImageIndex}
+          roomNumber={selectedPhotoTask?.roomNumber ?? ""}
+          roomType={selectedPhotoTask?.roomType ?? ""}
+          onImageChange={changeImage}
           zoom={zoom}
           setZoom={setZoom}
+          zoomOrigin={zoomOrigin}
+          setZoomOrigin={setZoomOrigin}
           onClose={closeImage}
         />
       )}
@@ -354,30 +388,35 @@ function HousekeepingCard({
   onReject,
 }: {
   task: HousekeepingTask;
-  onImageClick: (image: string) => void;
+  onImageClick: (
+    images: string[],
+    index: number,
+    task: HousekeepingTask,
+  ) => void;
   onApprove: () => void;
   onReject: () => void;
 }) {
   return (
     <article className={styles.taskCard}>
       {/* Pictures */}
-      <div className={styles.pictures}>
+      <div
+        className={`${styles.pictures} ${
+          task.pictures.length === 1 ? styles.singlePicture : ""
+        }`}
+      >
         {task.pictures.map((picture, index) => (
           <button
             key={picture}
             className={styles.pictureButton}
-            onClick={() => onImageClick(picture)}
+            aria-label={`View room ${task.roomNumber} photo ${index + 1} of ${task.pictures.length}`}
+            onClick={() => onImageClick(task.pictures, index, task)}
           >
             <img
               src={picture}
               alt={`Room ${task.roomNumber} photo ${index + 1}`}
+              loading="lazy"
+              decoding="async"
             />
-
-            {index === 0 && task.pictures.length > 1 && (
-              <span className={styles.pictureCount}>
-                +{task.pictures.length - 1}
-              </span>
-            )}
           </button>
         ))}
       </div>
@@ -540,45 +579,138 @@ function ReviewModal({
 /* -------------------------------------------------------------------------- */
 
 function ImageModal({
-  image,
+  images,
+  imageIndex,
+  roomNumber,
+  roomType,
+  onImageChange,
   zoom,
   setZoom,
+  zoomOrigin,
+  setZoomOrigin,
   onClose,
 }: {
-  image: string;
+  images: string[];
+  imageIndex: number;
+  roomNumber: string;
+  roomType: string;
+  onImageChange: (index: number) => void;
   zoom: number;
   setZoom: (value: number) => void;
+  zoomOrigin: string;
+  setZoomOrigin: (value: string) => void;
   onClose: () => void;
 }) {
+  const image = images[imageIndex];
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "ArrowLeft") {
+        onImageChange(imageIndex - 1);
+      } else if (event.key === "ArrowRight") {
+        onImageChange(imageIndex + 1);
+      } else if (event.key === "Escape") {
+        onClose();
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [imageIndex, onClose, onImageChange]);
+
+  function toggleZoomAt(x: number, y: number) {
+    if (zoom >= 3) {
+      setZoom(1);
+      setZoomOrigin("50% 50%");
+      return;
+    }
+
+    if (zoom === 1) {
+      setZoomOrigin(`${x}% ${y}%`);
+    }
+    setZoom(Math.min(3, zoom + 1));
+  }
+
+  function handleImageClick(event: MouseEvent<HTMLImageElement>) {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - bounds.left) / bounds.width) * 100;
+    const y = ((event.clientY - bounds.top) / bounds.height) * 100;
+    toggleZoomAt(x, y);
+  }
+
   return (
     <div className={styles.imageOverlay} onMouseDown={onClose}>
-      <button className={styles.closeImage} onClick={onClose}>
-        ×
-      </button>
-
-      <div
-        className={styles.zoomControls}
-        onMouseDown={(e) => e.stopPropagation()}
+      <section
+        className={styles.imageModal}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="housekeeping-photo-title"
+        onMouseDown={(event) => event.stopPropagation()}
       >
-        <button onClick={() => setZoom(Math.max(0.5, zoom - 0.25))}>−</button>
+        <button
+          type="button"
+          className={styles.closeImage}
+          onClick={onClose}
+          aria-label="Close image"
+        >
+          ×
+        </button>
 
-        <span>{Math.round(zoom * 100)}%</span>
+        <h2 className={styles.imageModalTitle} id="housekeeping-photo-title">
+          Housekeeping Photo
+        </h2>
+        <p className={styles.imageModalRoom}>
+          Room {roomNumber} <span aria-hidden="true">•</span> {roomType}
+        </p>
 
-        <button onClick={() => setZoom(Math.min(3, zoom + 0.25))}>+</button>
-      </div>
+        <div className={styles.imageContainer}>
+          <img
+            src={image}
+            alt={`Housekeeping room photo ${imageIndex + 1} of ${images.length}`}
+            className={zoom >= 3 ? styles.zoomedImage : ""}
+            onClick={handleImageClick}
+            onKeyDown={(event) => {
+              if (event.key === "Enter" || event.key === " ") {
+                event.preventDefault();
+                toggleZoomAt(50, 50);
+              }
+            }}
+            role="button"
+            tabIndex={0}
+            aria-label={
+              zoom >= 3 ? "Reset photo zoom" : "Zoom in at pointer location"
+            }
+            style={{
+              transform: `scale(${zoom})`,
+              transformOrigin: zoomOrigin,
+            }}
+          />
+        </div>
 
-      <div
-        className={styles.imageContainer}
-        onMouseDown={(e) => e.stopPropagation()}
-      >
-        <img
-          src={image}
-          alt="Housekeeping room"
-          style={{
-            transform: `scale(${zoom})`,
-          }}
-        />
-      </div>
+        {images.length > 1 && (
+          <div className={styles.photoControls}>
+            <button
+              type="button"
+              className={styles.photoNavButton}
+              onClick={() => onImageChange(imageIndex - 1)}
+              aria-label="Previous photo"
+            >
+              Previous
+            </button>
+            <span aria-live="polite">
+              {imageIndex + 1} / {images.length}
+            </span>
+            <button
+              type="button"
+              className={styles.photoNavButton}
+              onClick={() => onImageChange(imageIndex + 1)}
+              aria-label="Next photo"
+            >
+              Next
+            </button>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
