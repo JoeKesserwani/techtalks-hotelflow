@@ -19,6 +19,7 @@ model Hotel {
   checkOutTime      String?            @map("check_out_time")
   email             String?
   phone             String?
+
   auditLogs         AuditLog[]
   guests            Guest[]
   housekeepingTasks HousekeepingTask[]
@@ -39,6 +40,7 @@ model User {
   isActive            Boolean            @default(true) @map("is_active")
   createdAt           DateTime           @default(now()) @map("created_at")
   updatedAt           DateTime           @updatedAt @map("updated_at")
+
   auditLogs           AuditLog[]
   housekeepingTasks   HousekeepingTask[] @relation("AssignedTo")
   createdReservations Reservation[]      @relation("CreatedBy")
@@ -55,8 +57,9 @@ model Session {
   userId           String   @map("user_id")
   refreshTokenHash String   @map("refresh_token_hash")
   expiresAt        DateTime @map("expires_at")
-  createdAt        DateTime @default(now()) @map("created_at")
-  user             User     @relation(fields: [userId], references: [id])
+  createdAt         DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [id])
 
   @@index([userId], map: "sessions_user_id_fkey")
   @@map("sessions")
@@ -73,6 +76,11 @@ model Room {
   updatedAt         DateTime           @updatedAt @map("updated_at")
   floor             Int                @default(1)
   capacity          Int                @default(1)
+<<<<<<< Updated upstream
+=======
+
+  reservations      Reservation[]
+>>>>>>> Stashed changes
   housekeepingTasks HousekeepingTask[]
   reservations      Reservation[]
 
@@ -90,8 +98,9 @@ model Guest {
   updatedAt      DateTime      @updatedAt @map("updated_at")
   note           String?
   passportNumber String?       @map("passport_number")
-  hotel          Hotel         @relation(fields: [hotelId], references: [id])
-  reservations   Reservation[]
+
+  hotel        Hotel         @relation(fields: [hotelId], references: [id])
+  reservations Reservation[]
 
   @@index([hotelId], map: "guests_hotel_id_fkey")
   @@map("guests")
@@ -175,8 +184,9 @@ model AuditLog {
   entityType   String   @map("entity_type")
   metadataJson Json?    @map("metadata_json")
   createdAt    DateTime @default(now()) @map("created_at")
-  hotel        Hotel    @relation(fields: [hotelId], references: [id])
-  user         User?    @relation(fields: [userId], references: [id])
+
+  hotel Hotel @relation(fields: [hotelId], references: [id])
+  user  User?  @relation(fields: [userId], references: [id])
 
   @@index([hotelId], map: "audit_logs_hotel_id_fkey")
   @@index([userId], map: "audit_logs_user_id_fkey")
@@ -196,7 +206,11 @@ model Notification {
 
   isRead    Boolean   @default(false) @map("is_read")
   readAt    DateTime? @map("read_at") @db.DateTime(0)
+<<<<<<< Updated upstream
   createdAt DateTime  @default(now()) @map("created_at") @db.DateTime(0)
+=======
+  createdAt DateTime  @default(now()) @map("created_at")
+>>>>>>> Stashed changes
 
   hotel Hotel @relation(fields: [hotelId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -249,6 +263,10 @@ enum PaymentStatus {
   UNPAID
   PARTIAL
   PAID
+<<<<<<< Updated upstream
 }
 
 
+=======
+}
+>>>>>>> Stashed changes
