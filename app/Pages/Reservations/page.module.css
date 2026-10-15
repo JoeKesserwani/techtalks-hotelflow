@@ -33,28 +33,18 @@
   margin: 0;
 }
 
-/* Header */
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  gap: 16px;
-  flex-wrap: wrap;
-}
 .nav {
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
 }
-.nav h1 {
-  font-size: clamp(24px, 5vw, 34px);
-  line-height: 1.15;
-}
-.sub {
-  margin: 10px 0 0;
-  color: var(--muted);
-  font-size: 15px;
+.selectedDate {
+  min-width: 144px;
+  color: var(--ink);
+  font-family: "Source Serif 4", Georgia, "Times New Roman", serif;
+  font-size: 17px;
+  text-align: center;
 }
 .arrow,
 .ghost {
@@ -86,32 +76,6 @@
   font: inherit;
   font-size: 13px;
 }
-.staff {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.staff div {
-  display: flex;
-  flex-direction: column;
-  line-height: 1.35;
-}
-.staff span:not(.avatar) {
-  color: var(--muted);
-}
-.avatar {
-  width: 34px;
-  height: 34px;
-  border-radius: 50%;
-  background: var(--ink);
-  color: #fff;
-  display: grid;
-  place-items: center;
-  font:
-    700 14px Georgia,
-    serif;
-}
-
 /* Summary */
 .summaryBar {
   display: flex;
@@ -152,31 +116,6 @@
   gap: 16px;
   margin-bottom: 28px;
 }
-.card {
-  background: var(--card);
-  border: 1px solid var(--line);
-  border-radius: 14px;
-  overflow: hidden;
-  align-self: start;
-}
-.cardHead {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 18px;
-}
-.cardHead h2 {
-  font-size: 17px;
-}
-.badge {
-  min-width: 26px;
-  padding: 3px 9px;
-  border-radius: 999px;
-  color: #fff;
-  font-size: 12px;
-  font-weight: 700;
-  text-align: center;
-}
 .slate {
   background: var(--slate);
 }
@@ -185,9 +124,6 @@
 }
 .olive {
   background: var(--olive);
-}
-.ink {
-  background: var(--ink);
 }
 .empty {
   margin: 0;
@@ -371,9 +307,6 @@
   .soft {
     padding: 10px 16px;
   }
-  .staff div {
-    display: none;
-  }
 }
 @media (prefers-reduced-motion: reduce) {
   .toast {
@@ -381,115 +314,11 @@
   }
 }
 
-/* Room availability board */
-.cardHead .hint {
-  margin: 4px 0 0;
-}
 .hint {
   color: var(--muted);
   font-size: 12.5px;
   margin: 6px 0 0;
 }
-.legend {
-  list-style: none;
-  margin: 0;
-  padding: 0 18px 12px;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px 14px;
-  font-size: 12px;
-  color: var(--muted);
-}
-.legend li {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 3px;
-  border: 1px solid var(--line);
-  display: inline-block;
-}
-.tiles {
-  list-style: none;
-  margin: 0;
-  padding: 14px 18px 18px;
-  border-top: 1px solid var(--line);
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(96px, 1fr));
-  gap: 10px;
-}
-.tile {
-  width: 100%;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  text-align: left;
-  padding: 10px 12px;
-  border-radius: 10px;
-  border: 1px solid var(--line);
-  background: var(--card);
-  color: var(--ink);
-  font: inherit;
-  min-height: 62px;
-  cursor: default;
-}
-.tile strong {
-  font:
-    700 17px "Source Serif 4",
-    Georgia,
-    serif;
-}
-.tile span {
-  font-size: 11.5px;
-  opacity: 0.85;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.tile:not(:disabled) {
-  cursor: pointer;
-  border-color: var(--sage);
-}
-.tile:not(:disabled):hover {
-  background: #f4f6ea;
-}
-.t_arriving {
-  background: var(--slate);
-  border-color: var(--slate);
-  color: #fff;
-}
-.t_occupied {
-  background: var(--olive);
-  border-color: var(--olive);
-  color: #fff;
-}
-.t_departing {
-  background: #f6e1d8;
-  border-color: var(--clay);
-}
-.t_dirty {
-  background: var(--chip);
-}
-.t_oos {
-  background: repeating-linear-gradient(
-    45deg,
-    var(--chip),
-    var(--chip) 6px,
-    #e7dcc6 6px,
-    #e7dcc6 12px
-  );
-  color: var(--muted);
-}
-.t_free {
-  background: var(--card);
-}
-.dot.t_free {
-  border-color: var(--sage);
-}
-
 /* Dialogs */
 .dialog {
   border: 0;
@@ -679,10 +508,6 @@
   }
   .twoCol {
     grid-template-columns: 1fr;
-  }
-  .tiles {
-    grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
-    padding: 12px;
   }
 }
 

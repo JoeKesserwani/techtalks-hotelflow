@@ -225,8 +225,8 @@ export function roomBoard(
       const a = arr.get(room.id),
         s = stay.get(room.id),
         d = dep.get(room.id);
-      if (a) return { room, state: "arriving", guest: guestName(a) };
       if (s) return { room, state: "occupied", guest: guestName(s) };
+      if (a) return { room, state: "arriving", guest: guestName(a) };
       if (room.status === "OUT_OF_SERVICE" && date >= today)
         return { room, state: "oos" };
       if (d) return { room, state: "departing", guest: guestName(d) };

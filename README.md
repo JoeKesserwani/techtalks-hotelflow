@@ -95,7 +95,19 @@ Run commands:
 - npm run build
 - npm run start
 
+Prisma Client is regenerated from `prisma/schema.prisma` automatically before
+the development server and production build start.
+
 Open http://localhost:3000 after running `npm run dev`.
+
+### Install HotelFlow on a mobile device
+
+HotelFlow can be installed from a supported mobile browser when it is served
+over HTTPS (localhost is also supported for development). On Android, use the
+browser's **Install app** prompt or choose **Install app** from its menu. On
+iPhone or iPad, open the site in Safari, tap **Share**, then choose **Add to
+Home Screen**. The installed PWA opens in its own app window; it is not an App
+Store download and does not currently support offline hotel operations.
 
 Test commands:
 
@@ -112,10 +124,9 @@ Add this to `.env`:
 DATABASE_URL="mysql://root:311976Lh*C@158.101.239.181:3306/HotelFlow"
 ```
 
-Generate Prisma Client and apply the migrations:
+Apply the migrations:
 
 ```powershell
-npx prisma generate
 npx prisma migrate deploy
 ```
 
@@ -123,8 +134,10 @@ For future schema changes:
 
 ```powershell
 npx prisma migrate dev --name describe_your_change
-npx prisma generate
 ```
+
+Prisma Client is regenerated automatically the next time you run `npm run dev`
+or `npm run build`. To regenerate it manually, run `npx prisma generate`.
 
 Open Prisma Studio:
 

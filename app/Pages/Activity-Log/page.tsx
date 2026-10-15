@@ -318,12 +318,13 @@ export default function ActivityLogPage() {
                     >
                       <td
                         className={styles.timeCell}
+                        data-label="Time"
                         title={fullTimestamp(item.createdAt)}
                       >
                         {timeLabel(item.createdAt)}
                       </td>
 
-                      <td>
+                      <td data-label="Staff member">
                         <div className={styles.staff}>
                           <span
                             className={`${styles.avatar} ${styles[avatarClass(staffName)]}`}
@@ -341,7 +342,7 @@ export default function ActivityLogPage() {
                         </div>
                       </td>
 
-                      <td>
+                      <td data-label="Activity">
                         <div className={styles.activity}>
                           <span
                             className={`${styles.tag} ${styles[`tag_${info.category}`]}`}
