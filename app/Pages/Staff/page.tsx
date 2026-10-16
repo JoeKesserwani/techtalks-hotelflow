@@ -526,10 +526,7 @@ export default function StaffPage() {
                       <td className={styles.dateCell} data-label="Date added">
                         {formatDate(member.createdAt)}
                       </td>
-                      <td
-                        className={styles.actionsCell}
-                        data-label="Actions"
-                      >
+                      <td className={styles.actionsCell} data-label="Actions">
                         <button
                           type="button"
                           className={styles.editButton}
