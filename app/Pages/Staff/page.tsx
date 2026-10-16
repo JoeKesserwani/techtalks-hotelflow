@@ -64,7 +64,7 @@ const initials = (name: string) =>
     .join("")
     .toUpperCase();
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 5;
 
 export default function StaffPage() {
   const { notify } = usePopupMessage();
