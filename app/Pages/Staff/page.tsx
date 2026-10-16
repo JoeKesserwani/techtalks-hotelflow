@@ -1,9 +1,19 @@
 "use client";
 
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  CircleCheck,
+  CircleMinus,
+  Mail,
+  Pencil,
+  Search,
+  ShieldCheck,
+  UserPlus,
+  Users,
+  X,
+} from "lucide-react";
 import { Role } from "@/app/generated/prisma/enums";
-import styles from "./page.module.css";
-import { useAuth } from "@/components/Auth/AuthProvider";
+import styles from "./staff.module.css";
 import Pagination from "@/components/Pagination";
 import Header from "@/components/Header/Header";
 
@@ -23,6 +33,9 @@ type StaffForm = {
   role: Role;
 };
 
+type AccountFilter = "all" | "active" | "inactive";
+type RoleFilter = Role | "all";
+
 const roleOptions = Object.values(Role).filter((role) => role !== Role.ADMIN);
 const emptyForm: StaffForm = {
   fullName: "",
@@ -41,9 +54,22 @@ const formatDate = (date: string) =>
     year: "numeric",
   }).format(new Date(date));
 
+const initials = (name: string) =>
+  name
+    .trim()
+    .split(/\s+/)
+    .slice(0, 2)
+    .map((part) => part.charAt(0))
+    .join("")
+    .toUpperCase();
+
+const PAGE_SIZE = 8;
+
 export default function StaffPage() {
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [query, setQuery] = useState("");
+  const [accountFilter, setAccountFilter] = useState<AccountFilter>("all");
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -52,7 +78,6 @@ export default function StaffPage() {
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [form, setForm] = useState<StaffForm>(emptyForm);
-  const { user } = useAuth();
 
   async function loadStaff() {
     setIsLoading(true);
@@ -111,28 +136,37 @@ export default function StaffPage() {
   const filteredStaff = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    return normalizedQuery
-      ? staff.filter((member) =>
-          [member.fullName, member.email, formatRole(member.role)]
-            .join(" ")
-            .toLowerCase()
-            .includes(normalizedQuery),
-        )
-      : staff;
-  }, [query, staff]);
+    return staff.filter((member) => {
+      const matchesQuery =
+        !normalizedQuery ||
+        [member.fullName, member.email, formatRole(member.role)]
+          .join(" ")
+          .toLowerCase()
+          .includes(normalizedQuery);
+      const matchesStatus =
+        accountFilter === "all" ||
+        member.isActive === (accountFilter === "active");
+      const matchesRole = roleFilter === "all" || member.role === roleFilter;
 
-  const pageSize = 5;
-  const totalPages = Math.max(1, Math.ceil(filteredStaff.length / pageSize));
+      return matchesQuery && matchesStatus && matchesRole;
+    });
+  }, [accountFilter, query, roleFilter, staff]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredStaff.length / PAGE_SIZE));
   const safeCurrentPage = Math.min(currentPage, totalPages);
+  const activeCount = staff.filter((member) => member.isActive).length;
+  const inactiveCount = staff.length - activeCount;
+  const hasFilters =
+    !!query.trim() || accountFilter !== "all" || roleFilter !== "all";
 
   const paginatedStaff = useMemo(() => {
-    if (filteredStaff.length <= pageSize) {
+    if (filteredStaff.length <= PAGE_SIZE) {
       return filteredStaff;
     }
 
-    const startIndex = (safeCurrentPage - 1) * pageSize;
-    return filteredStaff.slice(startIndex, startIndex + pageSize);
-  }, [filteredStaff, pageSize, safeCurrentPage]);
+    const startIndex = (safeCurrentPage - 1) * PAGE_SIZE;
+    return filteredStaff.slice(startIndex, startIndex + PAGE_SIZE);
+  }, [filteredStaff, safeCurrentPage]);
 
   function closeDialog() {
     if (!isSaving) {
@@ -258,116 +292,271 @@ export default function StaffPage() {
 
   return (
     <main className={styles.page}>
-      {Header({
-        title: "Staff Management",
-        subtitle: `${staff.length} ${staff.length === 1 ? "account" : "accounts"} · Manage roles and access`,
-        userSubtitle: "Currently reviewing rooms",
-      })}
-      <section className={styles.toolbar} aria-label="Staff controls">
-        <label className={styles.searchLabel}>
-          <span className="sr-only">Search staff</span>
-          <input
-            type="search"
-            placeholder="Search staff by name, email or Role"
-            value={query}
-            onChange={(event) => {
-              setQuery(event.target.value);
-              setCurrentPage(1);
-            }}
-            maxLength={30}
-          />
-        </label>
-        <button
-          type="button"
-          className={styles.addButton}
-          onClick={openCreateDialog}
-        >
-          + Add staff
-        </button>
-      </section>
+      <div className={styles.pageInner}>
+        <Header
+          title="Staff"
+          subtitle="Manage team accounts, roles and access."
+          userSubtitle="Team administration"
+        />
 
-      {error ? (
-        <div className={styles.message} role="alert">
-          <p>{error}</p>
-          <button type="button" onClick={() => void loadStaff()}>
-            Try again
-          </button>
-        </div>
-      ) : isLoading ? (
-        <p className={styles.loading}>Loading staff…</p>
-      ) : (
-        <>
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th scope="col">Name</th>
-                  <th scope="col">Role</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Added</th>
-                  <th scope="col">
-                    <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedStaff.map((member) => (
-                  <tr key={member.id}>
-                    <td>
-                      <div className={styles.member}>
-                        <span className={styles.avatar} aria-hidden="true">
-                          {member.fullName.charAt(0).toUpperCase()}
-                        </span>
-                        <span>
-                          <strong>{member.fullName}</strong>
-                          <small>{member.email}</small>
-                        </span>
-                      </div>
-                    </td>
-                    <td>{formatRole(member.role)}</td>
-                    <td>
-                      <span
-                        className={
-                          member.isActive ? styles.active : styles.inactive
-                        }
-                      >
-                        {member.isActive ? "Active" : "Inactive"}
-                      </span>
-                    </td>
-                    <td>{formatDate(member.createdAt)}</td>
-                    <td>
-                      <button
-                        type="button"
-                        className={styles.editButton}
-                        onClick={() => openEditDialog(member)}
-                      >
-                        Edit
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-                {filteredStaff.length === 0 && (
-                  <tr>
-                    <td className={styles.empty} colSpan={5}>
-                      No staff members match your search.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+        <section className={styles.metrics} aria-label="Staff overview">
+          <article className={styles.metric}>
+            <span className={`${styles.metricIcon} ${styles.metricTotal}`}>
+              <Users size={19} aria-hidden="true" />
+            </span>
+            <span className={styles.metricCopy}>
+              <span className={styles.metricLabel}>Team members</span>
+              <strong className={styles.metricValue}>{staff.length}</strong>
+              <span className={styles.metricFoot}>Staff accounts</span>
+            </span>
+          </article>
+          <article className={styles.metric}>
+            <span className={`${styles.metricIcon} ${styles.metricActive}`}>
+              <CircleCheck size={19} aria-hidden="true" />
+            </span>
+            <span className={styles.metricCopy}>
+              <span className={styles.metricLabel}>Active access</span>
+              <strong className={styles.metricValue}>{activeCount}</strong>
+              <span className={styles.metricFoot}>Can sign in</span>
+            </span>
+          </article>
+          <article className={styles.metric}>
+            <span className={`${styles.metricIcon} ${styles.metricInactive}`}>
+              <CircleMinus size={19} aria-hidden="true" />
+            </span>
+            <span className={styles.metricCopy}>
+              <span className={styles.metricLabel}>Inactive</span>
+              <strong className={styles.metricValue}>{inactiveCount}</strong>
+              <span className={styles.metricFoot}>Access disabled</span>
+            </span>
+          </article>
+        </section>
+
+        <section className={styles.directory} aria-labelledby="directory-title">
+          <div className={styles.directoryHeader}>
+            <div>
+              <p className={styles.eyebrow}>People &amp; permissions</p>
+              <h2 id="directory-title">Staff directory</h2>
+              <p className={styles.directoryDescription}>
+                Review account status and manage each team member’s access.
+              </p>
+            </div>
+            <span className={styles.resultCount}>
+              {filteredStaff.length}{" "}
+              {filteredStaff.length === 1 ? "member" : "members"}
+            </span>
           </div>
 
-          {filteredStaff.length > 0 && (
+          <div className={styles.toolbar}>
+            <label className={styles.searchField}>
+              <Search size={17} aria-hidden="true" />
+              <span className={styles.visuallyHidden}>Search staff</span>
+              <input
+                type="search"
+                placeholder="Search name, email or role"
+                value={query}
+                onChange={(event) => {
+                  setQuery(event.target.value);
+                  setCurrentPage(1);
+                }}
+                maxLength={40}
+              />
+            </label>
+
+            <label className={styles.roleFilter}>
+              <span>Role</span>
+              <select
+                value={roleFilter}
+                onChange={(event) => {
+                  setRoleFilter(event.target.value as RoleFilter);
+                  setCurrentPage(1);
+                }}
+              >
+                <option value="all">All roles</option>
+                {roleOptions.map((role) => (
+                  <option key={role} value={role}>
+                    {formatRole(role)}
+                  </option>
+                ))}
+              </select>
+            </label>
+
+            <button
+              type="button"
+              className={styles.addButton}
+              onClick={openCreateDialog}
+            >
+              <UserPlus size={17} aria-hidden="true" />
+              <span>Add staff</span>
+            </button>
+          </div>
+
+          <div
+            className={styles.statusFilters}
+            role="group"
+            aria-label="Filter staff by account status"
+          >
+            <button
+              type="button"
+              className={
+                accountFilter === "all"
+                  ? styles.filterActive
+                  : styles.filterButton
+              }
+              aria-pressed={accountFilter === "all"}
+              onClick={() => {
+                setAccountFilter("all");
+                setCurrentPage(1);
+              }}
+            >
+              All staff <span>{staff.length}</span>
+            </button>
+            <button
+              type="button"
+              className={
+                accountFilter === "active"
+                  ? styles.filterActive
+                  : styles.filterButton
+              }
+              aria-pressed={accountFilter === "active"}
+              onClick={() => {
+                setAccountFilter("active");
+                setCurrentPage(1);
+              }}
+            >
+              Active <span>{activeCount}</span>
+            </button>
+            <button
+              type="button"
+              className={
+                accountFilter === "inactive"
+                  ? styles.filterActive
+                  : styles.filterButton
+              }
+              aria-pressed={accountFilter === "inactive"}
+              onClick={() => {
+                setAccountFilter("inactive");
+                setCurrentPage(1);
+              }}
+            >
+              Inactive <span>{inactiveCount}</span>
+            </button>
+          </div>
+
+          {error ? (
+            <div className={styles.message} role="alert">
+              <p>{error}</p>
+              <button type="button" onClick={() => void loadStaff()}>
+                Try again
+              </button>
+            </div>
+          ) : isLoading ? (
+            <div className={styles.loading} role="status">
+              <span className={styles.spinner} aria-hidden="true" />
+              Loading staff accounts…
+            </div>
+          ) : filteredStaff.length === 0 ? (
+            <div className={styles.emptyState}>
+              <span className={styles.emptyIcon}>
+                <Users size={22} aria-hidden="true" />
+              </span>
+              <h3>
+                {staff.length ? "No matching staff" : "No staff accounts yet"}
+              </h3>
+              <p>
+                {staff.length
+                  ? "Try a different search or filter."
+                  : "Add a staff account to give your team access."}
+              </p>
+              {staff.length === 0 && (
+                <button
+                  type="button"
+                  className={styles.addButton}
+                  onClick={openCreateDialog}
+                >
+                  <UserPlus size={17} aria-hidden="true" />
+                  Add staff
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className={styles.tableViewport}>
+              <table className={styles.table}>
+                <thead>
+                  <tr>
+                    <th scope="col">Team member</th>
+                    <th scope="col">Role</th>
+                    <th scope="col">Account status</th>
+                    <th scope="col">Date added</th>
+                    <th scope="col" className={styles.actionsHeading}>
+                      <span className={styles.visuallyHidden}>Actions</span>
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedStaff.map((member) => (
+                    <tr key={member.id}>
+                      <td>
+                        <div className={styles.member}>
+                          <span className={styles.avatar} aria-hidden="true">
+                            {initials(member.fullName)}
+                          </span>
+                          <span className={styles.memberInfo}>
+                            <strong>{member.fullName}</strong>
+                            <span className={styles.email}>
+                              <Mail size={14} aria-hidden="true" />
+                              {member.email}
+                            </span>
+                          </span>
+                        </div>
+                      </td>
+                      <td>
+                        <span className={styles.roleValue}>
+                          <ShieldCheck size={15} aria-hidden="true" />
+                          {formatRole(member.role)}
+                        </span>
+                      </td>
+                      <td>
+                        <span
+                          className={`${styles.status} ${member.isActive ? styles.statusActive : styles.statusInactive}`}
+                        >
+                          {member.isActive ? "Active" : "Inactive"}
+                        </span>
+                      </td>
+                      <td className={styles.dateCell}>
+                        {formatDate(member.createdAt)}
+                      </td>
+                      <td className={styles.actionsCell}>
+                        <button
+                          type="button"
+                          className={styles.editButton}
+                          onClick={() => openEditDialog(member)}
+                          aria-label={`Edit ${member.fullName}`}
+                          title="Edit staff member"
+                        >
+                          <Pencil size={15} aria-hidden="true" />
+                          <span>Edit</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+
+          {!error && !isLoading && filteredStaff.length > 0 && (
             <Pagination
               currentPage={safeCurrentPage}
               totalPages={totalPages}
               totalItems={filteredStaff.length}
-              itemsPerPage={pageSize}
+              itemsPerPage={PAGE_SIZE}
               onPageChange={setCurrentPage}
+              isFiltered={hasFilters}
             />
           )}
-        </>
-      )}
+        </section>
+      </div>
 
       {mode && (
         <div
@@ -384,13 +573,16 @@ export default function StaffPage() {
           >
             <div className={styles.dialogHeader}>
               <div>
+                <p className={styles.eyebrow}>
+                  {mode === "create" ? "New account" : "Account settings"}
+                </p>
                 <h2 id="staff-dialog-title">
                   {mode === "create" ? "Add staff member" : "Edit staff member"}
                 </h2>
-                <p>
+                <p className={styles.dialogDescription}>
                   {mode === "create"
-                    ? "Create a new account and assign access."
-                    : "Update access and account details."}
+                    ? "Create an account and assign a team role."
+                    : "Update this team member’s details and access."}
                 </p>
               </div>
               <button
@@ -398,31 +590,31 @@ export default function StaffPage() {
                 className={styles.closeButton}
                 onClick={closeDialog}
                 aria-label="Close dialog"
+                title="Close"
               >
-                ×
+                <X size={19} aria-hidden="true" />
               </button>
             </div>
 
-            <form onSubmit={saveStaff}>
+            <form onSubmit={saveStaff} aria-busy={isSaving}>
               <label>
                 Full name
                 <input
                   required
                   value={form.fullName}
                   maxLength={30}
+                  autoComplete="name"
                   onChange={(event) =>
                     updateForm("fullName", event.target.value)
                   }
                 />
               </label>
               <label>
-                Email
+                Email address
                 <input
                   required
                   type="email"
-                  autoComplete="off"
-                  data-lpignore="true"
-                  data-1pignore="true"
+                  autoComplete="email"
                   maxLength={40}
                   value={form.email}
                   onChange={(event) => updateForm("email", event.target.value)}
@@ -436,16 +628,14 @@ export default function StaffPage() {
                   maxLength={20}
                   type="password"
                   value={form.password}
-                  autoComplete="off"
-                  data-lpignore="true"
-                  data-1pignore="true"
+                  autoComplete={mode === "create" ? "new-password" : "off"}
                   onChange={(event) =>
                     updateForm("password", event.target.value)
                   }
                 />
               </label>
               <label>
-                Role
+                Staff role
                 <select
                   value={form.role}
                   onChange={(event) =>
@@ -470,14 +660,15 @@ export default function StaffPage() {
                 {mode === "edit" && selectedStaff?.isActive && (
                   <button
                     type="button"
-                    className={styles.deleteButton}
+                    className={styles.deactivateButton}
                     onClick={() => void deactivateStaff()}
                     disabled={isSaving}
                   >
+                    <CircleMinus size={16} aria-hidden="true" />
                     Deactivate
                   </button>
                 )}
-                <span />
+                <span className={styles.actionSpacer} />
                 <button
                   type="button"
                   className={styles.cancelButton}
