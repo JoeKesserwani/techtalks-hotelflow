@@ -24,6 +24,8 @@ type StaffForm = {
 };
 
 const roleOptions = Object.values(Role).filter((role) => role !== Role.ADMIN);
+type RoleFilter = Role | "all";
+
 const emptyForm: StaffForm = {
   fullName: "",
   email: "",
@@ -33,6 +35,16 @@ const emptyForm: StaffForm = {
 
 const formatRole = (role: Role) =>
   role.charAt(0) + role.slice(1).toLowerCase().replace("_", " ");
+
+const roleFilterOptions: { value: RoleFilter; label: string }[] = [
+  { value: "all", label: "All roles" },
+  ...Object.values(Role)
+    .filter((role) => role !== Role.ADMIN)
+    .map((role) => ({
+      value: role,
+      label: formatRole(role),
+    })),
+];
 
 const formatDate = (date: string) =>
   new Intl.DateTimeFormat("en", {
@@ -44,6 +56,8 @@ const formatDate = (date: string) =>
 export default function StaffPage() {
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [query, setQuery] = useState("");
+  const [roleFilter, setRoleFilter] = useState<RoleFilter>("all");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -111,15 +125,21 @@ export default function StaffPage() {
   const filteredStaff = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    return normalizedQuery
-      ? staff.filter((member) =>
+    return staff
+      .filter((member) => {
+        const matchesQuery =
+          !normalizedQuery ||
           [member.fullName, member.email, formatRole(member.role)]
             .join(" ")
             .toLowerCase()
-            .includes(normalizedQuery),
-        )
-      : staff;
-  }, [query, staff]);
+            .includes(normalizedQuery);
+
+        return (
+          matchesQuery && (roleFilter === "all" || member.role === roleFilter)
+        );
+      })
+      .sort((first, second) => Number(second.isActive) - Number(first.isActive));
+  }, [query, roleFilter, staff]);
 
   const pageSize = 5;
   const totalPages = Math.max(1, Math.ceil(filteredStaff.length / pageSize));
@@ -255,7 +275,47 @@ export default function StaffPage() {
       setIsSaving(false);
     }
   }
+  async function ActivateStaff() {
+    if (
+      !selectedStaff ||
+      !window.confirm(`Activate ${selectedStaff.fullName}?`)
+    ) {
+      return;
+    }
 
+    setFormError(null);
+    setIsSaving(true);
+
+    try {
+      const response = await fetch(`/api/v1/users/${selectedStaff.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: true }),
+      });
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          result?.message ??
+            result?.error ??
+            "Unable to activate staff member.",
+        );
+      }
+
+      await loadStaff();
+      setMode(null);
+      setSelectedStaff(null);
+      setForm(emptyForm);
+    } catch (err) {
+      setFormError(
+        err instanceof Error
+          ? err.message
+          : "Unable to activate staff member.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
   return (
     <main className={styles.page}>
       {Header({
@@ -277,6 +337,56 @@ export default function StaffPage() {
             maxLength={30}
           />
         </label>
+        <div className={styles.filterWrapper}>
+          <button
+            type="button"
+            className={styles.filterButton}
+            onClick={() => setIsFilterOpen((open) => !open)}
+            aria-haspopup="listbox"
+            aria-expanded={isFilterOpen}
+          >
+            {roleFilter === "all" ? "All roles" : formatRole(roleFilter)}
+            <span className={styles.filterCaret} aria-hidden="true">
+              ▾
+            </span>
+          </button>
+
+          {isFilterOpen && (
+            <>
+              <div
+                className={styles.filterBackdrop}
+                onClick={() => setIsFilterOpen(false)}
+              />
+              <ul
+                className={styles.filterMenu}
+                role="listbox"
+                aria-label="Filter staff by role"
+              >
+                {roleFilterOptions.map((option) => (
+                  <li key={option.value}>
+                    <button
+                      type="button"
+                      className={
+                        option.value === roleFilter
+                          ? styles.filterOptionActive
+                          : styles.filterOption
+                      }
+                      onClick={() => {
+                        setRoleFilter(option.value);
+                        setCurrentPage(1);
+                        setIsFilterOpen(false);
+                      }}
+                      role="option"
+                      aria-selected={option.value === roleFilter}
+                    >
+                      {option.label}
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </>
+          )}
+        </div>
         <button
           type="button"
           className={styles.addButton}
@@ -349,7 +459,7 @@ export default function StaffPage() {
                 {filteredStaff.length === 0 && (
                   <tr>
                     <td className={styles.empty} colSpan={5}>
-                      No staff members match your search.
+                      No staff members match your search or role filter.
                     </td>
                   </tr>
                 )}
@@ -475,6 +585,16 @@ export default function StaffPage() {
                     disabled={isSaving}
                   >
                     Deactivate
+                  </button>
+                )}
+                {mode === "edit" && selectedStaff?.isActive === false && (
+                  <button
+                    type="button"
+                    className={styles.activateButton}
+                    onClick={() => void ActivateStaff()}
+                    disabled={isSaving}
+                  >
+                    Activate
                   </button>
                 )}
                 <span />

@@ -18,6 +18,7 @@ import {
   type Reservation,
   type Room,
 } from "./frontdesk";
+import { useAuth } from "@/components/Auth/AuthProvider";
 
 const short = (d: string) => formatDate(d, { month: "short", day: "numeric" });
 const nightsText = (n: number) => `${n} night${n === 1 ? "" : "s"}`;
@@ -63,6 +64,7 @@ export function EditReservationDialog({
   onConflict: () => void;
   onFailure?: (message: string) => void;
 }) {
+  const { currencySymbol } = useAuth();
   const inHouse = r.status === "CHECKED_IN";
   const curIn = dayOnly(r.checkInDate);
   const curOut = dayOnly(r.checkOutDate);
@@ -343,7 +345,7 @@ export function EditReservationDialog({
                         </strong>
                         <small>
                           {reason ??
-                            `${money(room.basePrice)} / night${room.capacity ? ` · sleeps ${room.capacity}` : ""}`}
+                            `${money(room.basePrice, currencySymbol)} / night${room.capacity ? ` · sleeps ${room.capacity}` : ""}`}
                         </small>
                       </span>
                     </label>
@@ -360,10 +362,10 @@ export function EditReservationDialog({
 
           <div className={s.info}>
             {reprice
-              ? `Repriced at Room ${newRoom?.roomNumber}'s rate (${money(rate)} / night).`
-              : `The agreed rate of ${money(rate)} / night stays the same.`}
+              ? `Repriced at Room ${newRoom?.roomNumber}'s rate (${money(rate, currencySymbol)} / night).`
+              : `The agreed rate of ${money(rate, currencySymbol)} / night stays the same.`}
             {becomesPartial &&
-              ` This reservation is marked paid, so the extra ${money(delta)} will leave a balance and it will switch to partial paid.`}
+              ` This reservation is marked paid, so the extra ${money(delta, currencySymbol)} will leave a balance and it will switch to partial paid.`}
           </div>
 
           {err && (
@@ -376,7 +378,7 @@ export function EditReservationDialog({
         <div className={s.dlgFoot}>
           <span className={s.total}>
             {changed && datesOk && roomOk
-              ? `${nightsText(newNights)} · ${money(newTotal)}${delta ? ` (${delta > 0 ? "+" : "−"}${money(Math.abs(delta))})` : ""}`
+              ? `${nightsText(newNights)} · ${money(newTotal, currencySymbol)}${delta ? ` (${delta > 0 ? "+" : "−"}${money(Math.abs(delta), currencySymbol)})` : ""}`
               : "No changes yet"}
           </span>
           <button type="button" className={s.soft} onClick={onClose}>
@@ -402,6 +404,7 @@ export function CancelReservationDialog({
   onKeep: () => void;
   onConfirm: (reason: string) => void;
 }) {
+  const { currencySymbol } = useAuth();
   const [reason, setReason] = useState("");
   const p = payment(r);
   return (
@@ -411,7 +414,7 @@ export function CancelReservationDialog({
         <p className={s.dlgSummary}>
           <strong>{guestName(r)}</strong> · Room {roomLabel(r)} ·{" "}
           {short(dayOnly(r.checkInDate))} – {short(dayOnly(r.checkOutDate))} ·{" "}
-          {money(r.totalPrice)}
+          {money(r.totalPrice, currencySymbol)}
         </p>
         <p className={s.sub}>
           The room becomes available for those dates again. This can't be

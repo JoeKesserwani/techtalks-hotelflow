@@ -99,7 +99,7 @@ function sortRoomsByNumber(rooms: Room[]) {
 }
 
 const Page = () => {
-  const { user } = useAuth();
+  const { user, currencySymbol } = useAuth();
   const router = useRouter();
 
   /* -------------------------------------------------------------------------- */
@@ -767,17 +767,22 @@ const Page = () => {
               <div className={styles.formGroup}>
                 <label htmlFor="newBasePrice">Base price</label>
 
-                <input
-                  id="newBasePrice"
-                  type="number"
-                  min="0"
-                  step="1"
-                  max="9999"
-                  value={newBasePrice}
-                  onChange={(event) => setNewBasePrice(event.target.value)}
-                  placeholder="e.g. 120"
-                  maxLength={4}
-                />
+                <div className={styles.currencyInput}>
+                  <span className={styles.currencyPrefix} aria-hidden="true">
+                    {currencySymbol}
+                  </span>
+                  <input
+                    id="newBasePrice"
+                    type="number"
+                    min="0"
+                    step="1"
+                    max="9999"
+                    value={newBasePrice}
+                    onChange={(event) => setNewBasePrice(event.target.value)}
+                    placeholder="e.g. 120"
+                    maxLength={4}
+                  />
+                </div>
               </div>
 
               {createError && <p className={styles.formError}>{createError}</p>}
@@ -906,16 +911,20 @@ const Page = () => {
               <div className={styles.formGroup}>
                 <label htmlFor="basePrice">Base price</label>
 
-                <input
-                  id="basePrice"
-                  type="number"
-                  min="0"
-                  step="1"
-                  max="9999"
-                  value={basePrice}
-                  onChange={(event) => setBasePrice(event.target.value)}
-                  maxLength={4}
-                />
+                <div className={styles.currencyInput}>
+                  <span className={styles.currencyPrefix} aria-hidden="true">
+                    {currencySymbol}
+                  </span>
+                  <input
+                    id="basePrice"
+                    type="number"
+                    min="0"
+                    step="1"
+                    max="9999"
+                    value={basePrice}
+                    onChange={(event) => setBasePrice(event.target.value)}
+                  />
+                </div>
 
                 <p className={styles.priceWarning}>
                   ⚠ Please review the base price before saving.

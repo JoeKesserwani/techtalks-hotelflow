@@ -75,7 +75,7 @@
 .dialog select {
   width: 100%;
   border: 1px solid #dcd3c3;
-  border-radius: 2px;
+  border-radius: 5px;
   background: #fffdfa;
   color: #302c26;
   font: inherit;
@@ -88,16 +88,97 @@
 }
 
 .searchLabel input:focus,
+.filterButton:focus-visible,
 .dialog input:focus,
 .dialog select:focus {
   outline: 2px solid #c9613e;
   outline-offset: 1px;
 }
 
+.filterWrapper {
+  position: relative;
+  flex: none;
+}
+
+.filterButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-width: 145px;
+  height: 38px;
+  padding: 0 12px;
+  border: 1px solid #dcd3c3;
+  border-radius: 5px;
+  background: #fffdfa;
+  color: #302c26;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.filterButton:hover {
+  border-color: #c9613e;
+}
+
+.filterCaret {
+  color: #807766;
+  font-size: 11px;
+}
+
+.filterBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 9;
+  background: transparent;
+}
+
+.filterMenu {
+  position: absolute;
+  top: calc(100% + 5px);
+  left: 0;
+  z-index: 10;
+  min-width: 100%;
+  margin: 0;
+  padding: 5px;
+  border: 1px solid #dcd3c3;
+  border-radius: 2px;
+  background: #fffdfa;
+  box-shadow: 0 8px 22px rgba(74, 61, 43, 0.12);
+  list-style: none;
+}
+
+.filterOption,
+.filterOptionActive {
+  display: block;
+  width: 100%;
+  padding: 8px 10px;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  color: #302c26;
+  cursor: pointer;
+  font: inherit;
+  font-size: 14px;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.filterOption:hover {
+  background: #f5f1e7;
+}
+
+.filterOptionActive {
+  background: #f5f1e7;
+  color: #984124;
+  font-weight: 600;
+}
+
 .addButton,
 .saveButton {
   border: 0;
-  border-radius: 2px;
+  border-radius: 5px;
   background: #c9613e;
   color: white;
   cursor: pointer;
@@ -408,6 +489,26 @@
   border-color: #b75235;
   color: #a54126;
 }
+.activateButton {
+  border: 1px solid #cfc4b3;
+  border-radius: 2px;
+  background: transparent;
+  color: #544c41;
+  cursor: pointer;
+  padding: 9px 12px;
+  font-weight: 600;
+}
+
+.activateButton {
+  border-color: #289e2e;
+  color: #26a52c;
+}
+
+.activateButton:hover {
+  background: #fff2ed;
+  color:rgb(138, 243, 69);
+  border-color: rgb(138, 243, 69);
+}
 
 .saveButton {
   padding: 10px 14px;
@@ -415,6 +516,8 @@
 
 .deleteButton:hover {
   background: #fff2ed;
+  color: #fd673e;
+  border-color: #fd673e;
 }
 
 .cancelButton:hover {

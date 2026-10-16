@@ -10,6 +10,7 @@ import React, {
 import Pagination from "@/components/Pagination";
 import styles from "./page.module.css";
 import Header from "@/components/Header/Header";
+import { useAuth } from "@/components/Auth/AuthProvider";
 
 /*
  * ================================
@@ -90,9 +91,9 @@ const formatDate = (value: string) => {
   }).format(toUtc(day));
 };
 
-const formatMoney = (value: string | number) => {
+const formatMoney = (value: string | number, currencySymbol: string) => {
   const n = Number(value);
-  return `$${(Number.isFinite(n) ? n : 0).toLocaleString("en-US", {
+  return `${currencySymbol}${(Number.isFinite(n) ? n : 0).toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
@@ -147,6 +148,7 @@ const readApiResponse = async (response: Response) => {
  */
 
 export default function ReservationHistoryPage() {
+  const { currencySymbol } = useAuth();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [me, setMe] = useState<{ fullName: string; role: string } | null>(null);
 
@@ -453,14 +455,14 @@ export default function ReservationHistoryPage() {
           </div>
           <div className={styles.stat}>
             <span>Total billed</span>
-            <strong>{formatMoney(stats.billed)}</strong>
+            <strong>{formatMoney(stats.billed, currencySymbol)}</strong>
             <small>Across the stays shown</small>
           </div>
           <div
             className={`${styles.stat} ${stats.unpaidCount ? styles.statWarn : ""}`}
           >
             <span>Unpaid</span>
-            <strong>{formatMoney(stats.unpaid)}</strong>
+            <strong>{formatMoney(stats.unpaid, currencySymbol)}</strong>
             <small>
               {stats.unpaidCount} unpaid · {stats.partialCount} partial
             </small>
@@ -680,7 +682,7 @@ export default function ReservationHistoryPage() {
 
                         <td data-label="Total" className={styles.num}>
                           <span className={styles.cellMain}>
-                            {formatMoney(reservation.totalPrice)}
+                            {formatMoney(reservation.totalPrice, currencySymbol)}
                           </span>
                         </td>
 
@@ -692,6 +694,7 @@ export default function ReservationHistoryPage() {
                               setToDelete(reservation);
                             }}
                             aria-label={`Delete the stay of ${name}`}
+                            style={{ display: me?.role === "RECEPTIONIST" ?  "none" :"inline-block" }}
                           >
                             Delete
                           </button>
@@ -753,6 +756,7 @@ function ConfirmDelete({
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const { currencySymbol } = useAuth();
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -795,7 +799,7 @@ function ConfirmDelete({
           <div>
             <dt>Total</dt>
             <dd>
-              {formatMoney(reservation.totalPrice)} · {PAY_LABEL[kind]}
+              {formatMoney(reservation.totalPrice, currencySymbol)} · {PAY_LABEL[kind]}
             </dd>
           </div>
         </dl>

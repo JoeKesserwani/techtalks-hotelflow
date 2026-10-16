@@ -18,6 +18,7 @@ import {
   type Reservation,
   type Room,
 } from "../../app/Pages/Reservations/frontdesk";
+import { useAuth } from "../Auth/AuthProvider";
 
 export function NewReservationDialog({
   defaultDate,
@@ -42,6 +43,7 @@ export function NewReservationDialog({
   onConflict: () => void;
   onFailure?: (message: string) => void;
 }) {
+  const { currencySymbol } = useAuth();
   const [guests, setGuests] = useState<Guest[] | null>(null);
   const [q, setQ] = useState("");
   const [guestId, setGuestId] = useState(initialGuestId ?? "");
@@ -248,7 +250,7 @@ export function NewReservationDialog({
                       </strong>
                       <small>
                         {reason ??
-                          `${money(room.basePrice)} / night${room.capacity ? ` · sleeps ${room.capacity}` : ""}`}
+                          `${money(room.basePrice, currencySymbol)} / night${room.capacity ? ` · sleeps ${room.capacity}` : ""}`}
                       </small>
                     </span>
                   </label>
@@ -289,7 +291,7 @@ export function NewReservationDialog({
         <div className={s.dlgFoot}>
           <span className={s.total}>
             {chosen && nights
-              ? `${plural(nights)} · ${money(Number(chosen.basePrice) * nights)}`
+              ? `${plural(nights)} · ${money(Number(chosen.basePrice) * nights, currencySymbol)}`
               : "Select dates, guest and room"}
           </span>
           <button

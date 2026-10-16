@@ -3,7 +3,7 @@ import { requireAuth } from '../../../../../lib/middleware/requireAuth';
 import { createHousekeepingTaskSchema } from '../../../../../lib/validators/housekeeping';
 import { writeAuditLog } from '../../../../../lib/services/audit.service';
 import { ApiError, handleRouteError } from '../../../../../lib/api/errors';
-import { createNotification } from '@/lib/notifications';
+import { createNotification, sendNotificationPush } from '@/lib/notifications';
 
 export async function GET() {
   try {
@@ -142,6 +142,13 @@ export async function POST(req: Request) {
       );
     }
 
+    const notification = {
+      hotelId: user.hotelId,
+      userId: assignedToUserId,
+      title: 'New housekeeping task',
+      message: `You have been assigned to clean Room ${room.roomNumber}.`,
+      type: 'TASK_ASSIGNED' as const,
+    };
     const task = await prisma.$transaction(
       async (tx) => {
         const created =
@@ -155,17 +162,7 @@ export async function POST(req: Request) {
             },
           });
 
-        await createNotification(
-          {
-            hotelId: user.hotelId,
-            userId: assignedToUserId,
-            title: 'New housekeeping task',
-            message: `You have been assigned to clean Room ${room.roomNumber}.`,
-            type: 'TASK_ASSIGNED',
-            taskId: created.id,
-          },
-          tx
-        );
+        await createNotification({ ...notification, taskId: created.id }, tx);
         await writeAuditLog(tx, {
           hotelId: user.hotelId,
           userId: user.userId,
@@ -177,6 +174,8 @@ export async function POST(req: Request) {
         return created;
       }
     );
+
+    await sendNotificationPush(notification);
 
     return Response.json(task, { status: 201 });
   } catch (err) {

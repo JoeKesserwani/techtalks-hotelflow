@@ -7,6 +7,7 @@ type Housekeeper = {
   id: string;
   fullName: string;
   role: string;
+  isActive: boolean | 0 | 1;
 };
 
 type AssignTaskModalProps = {
@@ -53,7 +54,9 @@ export default function AssignTaskModal({
         }
 
         const availableHousekeepers = (data as Housekeeper[]).filter(
-          (staffUser) => staffUser.role === "HOUSEKEEPING",
+          (staffUser) =>
+            staffUser.role === "HOUSEKEEPING" &&
+            (staffUser.isActive === true || staffUser.isActive === 1),
         );
 
         if (!cancelled) {

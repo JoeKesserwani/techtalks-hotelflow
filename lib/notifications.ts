@@ -48,5 +48,11 @@ export async function createNotification(
     )
   `;
 
+  if (!tx) await sendNotificationPush(data);
+}
+
+export async function sendNotificationPush(
+  data: Pick<CreateNotificationInput, "userId" | "title" | "message">,
+) {
   await sendPushToUser(data.userId, data.title, data.message);
 } 

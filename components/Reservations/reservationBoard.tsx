@@ -22,6 +22,7 @@ import {
 } from "../../app/Pages/Reservations/edit-dialogs";
 import AssignTaskModal from "../Housekeeping/AssignTaskModal";
 import type { ReservationFeedback } from "./ReservationFeedbackPopup";
+import { useAuth } from "../Auth/AuthProvider";
 
 const PAGE_SIZE = 4;
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
@@ -64,6 +65,7 @@ export function ReservationsBoard({
   onReload,
   onToast,
 }: ReservationsBoardProps) {
+  const { currencySymbol } = useAuth();
   const [busy, setBusy] = useState<string | null>(null);
   const [pages, setPages] = useState(NO_PAGES);
   const [confirm, setConfirm] = useState<Reservation | null>(null);
@@ -299,7 +301,7 @@ export function ReservationsBoard({
                 key={r.id}
                 name={guestName(r)}
                 extras={links(r)}
-                meta={`Room ${roomLabel(r)} · ${p.kind === "unpaid" ? `Unpaid ${money(r.totalPrice)}` : p.label}`}
+                meta={`Room ${roomLabel(r)} · ${p.kind === "unpaid" ? `Unpaid ${money(r.totalPrice, currencySymbol)}` : p.label}`}
               >
                 {paidBtn(r)}
                 {r.status === "CHECKED_IN" && isToday ? (
