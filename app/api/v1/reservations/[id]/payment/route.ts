@@ -39,9 +39,16 @@ export async function PATCH(
       });
       if (!reservation) throw new ApiError("Reservation not found", 404);
 
+      const amountPaid =
+        paymentStatus === "PAID"
+          ? reservation.totalPrice
+          : paymentStatus === "UNPAID"
+            ? 0
+            : reservation.amountPaid;
+
       const result = await tx.reservation.update({
         where: { id },
-        data: { paymentStatus },
+        data: { paymentStatus, amountPaid },
         include: { room: true, guest: true },
       });
 
@@ -55,6 +62,8 @@ export async function PATCH(
           changes: {
             paymentStatus,
             previousPaymentStatus: reservation.paymentStatus,
+            amountPaid: amountPaid?.toString() ?? null,
+            previousAmountPaid: reservation.amountPaid?.toString() ?? null,
           },
         },
       });

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import s from "./reservationBoard.module.css";
 import {
   api,
@@ -8,9 +8,9 @@ import {
   dayOnly,
   formatDate,
   guestName,
-  money,
   nightsBetween,
   payment,
+  paymentSummary,
   roomLabel,
   type Reservation,
   type Room,
@@ -27,10 +27,11 @@ const PAGE_SIZE = 4;
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 type ColumnKey = "arriving" | "departing" | "staying";
-const NO_PAGES: Record<ColumnKey, number> = {
-  arriving: 0,
-  departing: 0,
-  staying: 0,
+type ColumnPage = { signature: string; page: number };
+const NO_PAGES: Record<ColumnKey, ColumnPage> = {
+  arriving: { signature: "", page: 0 },
+  departing: { signature: "", page: 0 },
+  staying: { signature: "", page: 0 },
 };
 
 export interface ReservationsBoardProps {
@@ -74,8 +75,6 @@ export function ReservationsBoard({
   );
   const [markPaidAfterTask, setMarkPaidAfterTask] = useState(false);
 
-  useEffect(() => setPages(NO_PAGES), [date]);
-
   const day = useMemo(
     () => bucketDay(items ?? [], date, today),
     [items, date, today],
@@ -83,18 +82,31 @@ export function ReservationsBoard({
   const isToday = date === today;
 
   /* Pagination: clamp the page when a list shrinks (after a check-out or a cancellation). */
-  const pageOf = (key: ColumnKey, total: number) =>
-    Math.min(pages[key], Math.max(0, Math.ceil(total / PAGE_SIZE) - 1));
-  const slice = <T,>(key: ColumnKey, list: T[]) => {
-    const p = pageOf(key, list.length);
+  const signatureOf = (list: Reservation[]) =>
+    JSON.stringify([date, list.map((reservation) => reservation.id)]);
+  const pageOf = (key: ColumnKey, list: Reservation[]) => {
+    const storedPage =
+      pages[key].signature === signatureOf(list) ? pages[key].page : 0;
+    return Math.min(
+      storedPage,
+      Math.max(0, Math.ceil(list.length / PAGE_SIZE) - 1),
+    );
+  };
+  const slice = (key: ColumnKey, list: Reservation[]) => {
+    const p = pageOf(key, list);
     return list.slice(p * PAGE_SIZE, p * PAGE_SIZE + PAGE_SIZE);
   };
-  const pager = (key: ColumnKey, total: number) => (
+  const pager = (key: ColumnKey, list: Reservation[]) => (
     <Pager
-      page={pageOf(key, total)}
-      total={total}
+      page={pageOf(key, list)}
+      total={list.length}
       label={key}
-      onPage={(p) => setPages((prev) => ({ ...prev, [key]: p }))}
+      onPage={(page) =>
+        setPages((prev) => ({
+          ...prev,
+          [key]: { signature: signatureOf(list), page },
+        }))
+      }
     />
   );
 
@@ -257,14 +269,14 @@ export function ReservationsBoard({
           tone={s.slate}
           loading={loading}
           empty="No arrivals on this date."
-          footer={pager("arriving", day.arriving.length)}
+          footer={pager("arriving", day.arriving)}
         >
           {slice("arriving", day.arriving).map((r) => (
             <Row
               key={r.id}
               name={guestName(r)}
               extras={links(r)}
-              meta={`Room ${roomLabel(r)} · ${plural(nightsBetween(r.checkInDate, r.checkOutDate), "night")} · ${payment(r).label}`}
+              meta={`Room ${roomLabel(r)} · ${plural(nightsBetween(r.checkInDate, r.checkOutDate), "night")} · ${paymentSummary(r)}`}
             >
               {paidBtn(r)}
               {r.status === "BOOKED" ? (
@@ -290,16 +302,15 @@ export function ReservationsBoard({
           tone={s.clay}
           loading={loading}
           empty="No departures on this date."
-          footer={pager("departing", day.departing.length)}
+          footer={pager("departing", day.departing)}
         >
           {slice("departing", day.departing).map((r) => {
-            const p = payment(r);
             return (
               <Row
                 key={r.id}
                 name={guestName(r)}
                 extras={links(r)}
-                meta={`Room ${roomLabel(r)} · ${p.kind === "unpaid" ? `Unpaid ${money(r.totalPrice)}` : p.label}`}
+                meta={`Room ${roomLabel(r)} · ${paymentSummary(r)}`}
               >
                 {paidBtn(r)}
                 {r.status === "CHECKED_IN" && isToday ? (
@@ -321,17 +332,16 @@ export function ReservationsBoard({
           loading={loading}
           wide
           empty="No in-house guests."
-          footer={pager("staying", day.staying.length)}
+          footer={pager("staying", day.staying)}
         >
           {slice("staying", day.staying).map((r) => (
             <Row
               key={r.id}
               name={guestName(r)}
               extras={links(r)}
-              meta={`Room ${roomLabel(r)} · until ${formatDate(dayOnly(r.checkOutDate), { month: "short", day: "numeric" })}`}
+              meta={`Room ${roomLabel(r)} · until ${formatDate(dayOnly(r.checkOutDate), { month: "short", day: "numeric" })} · ${paymentSummary(r)}`}
             >
               {paidBtn(r)}
-              <span className={s.note}>{payment(r).label}</span>
             </Row>
           ))}
         </Column>

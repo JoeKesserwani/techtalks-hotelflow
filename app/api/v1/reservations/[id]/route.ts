@@ -275,6 +275,12 @@ export async function PATCH(
        */
       const paymentStatus =
         parsed.data.paymentStatus ?? reservation.paymentStatus;
+      const amountPaid =
+        paymentStatus === "PAID"
+          ? totalPrice
+          : paymentStatus === "UNPAID"
+            ? 0
+            : reservation.amountPaid;
 
       /*
        * IMPORTANT:
@@ -293,6 +299,8 @@ export async function PATCH(
           status: reservation.status,
 
           paymentStatus,
+
+          amountPaid,
 
           pricePerNight,
 
@@ -332,6 +340,8 @@ export async function PATCH(
             checkOutDate: newCheckOutDateString,
 
             paymentStatus,
+
+            amountPaid: amountPaid?.toString() ?? null,
 
             pricePerNight,
 

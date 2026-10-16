@@ -117,6 +117,23 @@ export const money = (v: string | number) => {
   return `$${Number.isInteger(n) ? n : n.toFixed(2)}`;
 };
 
+export function paymentSummary(r: Reservation): string {
+  const total = Number(r.totalPrice);
+  const p = payment(r);
+
+  if (r.amountPaid === null || r.amountPaid === undefined) {
+    if (p.kind === "paid") return `Paid ${money(total)}`;
+    if (p.kind === "unpaid") return `Unpaid · Due ${money(total)}`;
+    return "Partial paid · Amount received not recorded";
+  }
+
+  const amountPaid = Math.max(0, Number(r.amountPaid));
+  const due = Math.max(0, total - amountPaid);
+  if (due === 0) return `Paid ${money(amountPaid)}`;
+  if (amountPaid === 0) return `Unpaid · Due ${money(total)}`;
+  return `Paid ${money(amountPaid)} · Due ${money(due)}`;
+}
+
 /**
  * Bucket every reservation for a selected date.
  * - Arriving:  check-in date is the selected date.
