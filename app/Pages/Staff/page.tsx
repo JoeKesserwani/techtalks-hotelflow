@@ -496,7 +496,7 @@ export default function StaffPage() {
                 <tbody>
                   {paginatedStaff.map((member) => (
                     <tr key={member.id}>
-                      <td>
+                      <td data-label="Team member">
                         <div className={styles.member}>
                           <span className={styles.avatar} aria-hidden="true">
                             {initials(member.fullName)}
@@ -510,23 +510,26 @@ export default function StaffPage() {
                           </span>
                         </div>
                       </td>
-                      <td>
+                      <td data-label="Role">
                         <span className={styles.roleValue}>
                           <ShieldCheck size={15} aria-hidden="true" />
                           {formatRole(member.role)}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Status">
                         <span
                           className={`${styles.status} ${member.isActive ? styles.statusActive : styles.statusInactive}`}
                         >
                           {member.isActive ? "Active" : "Inactive"}
                         </span>
                       </td>
-                      <td className={styles.dateCell}>
+                      <td className={styles.dateCell} data-label="Date added">
                         {formatDate(member.createdAt)}
                       </td>
-                      <td className={styles.actionsCell}>
+                      <td
+                        className={styles.actionsCell}
+                        data-label="Actions"
+                      >
                         <button
                           type="button"
                           className={styles.editButton}

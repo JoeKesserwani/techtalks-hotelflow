@@ -655,7 +655,7 @@
   clip-path: inset(50%);
 }
 
-@media (max-width: 760px) {
+@media (max-width: 1000px) {
   .page {
     padding: 22px 18px 40px;
   }
@@ -688,7 +688,7 @@
 
 @media (max-width: 520px) {
   .page {
-    padding: 18px 14px 32px;
+    padding: 72px 14px 32px;
   }
 
   .metrics {
@@ -802,5 +802,109 @@
 
   .deactivateButton {
     grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 768px) {
+  .page {
+    padding-top: 72px;
+  }
+}
+
+@media (max-width: 1024px) {
+  .tableViewport {
+    overflow: visible;
+  }
+
+  .table {
+    display: block;
+    min-width: 0;
+  }
+
+  .table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .table tbody {
+    display: grid;
+    gap: 10px;
+    padding: 12px 14px;
+  }
+
+  .table tbody tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    overflow: hidden;
+    border: 1px solid var(--color-border-soft);
+    border-radius: var(--radius-card);
+    background: var(--color-surface-alt);
+  }
+
+  .table td {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 4px;
+    padding: 10px 12px;
+    border: 0;
+    color: var(--color-label);
+    font-size: 12px;
+  }
+
+  .table td::before {
+    color: var(--color-muted);
+    content: attr(data-label);
+    font-size: 10px;
+    font-weight: 600;
+  }
+
+  .table td:first-child {
+    display: block;
+    grid-column: 1 / -1;
+    padding: 12px 14px;
+    border-bottom: 1px solid var(--color-border-soft);
+    background: color-mix(in srgb, var(--color-bg) 55%, var(--color-surface));
+  }
+
+  .table td:first-child::before {
+    content: none;
+  }
+
+  .table td:nth-child(2),
+  .table td:nth-child(3) {
+    border-bottom: 1px solid var(--color-border-soft);
+  }
+
+  .table td:nth-child(4) {
+    grid-column: 1;
+  }
+
+  .table td:nth-child(5) {
+    grid-column: 2;
+    align-items: flex-end;
+  }
+
+  .actionsCell {
+    width: auto;
+  }
+
+  .member {
+    min-width: 0;
+  }
+
+  .email {
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .roleValue {
+    white-space: normal;
   }
 }
