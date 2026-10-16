@@ -1,14 +1,34 @@
 import webpush from 'web-push'
 import { prisma } from '@/lib/db'
 
-webpush.setVapidDetails(
-  process.env.VAPID_SUBJECT!,
-  process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY!,
-  process.env.VAPID_PRIVATE_KEY!
-)
+const subject = process.env.VAPID_SUBJECT
+const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
+const privateKey = process.env.VAPID_PRIVATE_KEY
+const vapidConfig =
+  subject && publicKey && privateKey
+    ? { subject, publicKey, privateKey }
+    : null
+let vapidConfigured = false
+
+if (!vapidConfig) {
+  console.warn(
+    'Web push is disabled: set VAPID_SUBJECT, NEXT_PUBLIC_VAPID_PUBLIC_KEY, and VAPID_PRIVATE_KEY to enable it.'
+  )
+}
 
 export async function sendPushToUser(userId: string, title: string, body: string) {
+  if (!vapidConfig) return
+
   try {
+    if (!vapidConfigured) {
+      webpush.setVapidDetails(
+        vapidConfig.subject,
+        vapidConfig.publicKey,
+        vapidConfig.privateKey
+      )
+      vapidConfigured = true
+    }
+
     const subs = await prisma.pushSubscription.findMany({ where: { userId } })
     await Promise.all(
       subs.map(async (s) => {

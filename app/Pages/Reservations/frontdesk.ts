@@ -13,6 +13,7 @@ export interface Reservation {
   checkOutDate: string;
   pricePerNight: string | number;
   totalPrice: string | number;
+  amountPaid?: string | number | null;
   status: "BOOKED" | "CHECKED_IN" | "CHECKED_OUT" | string;
   paymentStatus: string;
   room?: Room;

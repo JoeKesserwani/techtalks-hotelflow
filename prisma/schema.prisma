@@ -109,6 +109,7 @@ model Reservation {
   status          ReservationStatus @default(BOOKED)
   pricePerNight   Decimal           @map("price_per_night") @db.Decimal(10, 2)
   totalPrice      Decimal           @map("total_price") @db.Decimal(10, 2)
+  amountPaid      Decimal?          @map("amount_paid") @db.Decimal(10, 2)
   paymentStatus   PaymentStatus     @default(UNPAID) @map("payment_status")
   createdAt       DateTime           @default(now()) @map("created_at")
   updatedAt       DateTime           @updatedAt @map("updated_at")
