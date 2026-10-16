@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useState } from "react";
+import { usePopupMessage } from "@/components/PopupMessage";
 import styles from "./AssignTaskModal.module.css";
 
 type Housekeeper = {
@@ -26,6 +27,7 @@ export default function AssignTaskModal({
   onCreated,
   disableCloseButtons = false,
 }: AssignTaskModalProps) {
+  const { notify } = usePopupMessage();
   const id = useId();
   const [housekeepers, setHousekeepers] = useState<Housekeeper[]>([]);
   const [selectedHousekeeperId, setSelectedHousekeeperId] = useState("");
@@ -34,7 +36,6 @@ export default function AssignTaskModal({
   const [isSavingTask, setIsSavingTask] = useState(false);
   const [taskCreated, setTaskCreated] = useState(false);
   const [taskError, setTaskError] = useState<string | null>(null);
-  const [taskSuccess, setTaskSuccess] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isOpen || housekeepers.length > 0) return;
@@ -62,11 +63,14 @@ export default function AssignTaskModal({
         }
       } catch (error) {
         if (!cancelled) {
-          setTaskError(
-            error instanceof Error
-              ? error.message
-              : "Unable to load housekeepers.",
-          );
+          notify({
+            kind: "error",
+            title: "Housekeepers could not be loaded",
+            description:
+              error instanceof Error
+                ? error.message
+                : "Unable to load housekeepers.",
+          });
         }
       } finally {
         if (!cancelled) setIsLoadingHousekeepers(false);
@@ -83,7 +87,6 @@ export default function AssignTaskModal({
   function handleClose() {
     if (disableCloseButtons || isSavingTask) return;
     setTaskError(null);
-    setTaskSuccess(null);
     onClose();
   }
 
@@ -93,13 +96,19 @@ export default function AssignTaskModal({
         setIsSavingTask(true);
         setTaskError(null);
         await onCreated?.();
-        setTaskSuccess("Cleaning task assigned and check-out completed.");
+        notify({
+          kind: "success",
+          title: "Cleaning task assigned and check-out completed",
+        });
       } catch (error) {
-        setTaskError(
-          error instanceof Error
-            ? error.message
-            : "The task was assigned, but check-out failed.",
-        );
+        notify({
+          kind: "error",
+          title: "Check-out was not completed",
+          description:
+            error instanceof Error
+              ? error.message
+              : "The task was assigned, but check-out failed.",
+        });
       } finally {
         setIsSavingTask(false);
       }
@@ -113,7 +122,6 @@ export default function AssignTaskModal({
 
     setIsSavingTask(true);
     setTaskError(null);
-    setTaskSuccess(null);
 
     try {
       const response = await fetch("/api/v1/housekeeping/tasks", {
@@ -133,12 +141,15 @@ export default function AssignTaskModal({
 
       setTaskComment("");
       if (onCreated) setTaskCreated(true);
-      setTaskSuccess("Cleaning task assigned successfully.");
       await onCreated?.();
+      notify({ kind: "success", title: "Cleaning task assigned" });
     } catch (error) {
-      setTaskError(
-        error instanceof Error ? error.message : "Unable to create the task.",
-      );
+      notify({
+        kind: "error",
+        title: "Cleaning task was not assigned",
+        description:
+          error instanceof Error ? error.message : "Unable to create the task.",
+      });
     } finally {
       setIsSavingTask(false);
     }
@@ -212,7 +223,6 @@ export default function AssignTaskModal({
         <span className={styles.characterCount}>{taskComment.length}/250</span>
 
         {taskError && <p className={styles.modalError}>{taskError}</p>}
-        {taskSuccess && <p className={styles.modalSuccess}>{taskSuccess}</p>}
 
         <div className={styles.modalActions}>
           <button

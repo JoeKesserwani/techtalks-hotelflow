@@ -194,7 +194,6 @@ export function EditReservationDialog({
       );
     } catch (e) {
       const message = e instanceof Error ? e.message : "Please try again.";
-      setErr(message);
       onFailure?.(message);
       onConflict(); // refresh so the lists show what changed under us
     } finally {

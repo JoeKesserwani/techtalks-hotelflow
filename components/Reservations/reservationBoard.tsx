@@ -21,7 +21,7 @@ import {
   EditReservationDialog,
 } from "../../app/Pages/Reservations/edit-dialogs";
 import AssignTaskModal from "../Housekeeping/AssignTaskModal";
-import type { ReservationFeedback } from "./ReservationFeedbackPopup";
+import type { ReservationFeedback } from "@/components/PopupMessage";
 
 const PAGE_SIZE = 4;
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;

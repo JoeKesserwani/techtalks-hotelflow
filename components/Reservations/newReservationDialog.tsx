@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { usePopupMessage } from "@/components/PopupMessage";
 import s from "./newReservationDialog.module.css";
 import { Dialog } from "../../app/Pages/Reservations/dialogs";
 import {
@@ -29,7 +30,6 @@ export function NewReservationDialog({
   onClose,
   onCreated,
   onConflict,
-  onFailure,
 }: {
   defaultDate: string;
   today: string;
@@ -40,8 +40,8 @@ export function NewReservationDialog({
   onClose: () => void;
   onCreated: (r: Reservation) => void;
   onConflict: () => void;
-  onFailure?: (message: string) => void;
 }) {
+  const { notify } = usePopupMessage();
   const [guests, setGuests] = useState<Guest[] | null>(null);
   const [q, setQ] = useState("");
   const [guestId, setGuestId] = useState(initialGuestId ?? "");
@@ -53,7 +53,6 @@ export function NewReservationDialog({
   const [pay, setPay] = useState<"UNPAID" | "PARTIAL" | "PAID">("UNPAID");
   const [amountPaid, setAmountPaid] = useState("");
   const [ack, setAck] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const dlg = useRef<HTMLFormElement>(null);
 
@@ -62,9 +61,13 @@ export function NewReservationDialog({
       .then(setGuests)
       .catch((e) => {
         setGuests([]);
-        setErr(e.message);
+        notify({
+          kind: "error",
+          title: "Guest list could not be loaded",
+          description: e instanceof Error ? e.message : "Please try again.",
+        });
       });
-  }, []);
+  }, [notify]);
 
   const datesOk = inD >= today && outD > inD;
   const nights = datesOk ? nightsBetween(inD, outD) : 0;
@@ -120,26 +123,32 @@ export function NewReservationDialog({
     e.preventDefault();
     if (!canSave) return;
     setSaving(true);
-    setErr(null);
     try {
-      onCreated(
-        await api<Reservation>("/reservations", {
-          method: "POST",
-          body: JSON.stringify({
-            roomId,
-            guestId,
-            checkInDate: inD,
-            checkOutDate: outD,
-            paymentStatus: pay,
-            amountPaid: pay === "PARTIAL" ? partialAmount : undefined,
-          }),
+      const reservation = await api<Reservation>("/reservations", {
+        method: "POST",
+        body: JSON.stringify({
+          roomId,
+          guestId,
+          checkInDate: inD,
+          checkOutDate: outD,
+          paymentStatus: pay,
+          amountPaid: pay === "PARTIAL" ? partialAmount : undefined,
         }),
-      );
+      });
+      onCreated(reservation);
+      notify({
+        kind: "success",
+        title: `Reservation created for ${guestName(reservation)}`,
+        description: `Room ${roomLabel(reservation)}`,
+      });
       dlg.current?.closest("dialog")?.close();
     } catch (e) {
       const message = e instanceof Error ? e.message : "Please try again.";
-      setErr(message);
-      onFailure?.(message);
+      notify({
+        kind: "error",
+        title: "Reservation was not created",
+        description: message,
+      });
       if ((e as ApiError).status === 409) {
         setRoomId("");
         onConflict();
@@ -351,12 +360,6 @@ export function NewReservationDialog({
               </div>
             )}
           </fieldset>
-
-          {err && (
-            <div className={s.warn} role="alert">
-              {err}
-            </div>
-          )}
         </div>
 
         <div className={s.dlgFoot}>

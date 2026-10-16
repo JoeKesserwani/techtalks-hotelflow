@@ -3,6 +3,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
+import { usePopupMessage } from "@/components/PopupMessage";
 import styles from "./page.module.css";
 import Header from "@/components/Header/Header";
 
@@ -71,6 +72,7 @@ function statusPillClass(
 }
 
 export default function GuestDetailPage() {
+  const { notify } = usePopupMessage();
   const params = useParams();
   const guestId = params?.id as string;
 
@@ -79,7 +81,6 @@ export default function GuestDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
   const [form, setForm] = useState<GuestForm>({
     fullName: "",
     phone: "",
@@ -122,7 +123,6 @@ export default function GuestDetailPage() {
       passportNumber: guest.passportNumber ?? "",
       note: guest.note ?? "",
     });
-    setSaveError(null);
     setIsEditing(true);
   }
 
@@ -131,7 +131,6 @@ export default function GuestDetailPage() {
     if (!guest) return;
 
     setIsSaving(true);
-    setSaveError(null);
     try {
       const response = await fetch(`/api/v1/guests/${guestId}`, {
         method: "PATCH",
@@ -147,16 +146,24 @@ export default function GuestDetailPage() {
       const result = await response.json().catch(() => null);
 
       if (!response.ok) {
-        setSaveError(
-          result?.error ?? result?.message ?? "Could not update guest.",
-        );
+        notify({
+          kind: "error",
+          title: "Guest was not updated",
+          description:
+            result?.error ?? result?.message ?? "Could not update guest.",
+        });
         return;
       }
 
       setGuest((current) => (current ? { ...current, ...result } : current));
       setIsEditing(false);
+      notify({ kind: "success", title: "Guest details updated" });
     } catch {
-      setSaveError("Something went wrong. Please try again.");
+      notify({
+        kind: "error",
+        title: "Guest was not updated",
+        description: "Something went wrong. Please try again.",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -282,11 +289,6 @@ export default function GuestDetailPage() {
                       />
                     </label>
                   </div>
-                  {saveError && (
-                    <p className={styles.formError} role="alert">
-                      {saveError}
-                    </p>
-                  )}
                   <div className={styles.formActions}>
                     <button
                       type="button"
@@ -294,7 +296,6 @@ export default function GuestDetailPage() {
                       disabled={isSaving}
                       onClick={() => {
                         setIsEditing(false);
-                        setSaveError(null);
                       }}
                     >
                       Cancel

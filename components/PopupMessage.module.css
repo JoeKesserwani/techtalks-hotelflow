@@ -1,0 +1,145 @@
+.popup {
+  --popup-ink: #214f39;
+  --popup-border: #a9d5b8;
+  --popup-bg: #f1faf4;
+  position: fixed;
+  z-index: 2000;
+  right: max(20px, env(safe-area-inset-right));
+  bottom: max(20px, env(safe-area-inset-bottom));
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 32px;
+  align-items: start;
+  gap: 12px;
+  width: min(440px, calc(100vw - 40px));
+  padding: 15px 14px;
+  color: var(--popup-ink);
+  background: var(--popup-bg);
+  border: 1px solid var(--popup-border);
+  border-radius: 10px;
+  box-shadow: 0 16px 44px rgb(25 32 26 / 18%);
+  animation: arrive 180ms ease-out both;
+}
+
+.success {
+  --popup-ink: #214f39;
+  --popup-border: #a9d5b8;
+  --popup-bg: #f1faf4;
+}
+
+.error {
+  --popup-ink: #762f26;
+  --popup-border: #e7b5a7;
+  --popup-bg: #fff5f1;
+}
+
+.warning {
+  --popup-ink: #684a16;
+  --popup-border: #e7d19d;
+  --popup-bg: #fff9e9;
+}
+
+.info {
+  --popup-ink: #354b56;
+  --popup-border: #c9d9df;
+  --popup-bg: #f3f8fa;
+}
+
+.icon {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+}
+
+.copy {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.title {
+  display: block;
+  margin: 1px 0 2px;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.4;
+}
+
+.description {
+  margin: 0;
+  color: #4f514b;
+  font-size: 13px;
+  line-height: 1.5;
+}
+
+.dismiss {
+  display: grid;
+  place-items: center;
+  width: 32px;
+  height: 32px;
+  margin: -4px -3px 0 0;
+  border: 0;
+  border-radius: 7px;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.dismiss:hover {
+  background: rgb(0 0 0 / 6%);
+}
+
+.progress {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  height: 3px;
+  overflow: hidden;
+  border-radius: 0 0 10px 10px;
+  background: rgb(0 0 0 / 5%);
+}
+
+.progress::after {
+  display: block;
+  width: 100%;
+  height: 100%;
+  content: "";
+  background: currentColor;
+  transform-origin: left;
+  animation: drain var(--popup-duration, 4500ms) linear both;
+}
+
+@keyframes arrive {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes drain {
+  to {
+    transform: scaleX(0);
+  }
+}
+
+@media (max-width: 560px) {
+  .popup {
+    right: max(12px, env(safe-area-inset-right));
+    bottom: max(12px, env(safe-area-inset-bottom));
+    left: max(12px, env(safe-area-inset-left));
+    width: auto;
+    gap: 10px;
+    padding: 13px 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .popup,
+  .progress::after {
+    animation: none;
+  }
+}

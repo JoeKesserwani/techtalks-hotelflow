@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import { usePopupMessage } from "@/components/PopupMessage";
 import styles from "./HousekeepingNotifications.module.css";
 import { useAuth } from "@/components/Auth/AuthProvider";
 import Header from "@/components/Header/Header";
@@ -48,7 +49,9 @@ function mapNotificationType(type: ApiNotification["type"]): NotificationTone {
   return "created";
 }
 
-function getNotificationCategory(type: ApiNotification["type"]): NotificationItem["category"] {
+function getNotificationCategory(
+  type: ApiNotification["type"],
+): NotificationItem["category"] {
   if (type === "TASK_APPROVED" || type === "TASK_REJECTED") return "Review";
   if (type === "TASK_ASSIGNED") return "Task";
   return "Reminder";
@@ -87,6 +90,7 @@ function formatNotificationTime(value: string) {
 }
 
 export default function HousekeepingNotificationsPage() {
+  const { notify } = usePopupMessage();
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<NotificationItem[]>([]);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
@@ -121,7 +125,9 @@ export default function HousekeepingNotificationsPage() {
         );
       } catch (loadError) {
         setError(
-          loadError instanceof Error ? loadError.message : "Unable to load notifications.",
+          loadError instanceof Error
+            ? loadError.message
+            : "Unable to load notifications.",
         );
       } finally {
         setIsLoading(false);
@@ -176,7 +182,9 @@ export default function HousekeepingNotificationsPage() {
 
     async function loadTaskPreview() {
       try {
-        const response = await fetch(`/api/v1/housekeeping/tasks/${selectedTaskId}`);
+        const response = await fetch(
+          `/api/v1/housekeeping/tasks/${selectedTaskId}`,
+        );
         const data = await response.json();
 
         if (!response.ok) {
@@ -190,7 +198,9 @@ export default function HousekeepingNotificationsPage() {
       } catch (taskError) {
         if (!ignore) {
           setTaskPreviewError(
-            taskError instanceof Error ? taskError.message : "Unable to load task details.",
+            taskError instanceof Error
+              ? taskError.message
+              : "Unable to load task details.",
           );
           setSelectedTask(null);
         }
@@ -223,7 +233,9 @@ export default function HousekeepingNotificationsPage() {
 
       if (!response.ok) {
         const data = await response.json().catch(() => ({}));
-        throw new Error(data.error ?? "Unable to mark the notification as read.");
+        throw new Error(
+          data.error ?? "Unable to mark the notification as read.",
+        );
       }
 
       setNotifications((current) =>
@@ -231,16 +243,21 @@ export default function HousekeepingNotificationsPage() {
           item.id === id ? { ...item, isRead: true } : item,
         ),
       );
+      notify({ kind: "success", title: "Notification marked as read" });
     } catch (markError) {
-      setError(
-        markError instanceof Error ? markError.message : "Unable to mark the notification as read.",
-      );
+      notify({
+        kind: "error",
+        title: "Notification was not marked as read",
+        description:
+          markError instanceof Error
+            ? markError.message
+            : "Unable to mark the notification as read.",
+      });
     }
   }
 
   return (
     <main className={styles.page}>
-      
       <div className={styles.container}>
         {Header({
           title: "Housekeeping Notifications",
@@ -305,7 +322,9 @@ export default function HousekeepingNotificationsPage() {
                           <h2>{notification.title}</h2>
                           <span
                             className={`${styles.statusBadge} ${styles[notification.tone]} ${
-                              notification.isRead ? styles.readBadge : styles.unreadBadge
+                              notification.isRead
+                                ? styles.readBadge
+                                : styles.unreadBadge
                             }`}
                           >
                             {notification.isRead ? "Read" : "New"}
@@ -314,7 +333,8 @@ export default function HousekeepingNotificationsPage() {
 
                         <p>{notification.message}</p>
                         <small>
-                          {notification.category} · {formatNotificationTime(notification.createdAt)}
+                          {notification.category} ·{" "}
+                          {formatNotificationTime(notification.createdAt)}
                         </small>
 
                         {notification.detail && (
@@ -353,8 +373,14 @@ export default function HousekeepingNotificationsPage() {
       </div>
 
       {selectedTaskId && (
-        <div className={styles.modalOverlay} onClick={() => setSelectedTaskId(null)}>
-          <div className={styles.modalContent} onClick={(event) => event.stopPropagation()}>
+        <div
+          className={styles.modalOverlay}
+          onClick={() => setSelectedTaskId(null)}
+        >
+          <div
+            className={styles.modalContent}
+            onClick={(event) => event.stopPropagation()}
+          >
             <div className={styles.modalHeader}>
               <div>
                 <p className={styles.modalLabel}>Task preview</p>
@@ -375,7 +401,9 @@ export default function HousekeepingNotificationsPage() {
               <>
                 <div className={styles.taskMeta}>
                   <span className={styles.metaPill}>{selectedTask.status}</span>
-                  <span className={styles.metaText}>{selectedTask.room.roomType}</span>
+                  <span className={styles.metaText}>
+                    {selectedTask.room.roomType}
+                  </span>
                 </div>
 
                 <div className={styles.taskSection}>
@@ -385,7 +413,8 @@ export default function HousekeepingNotificationsPage() {
 
                 <div className={styles.taskSection}>
                   <h3>Pictures</h3>
-                  {Array.isArray(selectedTask.photos) && selectedTask.photos.length > 0 ? (
+                  {Array.isArray(selectedTask.photos) &&
+                  selectedTask.photos.length > 0 ? (
                     <div className={styles.pictureGrid}>
                       {selectedTask.photos.map((photo, index) => (
                         <img
@@ -410,4 +439,3 @@ export default function HousekeepingNotificationsPage() {
     </main>
   );
 }
-

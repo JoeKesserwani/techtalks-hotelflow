@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { usePopupMessage } from "@/components/PopupMessage";
 import styles from "./AddGuestModal.module.css";
 
 export default function AddGuestModal({
@@ -11,6 +12,7 @@ export default function AddGuestModal({
   onClose: () => void;
   onCreated?: () => void;
 }) {
+  const { notify } = usePopupMessage();
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [passportNumber, setPassportNumber] = useState("");
@@ -72,7 +74,6 @@ export default function AddGuestModal({
   }, [onClose]);
 
   async function handleSave() {
-    setError(null);
     setIsSaving(true);
 
     try {
@@ -91,17 +92,26 @@ export default function AddGuestModal({
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error ?? "Could not save guest");
+        notify({
+          kind: "error",
+          title: "Guest was not added",
+          description: data.error ?? "Could not save guest.",
+        });
         return;
       }
 
       onCreated?.();
+      notify({ kind: "success", title: "Guest added" });
       onClose();
       // Ideally trigger a re-fetch of the guests list here (e.g. via a
       // callback prop or a shared data layer) so the new guest shows up
       // without a full page reload.
     } catch {
-      setError("Something went wrong. Please try again.");
+      notify({
+        kind: "error",
+        title: "Guest was not added",
+        description: "Something went wrong. Please try again.",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -204,8 +214,6 @@ export default function AddGuestModal({
           onChange={(e) => setNote(e.target.value)}
           maxLength={250}
         />
-
-        {error && <p className={styles.errorText}>{error}</p>}
 
         <div className={styles.actions}>
           <button type="button" className={styles.backButton} onClick={onClose}>
