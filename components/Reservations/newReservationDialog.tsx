@@ -52,7 +52,8 @@ export function NewReservationDialog({
     shiftDate(defaultDate < today ? today : defaultDate, 1),
   );
   const [roomId, setRoomId] = useState(initialRoomId ?? "");
-  const [pay, setPay] = useState<"UNPAID" | "PAID">("UNPAID");
+  const [pay, setPay] = useState<"UNPAID" | "PARTIAL" | "PAID">("UNPAID");
+  const [amountPaid, setAmountPaid] = useState("");
   const [ack, setAck] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -90,6 +91,16 @@ export function NewReservationDialog({
   );
 
   const chosen = options.find((o) => o.room.id === roomId && !o.reason)?.room;
+  const totalPrice = chosen && nights ? Number(chosen.basePrice) * nights : 0;
+  const partialAmount = Number(amountPaid);
+  const partialAmountCents = Math.round(partialAmount * 100);
+  const totalPriceCents = Math.round(totalPrice * 100);
+  const partialAmountValid =
+    amountPaid.trim() !== "" &&
+    Number.isFinite(partialAmount) &&
+    partialAmount > 0 &&
+    Math.abs(partialAmountCents - partialAmount * 100) <= 1e-7 &&
+    partialAmountCents <= totalPriceCents;
   const gConflict =
     guestId && datesOk
       ? findGuestConflict(reservations, guestId, inD, outD)
@@ -100,7 +111,12 @@ export function NewReservationDialog({
       .includes(q.toLowerCase()),
   );
   const canSave =
-    !!guestId && !!chosen && datesOk && (!gConflict || ack) && !saving;
+    !!guestId &&
+    !!chosen &&
+    datesOk &&
+    (!gConflict || ack) &&
+    (pay !== "PARTIAL" || partialAmountValid) &&
+    !saving;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -117,6 +133,7 @@ export function NewReservationDialog({
             checkInDate: inD,
             checkOutDate: outD,
             paymentStatus: pay,
+            amountPaid: pay === "PARTIAL" ? partialAmount : undefined,
           }),
         }),
       );
@@ -261,10 +278,11 @@ export function NewReservationDialog({
 
           <fieldset>
             <legend>4 · Payment</legend>
-            <div className={s.twoCol}>
+            <div className={`${s.twoCol} ${s.payOptions}`}>
               <label className={s.radio}>
                 <input
                   type="radio"
+                  name="payment"
                   checked={pay === "UNPAID"}
                   onChange={() => setPay("UNPAID")}
                 />{" "}
@@ -273,12 +291,67 @@ export function NewReservationDialog({
               <label className={s.radio}>
                 <input
                   type="radio"
+                  name="payment"
                   checked={pay === "PAID"}
                   onChange={() => setPay("PAID")}
                 />{" "}
                 Paid in full
               </label>
+              <label className={s.radio}>
+                <input
+                  type="radio"
+                  name="payment"
+                  checked={pay === "PARTIAL"}
+                  onChange={() => setPay("PARTIAL")}
+                />{" "}
+                Partially paid
+              </label>
             </div>
+            {pay === "PARTIAL" && (
+              <div className={s.partialPayment}>
+                <div className={s.amountEntry}>
+                  <label htmlFor="reservation-amount-paid">
+                    Amount received
+                  </label>
+                  <div className={s.amountInput}>
+                    <span className={s.currencyPrefix} aria-hidden="true">
+                      $
+                    </span>
+                    <input
+                      id="reservation-amount-paid"
+                      type="number"
+                      min="0.01"
+                      max={totalPrice > 0 ? totalPrice : undefined}
+                      step="0.01"
+                      value={amountPaid}
+                      required
+                      aria-describedby="partial-payment-feedback"
+                      onChange={(e) => setAmountPaid(e.target.value)}
+                    />
+                  </div>
+                </div>
+                {partialAmountValid ? (
+                  <div
+                    className={s.partialBalance}
+                    id="partial-payment-feedback"
+                    aria-live="polite"
+                  >
+                    <span>Remaining balance</span>
+                    <strong>{money(totalPrice - partialAmount)}</strong>
+                  </div>
+                ) : (
+                  <p
+                    className={s.hint}
+                    id="partial-payment-feedback"
+                    aria-live="polite"
+                  >
+                    {chosen && nights
+                      ? `Enter an amount from $0.01 up to ${money(totalPrice)}.`
+                      : "Select dates and a room to calculate the reservation total."}
+                  </p>
+                )}
+              </div>
+            )}
           </fieldset>
 
           {err && (

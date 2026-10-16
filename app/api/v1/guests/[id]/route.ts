@@ -1,6 +1,6 @@
 import { prisma } from "../../../../../lib/db";
 import { requireAuth } from "../../../../../lib/middleware/requireAuth";
-import { createGuestSchema } from "../../../../../lib/validators/guest";
+import { updateGuestSchema } from "../../../../../lib/validators/guest";
 import { writeAuditLog } from "../../../../../lib/services/audit.service";
 import { ApiError, handleRouteError } from "../../../../../lib/api/errors";
 
@@ -44,7 +44,7 @@ export async function PATCH(
     if (!user) throw new ApiError("Unauthorized", 401);
 
     const body = await req.json();
-    const parsed = createGuestSchema.partial().safeParse(body);
+    const parsed = updateGuestSchema.safeParse(body);
     if (!parsed.success) throw new ApiError("Invalid request body", 400);
 
     const guest = await prisma.guest.findFirst({
