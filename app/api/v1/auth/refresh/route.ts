@@ -1,26 +1,31 @@
-import { cookies } from 'next/headers';
-import { prisma } from '../../../../../lib/db';
-import { signAccessToken } from '../../../../../lib/auth/jwt';
-import { rotateSession } from '../../../../../lib/auth/session';
-import { ApiError, handleRouteError } from '../../../../../lib/api/errors';
+import { cookies } from "next/headers";
+import { prisma } from "../../../../../lib/db";
+import {
+  ACCESS_TOKEN_TTL_SECONDS,
+  signAccessToken,
+} from "../../../../../lib/auth/jwt";
+import { rotateSession } from "../../../../../lib/auth/session";
+import { ApiError, handleRouteError } from "../../../../../lib/api/errors";
 
 export async function POST() {
   try {
     const cookieStore = await cookies();
-    const refreshToken = cookieStore.get('refresh_token')?.value;
+    const refreshToken = cookieStore.get("refresh_token")?.value;
 
     if (!refreshToken) {
-      throw new ApiError('No refresh token', 401);
+      throw new ApiError("No refresh token", 401);
     }
 
     const rotated = await rotateSession(refreshToken);
     if (!rotated) {
-      throw new ApiError('Invalid or expired session', 401);
+      throw new ApiError("Invalid or expired session", 401);
     }
 
-    const user = await prisma.user.findUnique({ where: { id: rotated.userId } });
+    const user = await prisma.user.findUnique({
+      where: { id: rotated.userId },
+    });
     if (!user || !user.isActive) {
-      throw new ApiError('User no longer active', 401);
+      throw new ApiError("User no longer active", 401);
     }
 
     const accessToken = signAccessToken({
@@ -30,18 +35,18 @@ export async function POST() {
       fullName: user.fullName,
     });
 
-    cookieStore.set('access_token', accessToken, {
+    cookieStore.set("access_token", accessToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      path: '/',
-      maxAge: 15 * 60,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
+      maxAge: ACCESS_TOKEN_TTL_SECONDS,
     });
-    cookieStore.set('refresh_token', rotated.rawToken, {
+    cookieStore.set("refresh_token", rotated.rawToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
-      path: '/',
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      path: "/",
       expires: rotated.expiresAt,
     });
 

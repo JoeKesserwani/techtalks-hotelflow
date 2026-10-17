@@ -2,7 +2,10 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 import { prisma } from "../../../../../lib/db";
 import { verifyPassword } from "../../../../../lib/auth/password";
-import { signAccessToken } from "../../../../../lib/auth/jwt";
+import {
+  ACCESS_TOKEN_TTL_SECONDS,
+  signAccessToken,
+} from "../../../../../lib/auth/jwt";
 import { createSession } from "../../../../../lib/auth/session";
 import { ApiError, handleRouteError } from "../../../../../lib/api/errors";
 
@@ -48,7 +51,7 @@ export async function POST(req: Request) {
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
       path: "/",
-      maxAge: 15 * 60,
+      maxAge: ACCESS_TOKEN_TTL_SECONDS,
     });
     cookieStore.set("refresh_token", refreshToken, {
       httpOnly: true,
