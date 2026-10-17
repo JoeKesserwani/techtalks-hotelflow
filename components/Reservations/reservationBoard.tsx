@@ -22,6 +22,8 @@ import {
 } from "../../app/Pages/Reservations/edit-dialogs";
 import AssignTaskModal from "../Housekeeping/AssignTaskModal";
 import type { ReservationFeedback } from "@/components/PopupMessage";
+import type { ReservationFeedback } from "./ReservationFeedbackPopup";
+import { useAuth } from "../Auth/AuthProvider";
 
 const PAGE_SIZE = 4;
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
@@ -65,6 +67,7 @@ export function ReservationsBoard({
   onReload,
   onToast,
 }: ReservationsBoardProps) {
+  const { currencySymbol } = useAuth();
   const [busy, setBusy] = useState<string | null>(null);
   const [pages, setPages] = useState(NO_PAGES);
   const [confirm, setConfirm] = useState<Reservation | null>(null);

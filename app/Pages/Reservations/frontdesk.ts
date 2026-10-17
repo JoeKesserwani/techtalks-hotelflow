@@ -123,9 +123,9 @@ export function payment(r: Reservation): { kind: PayKind; label: string } {
   return { kind: "unpaid", label: "Unpaid" };
 }
 
-export const money = (v: string | number) => {
+export const money = (v: string | number, currencySymbol = "$") => {
   const n = Number(v);
-  return `$${Number.isInteger(n) ? n : n.toFixed(2)}`;
+  return `${currencySymbol}${Number.isInteger(n) ? n : n.toFixed(2)}`;
 };
 
 export function paymentSummary(r: Reservation): string {

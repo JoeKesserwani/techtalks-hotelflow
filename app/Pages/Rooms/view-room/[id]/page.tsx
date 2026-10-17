@@ -5,6 +5,7 @@ import AssignTaskModal from "@/components/Housekeeping/AssignTaskModal";
 import { useParams, useRouter } from "next/navigation";
 import styles from "./viewRoom.module.css";
 import Header from "@/components/Header/Header";
+import { useAuth } from "@/components/Auth/AuthProvider";
 
 type RoomStatus =
   | "AVAILABLE"
@@ -83,6 +84,7 @@ function getStatusClass(status: RoomStatus) {
 const ViewRoomPage = () => {
   const params = useParams();
   const router = useRouter();
+  const { currencySymbol } = useAuth();
 
   const roomId = params.id as string;
 
@@ -324,7 +326,7 @@ const ViewRoomPage = () => {
               </span>
 
               <strong>
-                {Number(room.basePrice).toFixed(2)}
+                {currencySymbol}{Number(room.basePrice).toFixed(2)}
               </strong>
             </div>
 

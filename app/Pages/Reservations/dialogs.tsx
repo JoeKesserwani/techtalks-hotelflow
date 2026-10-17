@@ -18,6 +18,7 @@ import {
   type Reservation,
   type Room,
 } from "./frontdesk";
+import { useAuth } from "@/components/Auth/AuthProvider";
 
 /** Native <dialog>: focus trap, Esc to close and inert background come for free. */
 export function Dialog({
@@ -57,6 +58,7 @@ export function ConfirmCheckout({
   onPayAndGo: () => void;
   onGo: () => void;
 }) {
+  const { currencySymbol } = useAuth();
   const p = payment(r);
   return (
     <Dialog label="Confirm check-out" onClose={onCancel}>
@@ -65,7 +67,7 @@ export function ConfirmCheckout({
         <p className={s.sub}>
           <strong>{guestName(r)}</strong> (Room {roomLabel(r)}) is marked{" "}
           <strong>{p.label.toLowerCase()}</strong>
-          {p.kind === "unpaid" ? <> with {money(r.totalPrice)} due</> : null}.
+          {p.kind === "unpaid" ? <> with {money(r.totalPrice, currencySymbol)} due</> : null}.
           Are you sure you want to check out?
         </p>
       </div>
@@ -103,6 +105,7 @@ export function NewReservationDialog({
   onCreated: (r: Reservation) => void;
   onConflict: () => void;
 }) {
+  const { currencySymbol } = useAuth();
   const [guests, setGuests] = useState<Guest[] | null>(null);
   const [q, setQ] = useState("");
   const [guestId, setGuestId] = useState("");
@@ -307,7 +310,7 @@ export function NewReservationDialog({
                       </strong>
                       <small>
                         {reason ??
-                          `${money(room.basePrice)} / night${room.capacity ? ` · sleeps ${room.capacity}` : ""}`}
+                          `${money(room.basePrice, currencySymbol)} / night${room.capacity ? ` · sleeps ${room.capacity}` : ""}`}
                       </small>
                     </span>
                   </label>
@@ -348,7 +351,7 @@ export function NewReservationDialog({
         <div className={s.dlgFoot}>
           <span className={s.total}>
             {chosen && nights
-              ? `${plural(nights)} · ${money(Number(chosen.basePrice) * nights)}`
+              ? `${plural(nights)} · ${money(Number(chosen.basePrice) * nights, currencySymbol)}`
               : "Select dates, guest and room"}
           </span>
           <button

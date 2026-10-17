@@ -112,7 +112,7 @@ export async function POST(
       await tx.room.update({
         where: { id: task.roomId },
         data: {
-          status: 'AVAILABLE',
+          status: 'IN_REVIEW',
         },
       });
 
@@ -128,7 +128,7 @@ export async function POST(
         },
       });
       return result;
-    });
+    }, { timeout: 30_000 });
 
     return Response.json({
       ...updated,

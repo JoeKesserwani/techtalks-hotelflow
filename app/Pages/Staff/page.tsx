@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
@@ -35,9 +36,11 @@ type StaffForm = {
 };
 
 type AccountFilter = "all" | "active" | "inactive";
-type RoleFilter = Role | "all";
+
 
 const roleOptions = Object.values(Role).filter((role) => role !== Role.ADMIN);
+type RoleFilter = Role | "all";
+
 const emptyForm: StaffForm = {
   fullName: "",
   email: "",
@@ -47,6 +50,16 @@ const emptyForm: StaffForm = {
 
 const formatRole = (role: Role) =>
   role.charAt(0) + role.slice(1).toLowerCase().replace("_", " ");
+
+const roleFilterOptions: { value: RoleFilter; label: string }[] = [
+  { value: "all", label: "All roles" },
+  ...Object.values(Role)
+    .filter((role) => role !== Role.ADMIN)
+    .map((role) => ({
+      value: role,
+      label: formatRole(role),
+    })),
+];
 
 const formatDate = (date: string) =>
   new Intl.DateTimeFormat("en", {
@@ -298,7 +311,47 @@ export default function StaffPage() {
       setIsSaving(false);
     }
   }
+  async function ActivateStaff() {
+    if (
+      !selectedStaff ||
+      !window.confirm(`Activate ${selectedStaff.fullName}?`)
+    ) {
+      return;
+    }
 
+    setFormError(null);
+    setIsSaving(true);
+
+    try {
+      const response = await fetch(`/api/v1/users/${selectedStaff.id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ isActive: true }),
+      });
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        throw new Error(
+          result?.message ??
+            result?.error ??
+            "Unable to activate staff member.",
+        );
+      }
+
+      await loadStaff();
+      setMode(null);
+      setSelectedStaff(null);
+      setForm(emptyForm);
+    } catch (err) {
+      setFormError(
+        err instanceof Error
+          ? err.message
+          : "Unable to activate staff member.",
+      );
+    } finally {
+      setIsSaving(false);
+    }
+  }
   return (
     <main className={styles.page}>
       <div className={styles.pageInner}>
@@ -669,6 +722,16 @@ export default function StaffPage() {
                   >
                     <CircleMinus size={16} aria-hidden="true" />
                     Deactivate
+                  </button>
+                )}
+                {mode === "edit" && selectedStaff?.isActive === false && (
+                  <button
+                    type="button"
+                    className={styles.activateButton}
+                    onClick={() => void ActivateStaff()}
+                    disabled={isSaving}
+                  >
+                    Activate
                   </button>
                 )}
                 <span className={styles.actionSpacer} />

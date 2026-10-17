@@ -496,6 +496,25 @@
   color: var(--color-faint);
 }
 
+.currencyInput {
+  position: relative;
+}
+
+.currencyPrefix {
+  position: absolute;
+  top: 50%;
+  left: 12px;
+  transform: translateY(-50%);
+  color: var(--color-label);
+  font-family: var(--font-body);
+  font-size: 13px;
+  pointer-events: none;
+}
+
+.currencyInput input {
+  padding-left: 36px;
+}
+
 /* =========================
    PRICE WARNING & ERROR
 ========================= */

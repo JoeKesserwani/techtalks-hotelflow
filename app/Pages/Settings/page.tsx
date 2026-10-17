@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { usePopupMessage } from "@/components/PopupMessage";
 import styles from "./page.module.css";
 import Header from "@/components/Header/Header";
+import { useAuth } from "@/components/Auth/AuthProvider";
 
 type HotelSettings = {
   id: string;
@@ -25,6 +26,7 @@ const CURRENCIES = [
 
 export default function HotelSettingsPage() {
   const { notify } = usePopupMessage();
+  const { setHotelCurrency } = useAuth();
   const [settings, setSettings] = useState<HotelSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -73,6 +75,8 @@ export default function HotelSettingsPage() {
 
       if (res.ok) {
         notify({ kind: "success", title: "Hotel settings saved" });
+        setHotelCurrency(settings.currency);
+        setSaved(true);
       } else {
         const data = await res.json().catch(() => ({}));
         notify({
