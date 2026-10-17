@@ -14,6 +14,14 @@ export default function AddGuestModal({
 }) {
   const { notify } = usePopupMessage();
   const [fullName, setFullName] = useState("");
+  const initials =
+    fullName
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0].toUpperCase())
+      .join("") || "GS";
   const [phone, setPhone] = useState("");
   const [passportNumber, setPassportNumber] = useState("");
   const [email, setEmail] = useState("");
@@ -127,27 +135,14 @@ export default function AddGuestModal({
         onClick={(e) => e.stopPropagation()}
       >
         <h3>New guest profile</h3>
-        <p className={styles.subtitle}>
-          No match found — add their details below.
-        </p>
-
-        <div className={styles.steps}>
-          <span className={styles.stepInactive}>1 Find guest</span>
-          <span className={styles.stepActive}>2 Reservation details</span>
-        </div>
-
         <div className={styles.selectedChip}>
-          <span className={styles.chipAvatar}>GS</span>
+          <span className={styles.chipAvatar}>{initials}</span>
           <div className={styles.chipText}>
             <strong>{fullName || "Guest's name"}</strong>
             <span>
               {phone || "Phone number"} - {passportNumber || "ID"}
             </span>
           </div>
-          <span className={styles.selectedTag}>selected</span>
-          <button type="button" className={styles.changeLink} onClick={onClose}>
-            change
-          </button>
         </div>
 
         <label className={styles.label} htmlFor="fullName">

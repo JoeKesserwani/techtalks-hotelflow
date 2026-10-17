@@ -173,10 +173,22 @@ export default function ReservationHistoryPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const response = await fetch("/api/v1/reservations", {
-        credentials: "include",
-        cache: "no-store",
-      });
+      const request = () =>
+        fetch("/api/v1/reservations", {
+          credentials: "include",
+          cache: "no-store",
+        });
+      let response = await request();
+
+      if (response.status === 401) {
+        const refreshResponse = await fetch("/api/v1/auth/refresh", {
+          method: "POST",
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (refreshResponse.ok) response = await request();
+      }
+
       const data = await readApiResponse(response);
 
       if (response.status === 401) {

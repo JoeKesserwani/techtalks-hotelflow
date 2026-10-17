@@ -1,15 +1,15 @@
-import crypto from 'crypto';
-import { prisma } from '../db';
+import crypto from "crypto";
+import { prisma } from "../db";
 
-const REFRESH_TOKEN_TTL_DAYS = 7;
+const REFRESH_TOKEN_TTL_MS = 8 * 60 * 60 * 1000;
 
 function hashToken(token: string): string {
-  return crypto.createHash('sha256').update(token).digest('hex');
+  return crypto.createHash("sha256").update(token).digest("hex");
 }
 
 export async function createSession(userId: string) {
-  const rawToken = crypto.randomBytes(48).toString('hex');
-  const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_DAYS * 24 * 60 * 60 * 1000);
+  const rawToken = crypto.randomBytes(48).toString("hex");
+  const expiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_MS);
 
   await prisma.session.create({
     data: {
