@@ -101,7 +101,6 @@ function sortRoomsByNumber(rooms: Room[]) {
 
 const Page = () => {
   const { notify } = usePopupMessage();
-  const { user } = useAuth();
   const { user, currencySymbol } = useAuth();
   const router = useRouter();
 

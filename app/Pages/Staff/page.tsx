@@ -319,7 +319,7 @@ export default function StaffPage() {
       return;
     }
 
-    setFormError(null);
+    setError(null);
     setIsSaving(true);
 
     try {
@@ -343,7 +343,7 @@ export default function StaffPage() {
       setSelectedStaff(null);
       setForm(emptyForm);
     } catch (err) {
-      setFormError(
+      setError(
         err instanceof Error
           ? err.message
           : "Unable to activate staff member.",
