@@ -529,3 +529,64 @@
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Explicit task controls: the card itself is not interactive. */
+.actionButton {
+  display: flex;
+  width: 100%;
+  min-height: 44px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 15px;
+  border: 1px solid var(--rust);
+  border-radius: 10px;
+  background: var(--rust);
+  color: #fff;
+  font: inherit;
+  font-size: 12px;
+  font-weight: 800;
+  text-align: left;
+  cursor: pointer;
+  transition: background 150ms ease, border-color 150ms ease, box-shadow 150ms ease;
+}
+
+.actionButton:hover:not(:disabled) {
+  border-color: var(--rust-dark);
+  background: var(--rust-dark);
+  box-shadow: 0 4px 10px rgba(112, 58, 32, 0.16);
+}
+
+.actionButton:focus-visible {
+  outline: 3px solid #2e6576;
+  outline-offset: 3px;
+}
+
+.actionButton:disabled {
+  border-color: #e1dbd3;
+  background: #e9e4dd;
+  color: #827a71;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.actionButtonComplete {
+  border-color: #426b4c;
+  background: #426b4c;
+}
+
+.actionButtonComplete:hover:not(:disabled) {
+  border-color: #33583d;
+  background: #33583d;
+}
+
+.actionButton .actionArrow {
+  flex: 0 0 auto;
+}
+
+.actionHint {
+  margin: 9px 0 0;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.5;
+}

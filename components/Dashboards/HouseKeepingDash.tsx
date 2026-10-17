@@ -4,7 +4,6 @@ import React from "react";
 import { usePopupMessage } from "@/components/PopupMessage";
 import styles from "./HouseKeepingDash.module.css";
 import { useAuth } from "../Auth/AuthProvider";
-import Header from "../Header/Header";
 
 type TaskStatus = "PENDING" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
 
@@ -130,6 +129,18 @@ export default function HouseKeepingDash() {
   }, []);
 
   async function startCleaning(task: HousekeepingTask) {
+    // A housekeeper can clean only one room at a time.
+    const otherCleaningTask = tasks.find(
+      (item) => item.id !== task.id && item.status === "IN_PROGRESS",
+    );
+    if (otherCleaningTask) {
+      setError(
+        `Finish cleaning room ${otherCleaningTask.room.roomNumber} before starting another room.`,
+      );
+      return;
+    }
+    if (task.status !== "PENDING" || actionLoading !== null) return;
+
     try {
       setActionLoading(task.id);
       setError("");
@@ -299,12 +310,6 @@ export default function HouseKeepingDash() {
     }
   }
 
-  function handleTaskClick(task: HousekeepingTask) {
-    if (actionLoading === task.id) return;
-    if (task.status === "PENDING") void startCleaning(task);
-    else if (task.status === "IN_PROGRESS") void completeCleaning(task);
-  }
-
   const waitingTasks = tasks.filter((task) => task.status === "PENDING").length;
   const cleaningTasks = tasks.filter(
     (task) => task.status === "IN_PROGRESS",
@@ -314,9 +319,8 @@ export default function HouseKeepingDash() {
   ).length;
   const completedTasks = tasks.filter((task) => task.status === "DONE").length;
   const activeTasks = waitingTasks + cleaningTasks;
-  const visibleTasks = tasks.filter(
-    (task) => task.status === "PENDING" || task.status === "IN_PROGRESS",
-  );
+  const currentCleaningTask = tasks.find((task) => task.status === "IN_PROGRESS") ?? null;
+  const visibleTasks = tasks.filter((task) => task.status === "PENDING" || task.status === "IN_PROGRESS");
 
   const displayDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -341,18 +345,22 @@ export default function HouseKeepingDash() {
   return (
     <div className={styles.dashboard}>
       <main className={styles.main}>
-        {/* HEADER */}
-        <Header
-          title={`Hello, ${user?.fullName || "there"}!`}
-          subtitle="Overview of housekeeping operations"
-          userSubtitle={new Date().toLocaleDateString("en-US", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })}
-        />
-        {/* ERROR */}
+        <header className={styles.header}>
+          <div className={styles.headerCopy}>
+            <p className={styles.eyebrow}>HOTELFLOW · HOUSEKEEPING</p>
+            <h1 className={styles.title}>Hello, {user?.fullName || "Housekeeping team"}!</h1>
+            <p className={styles.date} suppressHydrationWarning>{displayDate}</p>
+          </div>
+          <div className={styles.user}>
+            <span className={styles.userAvatar} aria-hidden="true">
+              {(user?.fullName || "H").trim().charAt(0).toUpperCase()}
+            </span>
+            <div className={styles.userDetails}>
+              <span className={styles.userName}>{user?.fullName || "Housekeeping"}</span>
+              <span className={styles.roleBadge}>{user?.role || "HOUSEKEEPING"}</span>
+            </div>
+          </div>
+        </header>
 
         {error && (
           <div className={styles.error} role="alert">
@@ -403,8 +411,7 @@ export default function HouseKeepingDash() {
               <p className={styles.sectionEyebrow}>YOUR WORK QUEUE</p>
               <h2>My housekeeping tasks</h2>
               <p className={styles.sectionDescription}>
-                Open a task to start cleaning. Add photos while working, then
-                select the task again to submit it for review.
+                Use the Start Cleaning button to begin. Add photos while working, then select Finish and Submit for Review when you are done.
               </p>
             </div>
             <span className={styles.taskCounter}>
@@ -434,20 +441,8 @@ export default function HouseKeepingDash() {
                 return (
                   <article
                     key={task.id}
-                    className={`${styles.housekeepingCard} ${styles.clickable} ${isLoading ? styles.processing : ""}`}
-                    onClick={() => handleTaskClick(task)}
-                    role="button"
-                    tabIndex={0}
-                    aria-label={`${isPending ? "Start cleaning" : "Complete cleaning"} for room ${task.room.roomNumber}`}
+                    className={`${styles.housekeepingCard} ${isLoading ? styles.processing : ""}`}
                     aria-busy={isLoading}
-                    onKeyDown={(event) => {
-                      if (event.target !== event.currentTarget || isLoading)
-                        return;
-                      if (event.key === "Enter" || event.key === " ") {
-                        event.preventDefault();
-                        handleTaskClick(task);
-                      }
-                    }}
                   >
                     <div className={styles.taskCardHeader}>
                       <div
@@ -483,10 +478,7 @@ export default function HouseKeepingDash() {
                     </div>
 
                     {task.status === "IN_PROGRESS" && (
-                      <div
-                        className={styles.photoArea}
-                        onClick={(event) => event.stopPropagation()}
-                      >
+                      <div className={styles.photoArea}>
                         <div className={styles.photoAreaHeader}>
                           <div>
                             <strong>Cleaning photos</strong>
@@ -536,18 +528,40 @@ export default function HouseKeepingDash() {
                     )}
 
                     <div className={styles.taskAction}>
-                      <span className={styles.actionText}>
-                        {isLoading
-                          ? isPending
-                            ? "Starting cleaning…"
-                            : "Submitting for review…"
-                          : isPending
-                            ? "Start cleaning"
-                            : "Finish and submit for review"}
-                      </span>
-                      <span className={styles.actionArrow} aria-hidden="true">
-                        {isLoading ? "…" : "→"}
-                      </span>
+                      {isPending ? (
+                        <>
+                          <button
+                            type="button"
+                            className={styles.actionButton}
+                            onClick={() => void startCleaning(task)}
+                            disabled={
+                              isLoading ||
+                              actionLoading !== null ||
+                              currentCleaningTask !== null
+                            }
+                            aria-label={`Start cleaning room ${task.room.roomNumber}`}
+                          >
+                            <span>{isLoading ? "Starting cleaning…" : "Start Cleaning"}</span>
+                            <span className={styles.actionArrow} aria-hidden="true">→</span>
+                          </button>
+                          {currentCleaningTask && (
+                            <p className={styles.actionHint}>
+                              Finish cleaning room {currentCleaningTask.room.roomNumber} before starting another room.
+                            </p>
+                          )}
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          className={`${styles.actionButton} ${styles.actionButtonComplete}`}
+                          onClick={() => void completeCleaning(task)}
+                          disabled={isLoading || actionLoading !== null}
+                          aria-label={`Finish cleaning room ${task.room.roomNumber} and submit for review`}
+                        >
+                          <span>{isLoading ? "Submitting for review…" : "Finish and Submit for Review"}</span>
+                          <span className={styles.actionArrow} aria-hidden="true">→</span>
+                        </button>
+                      )}
                     </div>
                   </article>
                 );
