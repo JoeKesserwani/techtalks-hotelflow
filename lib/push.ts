@@ -36,7 +36,7 @@ export async function sendPushToUser(userId: string, title: string, body: string
     const publicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
     const privateKey = process.env.VAPID_PRIVATE_KEY
 
-    if (!subject || !publicKey || !privateKey) {
+    /*if (!subject || !publicKey || !privateKey) {
       if (!warnedAboutMissingVapidConfiguration) {
         console.warn(
           'Push notifications are disabled; configure VAPID_SUBJECT, NEXT_PUBLIC_VAPID_PUBLIC_KEY, and VAPID_PRIVATE_KEY.'
@@ -44,7 +44,7 @@ export async function sendPushToUser(userId: string, title: string, body: string
         warnedAboutMissingVapidConfiguration = true
       }
       return
-    }
+    }*/
 
     webpush.setVapidDetails(subject, publicKey, privateKey)
 

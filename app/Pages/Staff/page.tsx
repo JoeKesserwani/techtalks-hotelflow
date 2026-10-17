@@ -35,7 +35,7 @@ type StaffForm = {
 };
 
 type AccountFilter = "all" | "active" | "inactive";
-type RoleFilter = Role | "all";
+
 
 const roleOptions = Object.values(Role).filter((role) => role !== Role.ADMIN);
 type RoleFilter = Role | "all";
