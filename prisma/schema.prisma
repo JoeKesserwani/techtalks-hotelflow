@@ -214,6 +214,8 @@ enum NotificationType {
   TASK_ASSIGNED
   TASK_APPROVED
   TASK_REJECTED
+  TASK_SUBMITTED
+  RESERVATION_CREATED
 }
 
 enum TaskStatus {
