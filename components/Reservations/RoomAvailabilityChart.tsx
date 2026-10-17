@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo } from "react";
 import {
   bucketDay,
   formatDate,
@@ -11,14 +11,14 @@ import {
 } from "../../app/Pages/Reservations/frontdesk";
 import styles from "./RoomAvailabilityChart.module.css";
 
-const PAGE_SIZE = 20;
-
 const STATUS_INFO: { state: TileState; label: string }[] = [
   { state: "free", label: "Free" },
   { state: "arriving", label: "Arriving" },
   { state: "occupied", label: "Occupied" },
   { state: "departing", label: "Leaves today" },
-  { state: "dirty", label: "Being cleaned" },
+  { state: "needsCleaning", label: "Needs cleaning" },
+  { state: "cleaning", label: "Being cleaned" },
+  { state: "inReview", label: "Awaiting review" },
   { state: "oos", label: "Out of service" },
 ];
 
@@ -39,8 +39,6 @@ export function RoomAvailabilityChart({
   onSelectRoom,
   onViewAll,
 }: RoomAvailabilityChartProps) {
-  const [pagination, setPagination] = useState({ date, page: 0 });
-
   const day = useMemo(
     () => bucketDay(reservations, date, today),
     [reservations, date, today],
@@ -49,11 +47,20 @@ export function RoomAvailabilityChart({
     () => roomBoard(rooms, day, date, today),
     [rooms, day, date, today],
   );
-
-  const pageCount = Math.max(1, Math.ceil(board.length / PAGE_SIZE));
-  const selectedPage = pagination.date === date ? pagination.page : 0;
-  const page = Math.min(selectedPage, pageCount - 1);
-  const visibleTiles = board.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
+  const floorGroups = useMemo(() => {
+    const groups = new Map<number | undefined, typeof board>();
+    board.forEach((tile) => {
+      const floor = tile.room.floor;
+      const group = groups.get(floor);
+      if (group) group.push(tile);
+      else groups.set(floor, [tile]);
+    });
+    return [...groups.entries()].sort(([floorA], [floorB]) => {
+      if (floorA === undefined) return 1;
+      if (floorB === undefined) return -1;
+      return floorA - floorB;
+    });
+  }, [board]);
   const statusCounts = board.reduce<Record<TileState, number>>(
     (counts, tile) => {
       counts[tile.state] += 1;
@@ -64,7 +71,9 @@ export function RoomAvailabilityChart({
       arriving: 0,
       occupied: 0,
       departing: 0,
-      dirty: 0,
+      needsCleaning: 0,
+      cleaning: 0,
+      inReview: 0,
       oos: 0,
     },
   );
@@ -74,13 +83,7 @@ export function RoomAvailabilityChart({
   const occupancy = rooms.length
     ? Math.round((tonight / rooms.length) * 100)
     : 0;
-  const firstRoom = board.length ? page * PAGE_SIZE + 1 : 0;
-  const lastRoom = Math.min((page + 1) * PAGE_SIZE, board.length);
   const bookingDate = date < today ? today : date;
-
-  const changePage = (nextPage: number) => {
-    setPagination({ date, page: nextPage });
-  };
 
   return (
     <section
@@ -123,56 +126,46 @@ export function RoomAvailabilityChart({
         ))}
       </ul>
 
-      <ul className={styles.tiles}>
-        {visibleTiles.map(({ room, state, guest }) => (
-          <li key={room.id}>
-            <button
-              className={`${styles.tile} ${styles[`t_${state}`]}`}
-              disabled={state !== "free" || date < today}
-              onClick={() => onSelectRoom(room.id)}
-              aria-label={`Room ${room.roomNumber}, ${STATUS_INFO.find((item) => item.state === state)?.label ?? state}${guest ? `, ${guest}` : ""}`}
-            >
-              <strong>{room.roomNumber}</strong>
-              <span>
-                {guest ??
-                  room.roomType ??
-                  STATUS_INFO.find((item) => item.state === state)?.label}
-              </span>
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      <nav className={styles.pagination} aria-label="Room availability pages">
-        <span className={styles.range}>
-          {board.length
-            ? `Showing ${firstRoom}–${lastRoom} of ${board.length} rooms`
-            : "No rooms to display"}
-        </span>
-        <div className={styles.pageControls}>
-          <button
-            className={styles.pageButton}
-            type="button"
-            aria-label="Previous rooms"
-            disabled={page === 0}
-            onClick={() => changePage(page - 1)}
+      {floorGroups.length ? (
+        floorGroups.map(([floor, tiles]) => (
+          <section
+            className={styles.floorSection}
+            key={floor ?? "unassigned"}
+            aria-label={
+              floor === undefined ? "Floor not set" : `Floor ${floor}`
+            }
           >
-            ‹
-          </button>
-          <span className={styles.pageLabel}>
-            Page {page + 1} of {pageCount}
-          </span>
-          <button
-            className={styles.pageButton}
-            type="button"
-            aria-label="Next rooms"
-            disabled={page >= pageCount - 1}
-            onClick={() => changePage(page + 1)}
-          >
-            ›
-          </button>
-        </div>
-      </nav>
+            <h3 className={styles.floorHeading}>
+              {floor === undefined ? "Floor not set" : `Floor ${floor}`}
+            </h3>
+            <ul className={styles.tiles}>
+              {tiles.map(({ room, state, guest }) => (
+                <li key={room.id}>
+                  <button
+                    className={`${styles.tile} ${styles[`t_${state}`]}`}
+                    disabled={state !== "free" || date < today}
+                    onClick={() => onSelectRoom(room.id)}
+                    aria-label={`Room ${room.roomNumber}, ${STATUS_INFO.find((item) => item.state === state)?.label ?? state}${guest ? `, ${guest}` : ""}`}
+                  >
+                    <strong>{room.roomNumber}</strong>
+                    <span>
+                      {guest ??
+                        (state === "free"
+                          ? (room.roomType ??
+                            STATUS_INFO.find((item) => item.state === state)
+                              ?.label)
+                          : STATUS_INFO.find((item) => item.state === state)
+                              ?.label)}
+                    </span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))
+      ) : (
+        <p className={styles.emptyState}>No rooms to display</p>
+      )}
     </section>
   );
 }

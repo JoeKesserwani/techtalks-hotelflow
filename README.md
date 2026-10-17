@@ -145,6 +145,25 @@ Open Prisma Studio:
 npx prisma studio
 ```
 
+### Push notifications
+
+Push delivery is optional. To enable it, generate a VAPID key pair:
+
+```powershell
+npx web-push generate-vapid-keys
+```
+
+Add the generated keys and a contact email or URL to `.env`:
+
+```env
+VAPID_SUBJECT="mailto:your-email@example.com"
+NEXT_PUBLIC_VAPID_PUBLIC_KEY="your-generated-public-key"
+VAPID_PRIVATE_KEY="your-generated-private-key"
+```
+
+Restart the development server after changing `.env`. Without these values,
+push delivery is skipped and in-app notifications continue to work.
+
 6. Contribution Workflow
    Task branches: Create a branch per task/feature (e.g. feature/reservation-crud, fix/room-status-bug). Do not commit directly to main.
 

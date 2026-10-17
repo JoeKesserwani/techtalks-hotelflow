@@ -48,6 +48,7 @@ model User {
   sessions            Session[]
   hotel               Hotel              @relation(fields: [hotelId], references: [id])
   notifications       Notification[]
+  pushSubscriptions PushSubscription[]
 
   @@index([hotelId], map: "users_hotel_id_fkey")
   @@map("users")
@@ -114,6 +115,7 @@ model Reservation {
   status          ReservationStatus @default(BOOKED)
   pricePerNight   Decimal           @map("price_per_night") @db.Decimal(10, 2)
   totalPrice      Decimal           @map("total_price") @db.Decimal(10, 2)
+  amountPaid      Decimal?          @map("amount_paid") @db.Decimal(10, 2)
   paymentStatus   PaymentStatus     @default(UNPAID) @map("payment_status")
   createdAt       DateTime          @default(now()) @map("created_at")
   updatedAt       DateTime          @updatedAt @map("updated_at")
@@ -258,4 +260,18 @@ enum PaymentStatus {
   UNPAID
   PARTIAL
   PAID
+}
+
+model PushSubscription {
+  id        String   @id @default(uuid()) @db.Char(36)
+  userId    String   @map("user_id") @db.Char(36)
+  endpoint  String   @unique @db.VarChar(500)
+  p256dh    String   @db.VarChar(255)
+  auth      String   @db.VarChar(255)
+  createdAt DateTime @default(now()) @map("created_at") @db.DateTime(0)
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("push_subscriptions")
 }

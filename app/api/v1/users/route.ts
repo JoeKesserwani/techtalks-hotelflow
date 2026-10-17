@@ -28,7 +28,6 @@ export async function GET() {
     const users = await prisma.user.findMany({
       where: {
         hotelId: user.hotelId,
-        isActive: true,
         role: { not: 'ADMIN' },
       },
       orderBy: { fullName: 'asc' },

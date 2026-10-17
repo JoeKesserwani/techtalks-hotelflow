@@ -1,5 +1,5 @@
-
 import { prisma } from "@/lib/db";
+import { sendPushToUser } from "@/lib/push";
 
 type CreateNotificationInput = {
   hotelId: string;
@@ -47,4 +47,12 @@ export async function createNotification(
       NOW()
     )
   `;
+
+  if (!tx) await sendNotificationPush(data);
 }
+
+export async function sendNotificationPush(
+  data: Pick<CreateNotificationInput, "userId" | "title" | "message">,
+) {
+  await sendPushToUser(data.userId, data.title, data.message);
+} 

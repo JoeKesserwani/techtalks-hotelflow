@@ -1,10 +1,11 @@
 import { z } from 'zod';
+import { after } from 'next/server';
 import { Prisma } from '../../../../../../../app/generated/prisma/client';
 import { prisma } from '../../../../../../../lib/db';
 import { requireAuth } from '../../../../../../../lib/middleware/requireAuth';
 import { writeAuditLog } from '../../../../../../../lib/services/audit.service';
 import { ApiError, handleRouteError } from '../../../../../../../lib/api/errors';
-import { createNotification } from '@/lib/notifications';
+import { createNotification, sendNotificationPush } from '@/lib/notifications';
 
 const reviewHousekeepingTaskSchema = z.object({
   action: z.enum(['approve', 'reject']),
@@ -36,6 +37,16 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
     });
 
     const isApproved = parsed.data.action === 'approve';
+    const notification = {
+      hotelId: task.hotelId,
+      userId: task.assignedToUserId,
+      title: isApproved ? 'Cleaning task approved' : 'Cleaning task rejected',
+      message: isApproved
+        ? `Your cleaning task for Room ${room?.roomNumber ?? task.roomId} has been approved.`
+        : `Your cleaning task for Room ${room?.roomNumber ?? task.roomId} was rejected.`,
+      type: isApproved ? 'TASK_APPROVED' as const : 'TASK_REJECTED' as const,
+      taskId: task.id,
+    };
     const updated = await prisma.$transaction(async (tx) => {
       const result = await tx.housekeepingTask.update({
         where: { id },
@@ -77,23 +88,12 @@ export async function POST(req: Request, { params }: { params: Promise<{ id: str
         metadata: { taskId: id, roomId: task.roomId, comment: parsed.data.comment ?? null },
       });
 
-      const comment = parsed.data.comment?.trim();
-      await createNotification(
-        {
-          hotelId: task.hotelId,
-          userId: task.assignedToUserId,
-          title: isApproved ? 'Cleaning task approved' : 'Cleaning task rejected',
-          message: isApproved
-            ? `Your cleaning task for Room ${room?.roomNumber ?? task.roomId} has been approved.`
-            : `Your cleaning task for Room ${room?.roomNumber ?? task.roomId} was rejected.`,
-          type: isApproved ? 'TASK_APPROVED' : 'TASK_REJECTED',
-          taskId: task.id,
-        },
-        tx,
-      );
+      await createNotification(notification, tx);
 
       return result;
-    });
+    }, { maxWait: 10_000, timeout: 30_000 });
+
+    after(() => sendNotificationPush(notification));
 
     return Response.json(updated);
   } catch (err) {

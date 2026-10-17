@@ -13,6 +13,7 @@ export interface Reservation {
   checkOutDate: string;
   pricePerNight: string | number;
   totalPrice: string | number;
+  amountPaid?: string | number | null;
   status: "BOOKED" | "CHECKED_IN" | "CHECKED_OUT" | string;
   paymentStatus: string;
   room?: Room;
@@ -45,11 +46,22 @@ export class ApiError extends Error {
   }
 }
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API}${path}`, {
-    cache: "no-store",
-    ...init,
-    headers: { "Content-Type": "application/json", ...init?.headers },
-  });
+  const request = () =>
+    fetch(`${API}${path}`, {
+      cache: "no-store",
+      ...init,
+      headers: { "Content-Type": "application/json", ...init?.headers },
+    });
+  let res = await request();
+
+  if (res.status === 401) {
+    const refreshResponse = await fetch(`${API}/auth/refresh`, {
+      method: "POST",
+      cache: "no-store",
+    });
+    if (refreshResponse.ok) res = await request();
+  }
+
   if (!res.ok) {
     let msg = `Request failed (${res.status})`;
     try {
@@ -111,10 +123,27 @@ export function payment(r: Reservation): { kind: PayKind; label: string } {
   return { kind: "unpaid", label: "Unpaid" };
 }
 
-export const money = (v: string | number) => {
+export const money = (v: string | number, currencySymbol = "$") => {
   const n = Number(v);
-  return `$${Number.isInteger(n) ? n : n.toFixed(2)}`;
+  return `${currencySymbol}${Number.isInteger(n) ? n : n.toFixed(2)}`;
 };
+
+export function paymentSummary(r: Reservation): string {
+  const total = Number(r.totalPrice);
+  const p = payment(r);
+
+  if (r.amountPaid === null || r.amountPaid === undefined) {
+    if (p.kind === "paid") return `Paid ${money(total)}`;
+    if (p.kind === "unpaid") return `Unpaid · Due ${money(total)}`;
+    return "Partial paid · Amount received not recorded";
+  }
+
+  const amountPaid = Math.max(0, Number(r.amountPaid));
+  const due = Math.max(0, total - amountPaid);
+  if (due === 0) return `Paid ${money(amountPaid)}`;
+  if (amountPaid === 0) return `Unpaid · Due ${money(total)}`;
+  return `Paid ${money(amountPaid)} · Due ${money(due)}`;
+}
 
 /**
  * Bucket every reservation for a selected date.
@@ -199,7 +228,9 @@ export type TileState =
   | "arriving"
   | "occupied"
   | "departing"
-  | "dirty"
+  | "needsCleaning"
+  | "cleaning"
+  | "inReview"
   | "oos"
   | "free";
 export interface Tile {
@@ -219,24 +250,33 @@ export function roomBoard(
     day.arriving.filter((r) => ["BOOKED", "CHECKED_IN"].includes(r.status)),
   );
   const stay = index(day.staying);
-  const dep = index(day.departing);
+  const dep = index(
+    day.departing.filter((r) => date !== today || r.status !== "CHECKED_OUT"),
+  );
   return rooms
     .map((room): Tile => {
       const a = arr.get(room.id),
         s = stay.get(room.id),
         d = dep.get(room.id);
-      if (s) return { room, state: "occupied", guest: guestName(s) };
-      if (a) return { room, state: "arriving", guest: guestName(a) };
+
       if (room.status === "OUT_OF_SERVICE" && date >= today)
         return { room, state: "oos" };
+
+      if (date === today) {
+        if (room.status === "NEEDS_CLEANING")
+          return { room, state: "needsCleaning" };
+        if (room.status === "CLEANING") return { room, state: "cleaning" };
+        if (room.status === "IN_REVIEW") return { room, state: "inReview" };
+        if (d?.status === "CHECKED_IN")
+          return { room, state: "departing", guest: guestName(d) };
+        if (s) return { room, state: "occupied", guest: guestName(s) };
+        if (room.status === "OCCUPIED") return { room, state: "occupied" };
+        if (a) return { room, state: "arriving", guest: guestName(a) };
+      }
+
+      if (s) return { room, state: "occupied", guest: guestName(s) };
+      if (a) return { room, state: "arriving", guest: guestName(a) };
       if (d) return { room, state: "departing", guest: guestName(d) };
-      if (
-        date === today &&
-        ["NEEDS_CLEANING", "CLEANING", "IN_REVIEW"].includes(
-          String(room.status),
-        )
-      )
-        return { room, state: "dirty" };
       return { room, state: "free" };
     })
     .sort((x, y) =>
