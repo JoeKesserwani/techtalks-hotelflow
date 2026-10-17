@@ -16,6 +16,7 @@ const AdminNavigation = [
   { name: "Staff", href: "/Pages/Staff" },
   { name: "Hotel settings", href: "/Pages/Settings" },
   { name: "Activity log", href: "/Pages/Activity-Log" },
+  { name: "Statistics", href: "/Pages/Statistics" },
 ];
 
 const ManagerNavigation = [
@@ -27,6 +28,7 @@ const ManagerNavigation = [
   { name: "Rooms setup", href: "/Pages/Rooms" },
   { name: "Staff", href: "/Pages/Staff" },
   { name: "Activity log", href: "/Pages/Activity-Log" },
+  { name: "Statistics", href: "/Pages/Statistics" },
 ];
 
 const ReceptionistNavigation = [
