@@ -14,6 +14,7 @@ import {
   X,
 } from "lucide-react";
 import { Role } from "@/app/generated/prisma/enums";
+import { usePopupMessage } from "@/components/PopupMessage";
 import styles from "./staff.module.css";
 import Pagination from "@/components/Pagination";
 import Header from "@/components/Header/Header";
@@ -76,9 +77,10 @@ const initials = (name: string) =>
     .join("")
     .toUpperCase();
 
-const PAGE_SIZE = 8;
+const PAGE_SIZE = 5;
 
 export default function StaffPage() {
+  const { notify } = usePopupMessage();
   const [staff, setStaff] = useState<StaffMember[]>([]);
   const [query, setQuery] = useState("");
   const [accountFilter, setAccountFilter] = useState<AccountFilter>("all");
@@ -86,7 +88,6 @@ export default function StaffPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [formError, setFormError] = useState<string | null>(null);
   const [mode, setMode] = useState<"create" | "edit" | null>(null);
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -186,14 +187,12 @@ export default function StaffPage() {
       setMode(null);
       setSelectedStaff(null);
       setForm(emptyForm);
-      setFormError(null);
     }
   }
 
   function openCreateDialog() {
     setSelectedStaff(null);
     setForm(emptyForm);
-    setFormError(null);
     setMode("create");
   }
 
@@ -205,7 +204,6 @@ export default function StaffPage() {
       password: "",
       role: member.role,
     });
-    setFormError(null);
     setMode("edit");
   }
 
@@ -218,7 +216,6 @@ export default function StaffPage() {
 
   async function saveStaff(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setFormError(null);
     setIsSaving(true);
 
     const isCreate = mode === "create";
@@ -252,10 +249,19 @@ export default function StaffPage() {
       setMode(null);
       setSelectedStaff(null);
       setForm(emptyForm);
+      notify({
+        kind: "success",
+        title: isCreate ? "Staff member added" : "Staff member updated",
+      });
     } catch (err) {
-      setFormError(
-        err instanceof Error ? err.message : "Unable to save staff member.",
-      );
+      notify({
+        kind: "error",
+        title: isCreate
+          ? "Staff member was not added"
+          : "Staff member was not updated",
+        description:
+          err instanceof Error ? err.message : "Unable to save staff member.",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -269,7 +275,6 @@ export default function StaffPage() {
       return;
     }
 
-    setFormError(null);
     setIsSaving(true);
 
     try {
@@ -292,12 +297,16 @@ export default function StaffPage() {
       setMode(null);
       setSelectedStaff(null);
       setForm(emptyForm);
+      notify({ kind: "success", title: "Staff member deactivated" });
     } catch (err) {
-      setFormError(
-        err instanceof Error
-          ? err.message
-          : "Unable to deactivate staff member.",
-      );
+      notify({
+        kind: "error",
+        title: "Staff member was not deactivated",
+        description:
+          err instanceof Error
+            ? err.message
+            : "Unable to deactivate staff member.",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -702,12 +711,6 @@ export default function StaffPage() {
                   ))}
                 </select>
               </label>
-
-              {formError && (
-                <p className={styles.formError} role="alert">
-                  {formError}
-                </p>
-              )}
 
               <div className={styles.dialogActions}>
                 {mode === "edit" && selectedStaff?.isActive && (

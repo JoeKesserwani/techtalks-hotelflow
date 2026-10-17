@@ -1,16 +1,16 @@
 "use client";
 
 import React, { useCallback, useEffect, useState, useRef } from "react";
+import {
+  usePopupMessage,
+  type ReservationFeedback,
+} from "@/components/PopupMessage";
 import styles from "./ReceptionistDash.module.css";
 import { useAuth } from "../Auth/AuthProvider";
 import Header from "../Header/Header";
 import { ReservationsBoard } from "../Reservations/reservationBoard";
 import { NewReservationDialog } from "../Reservations/newReservationDialog";
 import { RoomAvailabilityChart } from "../Reservations/RoomAvailabilityChart";
-import {
-  ReservationFeedbackPopup,
-  type ReservationFeedback,
-} from "../Reservations/ReservationFeedbackPopup";
 import HousekeepingReview, {
   HousekeepingTask as ReviewHousekeepingTask,
 } from "../Housekeeping/housekeepingApproval";
@@ -97,6 +97,7 @@ type DashboardData = {
 // Reservations shown on the dashboard are limited to today.
 
 const ReceptionistDash = () => {
+  const { notify } = usePopupMessage();
   const { user } = useAuth();
 
   const [dashboard, setDashboard] = useState<DashboardData | null>(null);
@@ -108,8 +109,6 @@ const ReceptionistDash = () => {
   const dashboardRequest = useRef<Promise<void> | null>(null);
   const [showNewReservation, setShowNewReservation] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState<string | null>(null);
-  const [reservationToast, setReservationToast] =
-    useState<ReservationFeedback | null>(null);
 
   // --------------------------------------------------
   // Dates
@@ -234,15 +233,14 @@ const ReceptionistDash = () => {
   }, [fetchDashboard, fetchReservations]);
 
   const showReservationToast = (feedback: ReservationFeedback) => {
-    setReservationToast(feedback);
+    notify({
+      kind: feedback.status,
+      title: feedback.title,
+      description: feedback.message,
+    });
   };
-  const dismissReservationToast = useCallback(
-    () => setReservationToast(null),
-    [],
-  );
 
   const openNewReservation = () => {
-    setReservationToast(null);
     setSelectedRoomId(null);
     setShowNewReservation(true);
   };
@@ -256,10 +254,6 @@ const ReceptionistDash = () => {
     setReservations((current) => [...current, reservation]);
     setSelectedRoomId(null);
     setShowNewReservation(false);
-    showReservationToast({
-      status: "success",
-      title: "Reservation created successfully",
-    });
     fetchDashboard();
   };
 
@@ -308,12 +302,18 @@ const ReceptionistDash = () => {
       }
 
       await fetchDashboard();
+      showReservationToast({ status: "success", title: "Guest checked in" });
     } catch (err) {
       console.error("Check-in error:", err);
 
-      setError(
-        err instanceof Error ? err.message : "Unable to check in reservation.",
-      );
+      showReservationToast({
+        status: "error",
+        title: "Check-in failed",
+        message:
+          err instanceof Error
+            ? err.message
+            : "Unable to check in reservation.",
+      });
     }
   };
 
@@ -340,12 +340,18 @@ const ReceptionistDash = () => {
       }
 
       await fetchDashboard();
+      showReservationToast({ status: "success", title: "Guest checked out" });
     } catch (err) {
       console.error("Check-out error:", err);
 
-      setError(
-        err instanceof Error ? err.message : "Unable to check out reservation.",
-      );
+      showReservationToast({
+        status: "error",
+        title: "Check-out failed",
+        message:
+          err instanceof Error
+            ? err.message
+            : "Unable to check out reservation.",
+      });
     }
   };
 
@@ -467,10 +473,6 @@ const ReceptionistDash = () => {
           onTaskReviewed={handleHousekeepingReviewed}
         />
       </main>
-      <ReservationFeedbackPopup
-        feedback={reservationToast}
-        onDismiss={dismissReservationToast}
-      />
       {showNewReservation && (
         <NewReservationDialog
           defaultDate={todayDate}
@@ -481,13 +483,6 @@ const ReceptionistDash = () => {
           onClose={closeNewReservation}
           onCreated={handleReservationCreated}
           onConflict={fetchDashboard}
-          onFailure={(message) =>
-            showReservationToast({
-              status: "error",
-              title: "Reservation creation failed",
-              message,
-            })
-          }
         />
       )}
     </div>

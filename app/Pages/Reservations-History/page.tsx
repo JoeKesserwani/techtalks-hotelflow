@@ -8,6 +8,7 @@ import React, {
   useState,
 } from "react";
 import Pagination from "@/components/Pagination";
+import { usePopupMessage } from "@/components/PopupMessage";
 import styles from "./page.module.css";
 import Header from "@/components/Header/Header";
 import { useAuth } from "@/components/Auth/AuthProvider";
@@ -148,6 +149,7 @@ const readApiResponse = async (response: Response) => {
  */
 
 export default function ReservationHistoryPage() {
+  const { notify } = usePopupMessage();
   const { currencySymbol } = useAuth();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [me, setMe] = useState<{ fullName: string; role: string } | null>(null);
@@ -155,7 +157,6 @@ export default function ReservationHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [expired, setExpired] = useState(false);
-  const [notice, setNotice] = useState("");
 
   const [search, setSearch] = useState("");
   const [period, setPeriod] = useState<Period>("today");
@@ -167,7 +168,6 @@ export default function ReservationHistoryPage() {
 
   const [toDelete, setToDelete] = useState<Reservation | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState("");
 
   const today = getTodayString();
 
@@ -175,10 +175,22 @@ export default function ReservationHistoryPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const response = await fetch("/api/v1/reservations", {
-        credentials: "include",
-        cache: "no-store",
-      });
+      const request = () =>
+        fetch("/api/v1/reservations", {
+          credentials: "include",
+          cache: "no-store",
+        });
+      let response = await request();
+
+      if (response.status === 401) {
+        const refreshResponse = await fetch("/api/v1/auth/refresh", {
+          method: "POST",
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (refreshResponse.ok) response = await request();
+      }
+
       const data = await readApiResponse(response);
 
       if (response.status === 401) {
@@ -218,12 +230,6 @@ export default function ReservationHistoryPage() {
       .then((data) => data?.user && setMe(data.user))
       .catch(() => {});
   }, []);
-
-  useEffect(() => {
-    if (!notice) return;
-    const timer = setTimeout(() => setNotice(""), 4000);
-    return () => clearTimeout(timer);
-  }, [notice]);
 
   /* ---------- derived data ---------- */
 
@@ -394,7 +400,6 @@ export default function ReservationHistoryPage() {
   const confirmDelete = async () => {
     if (!toDelete) return;
     setDeleting(true);
-    setDeleteError("");
 
     try {
       const response = await fetch(`/api/v1/reservations/${toDelete.id}`, {
@@ -410,15 +415,20 @@ export default function ReservationHistoryPage() {
       }
 
       setReservations((current) => current.filter((r) => r.id !== toDelete.id));
-      setNotice(
-        `Deleted the stay of ${toDelete.guest?.fullName ?? "the guest"} from history.`,
-      );
+      notify({
+        kind: "success",
+        title: "Reservation deleted",
+        description: `Removed the stay of ${toDelete.guest?.fullName ?? "the guest"} from history.`,
+      });
       setToDelete(null);
     } catch (err) {
       console.error(err);
-      setDeleteError(
-        err instanceof Error ? err.message : "Failed to delete reservation",
-      );
+      notify({
+        kind: "error",
+        title: "Reservation was not deleted",
+        description:
+          err instanceof Error ? err.message : "Failed to delete reservation",
+      });
     } finally {
       setDeleting(false);
     }
@@ -690,7 +700,6 @@ export default function ReservationHistoryPage() {
                           <button
                             className={styles.deleteButton}
                             onClick={() => {
-                              setDeleteError("");
                               setToDelete(reservation);
                             }}
                             aria-label={`Delete the stay of ${name}`}
@@ -721,15 +730,10 @@ export default function ReservationHistoryPage() {
           <ConfirmDelete
             reservation={toDelete}
             busy={deleting}
-            error={deleteError}
             onCancel={() => !deleting && setToDelete(null)}
             onConfirm={confirmDelete}
           />
         )}
-
-        <div className={styles.toast} role="status" aria-live="polite">
-          {notice}
-        </div>
       </main>
     </div>
   );
@@ -746,13 +750,11 @@ export default function ReservationHistoryPage() {
 function ConfirmDelete({
   reservation,
   busy,
-  error,
   onCancel,
   onConfirm,
 }: {
   reservation: Reservation;
   busy: boolean;
-  error: string;
   onCancel: () => void;
   onConfirm: () => void;
 }) {
@@ -813,12 +815,6 @@ function ConfirmDelete({
           <p className={styles.dialogWarn}>
             This stay is <strong>{PAY_LABEL[kind].toLowerCase()}</strong>.
             Deleting it also discards the outstanding balance.
-          </p>
-        )}
-
-        {error && (
-          <p className={styles.dialogError} role="alert">
-            {error}
           </p>
         )}
       </div>

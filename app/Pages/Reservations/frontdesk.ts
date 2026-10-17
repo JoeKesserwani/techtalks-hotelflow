@@ -46,11 +46,22 @@ export class ApiError extends Error {
   }
 }
 export async function api<T>(path: string, init?: RequestInit): Promise<T> {
-  const res = await fetch(`${API}${path}`, {
-    cache: "no-store",
-    ...init,
-    headers: { "Content-Type": "application/json", ...init?.headers },
-  });
+  const request = () =>
+    fetch(`${API}${path}`, {
+      cache: "no-store",
+      ...init,
+      headers: { "Content-Type": "application/json", ...init?.headers },
+    });
+  let res = await request();
+
+  if (res.status === 401) {
+    const refreshResponse = await fetch(`${API}/auth/refresh`, {
+      method: "POST",
+      cache: "no-store",
+    });
+    if (refreshResponse.ok) res = await request();
+  }
+
   if (!res.ok) {
     let msg = `Request failed (${res.status})`;
     try {

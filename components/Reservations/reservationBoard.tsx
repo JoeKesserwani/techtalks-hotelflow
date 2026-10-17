@@ -21,6 +21,7 @@ import {
   EditReservationDialog,
 } from "../../app/Pages/Reservations/edit-dialogs";
 import AssignTaskModal from "../Housekeeping/AssignTaskModal";
+import type { ReservationFeedback } from "@/components/PopupMessage";
 import type { ReservationFeedback } from "./ReservationFeedbackPopup";
 import { useAuth } from "../Auth/AuthProvider";
 

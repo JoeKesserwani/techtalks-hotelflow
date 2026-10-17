@@ -2,6 +2,7 @@
 
 import React, { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { usePopupMessage } from "@/components/PopupMessage";
 import Pagination from "@/components/Pagination";
 import styles from "./rooms.module.css";
 import { useAuth } from "@/components/Auth/AuthProvider";
@@ -99,6 +100,8 @@ function sortRoomsByNumber(rooms: Room[]) {
 }
 
 const Page = () => {
+  const { notify } = usePopupMessage();
+  const { user } = useAuth();
   const { user, currencySymbol } = useAuth();
   const router = useRouter();
 
@@ -159,45 +162,43 @@ const Page = () => {
   /* -------------------------------------------------------------------------- */
 
   useEffect(() => {
-  async function loadRooms() {
-    try {
-      setIsLoading(true);
-      setError(null);
+    async function loadRooms() {
+      try {
+        setIsLoading(true);
+        setError(null);
 
-      const response = await fetch("/api/v1/rooms", {
-        cache: "no-store",
-      });
+        const response = await fetch("/api/v1/rooms", {
+          cache: "no-store",
+        });
 
-      const data = await response.json();
+        const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error ?? "Unable to load rooms.");
+        if (!response.ok) {
+          throw new Error(data.error ?? "Unable to load rooms.");
+        }
+
+        setRooms(sortRoomsByNumber(data as Room[]));
+      } catch (error) {
+        setError(
+          error instanceof Error ? error.message : "Unable to load rooms.",
+        );
+      } finally {
+        setIsLoading(false);
       }
-
-      setRooms(sortRoomsByNumber(data as Room[]));
-    } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Unable to load rooms.",
-      );
-    } finally {
-      setIsLoading(false);
     }
-  }
 
-  loadRooms();
-
-  const handleFocus = () => {
     loadRooms();
-  };
 
-  window.addEventListener("focus", handleFocus);
+    const handleFocus = () => {
+      loadRooms();
+    };
 
-  return () => {
-    window.removeEventListener("focus", handleFocus);
-  };
-}, []);
+    window.addEventListener("focus", handleFocus);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+    };
+  }, []);
 
   /* -------------------------------------------------------------------------- */
   /* Filter Rooms                                                               */
@@ -348,10 +349,17 @@ const Page = () => {
 
       setIsAddRoomOpen(false);
       setCreateError(null);
+      notify({
+        kind: "success",
+        title: `Room ${createdRoom.roomNumber} added`,
+      });
     } catch (error) {
-      setCreateError(
-        error instanceof Error ? error.message : "Unable to create room.",
-      );
+      notify({
+        kind: "error",
+        title: "Room was not added",
+        description:
+          error instanceof Error ? error.message : "Unable to create room.",
+      });
     } finally {
       setIsCreating(false);
     }
@@ -487,10 +495,17 @@ const Page = () => {
 
       setEditingRoom(null);
       setSaveError(null);
+      notify({
+        kind: "success",
+        title: `Room ${updatedRoom.roomNumber} updated`,
+      });
     } catch (error) {
-      setSaveError(
-        error instanceof Error ? error.message : "Unable to update room.",
-      );
+      notify({
+        kind: "error",
+        title: "Room was not updated",
+        description:
+          error instanceof Error ? error.message : "Unable to update room.",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -514,7 +529,7 @@ const Page = () => {
         {/* Header */}
         {Header({
           title: "Room Setup",
-          subtitle: `${rooms.length} rooms across ${new Set(  rooms.map((room) => room.floor)).size} floors`,
+          subtitle: `${rooms.length} rooms across ${new Set(rooms.map((room) => room.floor)).size} floors`,
           userSubtitle: "Currently managing rooms",
         })}
         {/* Search + Filters + Add Room */}
@@ -566,8 +581,6 @@ const Page = () => {
               + Add Room
             </button>
           )}
-          
-            
         </div>
 
         {/* Room Table */}
@@ -645,13 +658,14 @@ const Page = () => {
                           View
                         </button>
                         {user?.role !== "RECEPTIONIST" && (
-                        <button
-                          type="button"
-                          className={styles.editButton}
-                          onClick={() => openEditRoom(room)}
-                        >
-                          Edit
-                        </button>)}
+                          <button
+                            type="button"
+                            className={styles.editButton}
+                            onClick={() => openEditRoom(room)}
+                          >
+                            Edit
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>

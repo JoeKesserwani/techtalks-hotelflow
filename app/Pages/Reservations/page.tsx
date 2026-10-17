@@ -3,6 +3,10 @@
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
+import {
+  usePopupMessage,
+  type ReservationFeedback,
+} from "@/components/PopupMessage";
 import s from "./page.module.css";
 import t from "../../../components/Reservations/tokens.module.css";
 import {
@@ -20,10 +24,6 @@ import {
 } from "./frontdesk";
 import { NewReservationDialog } from "../../../components/Reservations/newReservationDialog";
 import { ReservationsBoard } from "../../../components/Reservations/reservationBoard";
-import {
-  ReservationFeedbackPopup,
-  type ReservationFeedback,
-} from "../../../components/Reservations/ReservationFeedbackPopup";
 import { RoomAvailabilityChart } from "../../../components/Reservations/RoomAvailabilityChart";
 import Header from "../../../components/Header/Header";
 
@@ -36,6 +36,7 @@ export default function FrontDeskPage() {
 }
 
 function FrontDeskContent() {
+  const { notify } = usePopupMessage();
   const searchParams = useSearchParams();
   const initialGuestId = searchParams.get("guestId") ?? undefined;
   const [today] = useState(todayInHotel);
@@ -44,7 +45,6 @@ function FrontDeskContent() {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [expired, setExpired] = useState(false);
-  const [toast, setToast] = useState<ReservationFeedback | null>(null);
   const [booking, setBooking] = useState<{
     roomId?: string;
     guestId?: string;
@@ -90,7 +90,15 @@ function FrontDeskContent() {
     window.addEventListener("focus", onFocus);
     return () => window.removeEventListener("focus", onFocus);
   }, [load]);
-  const dismissToast = useCallback(() => setToast(null), []);
+  const showToast = useCallback(
+    (feedback: ReservationFeedback) =>
+      notify({
+        kind: feedback.status,
+        title: feedback.title,
+        description: feedback.message,
+      }),
+    [notify],
+  );
 
   const day = useMemo(
     () => bucketDay(items ?? [], date, today),
@@ -190,7 +198,7 @@ function FrontDeskContent() {
         onUpdate={merge}
         onRemove={(id) => setItems((p) => p?.filter((x) => x.id !== id) ?? p)}
         onReload={load}
-        onToast={setToast}
+        onToast={showToast}
       />
 
       <RoomAvailabilityChart
@@ -211,26 +219,12 @@ function FrontDeskContent() {
           initialGuestId={booking.guestId}
           onClose={() => setBooking(null)}
           onConflict={load}
-          onFailure={(message) =>
-            setToast({
-              status: "error",
-              title: "Reservation creation failed",
-              message,
-            })
-          }
           onCreated={(r) => {
             setItems((p) => [r, ...(p ?? [])]);
             setDate(dayOnly(r.checkInDate)); // jump to the booking's arrival day
-            setToast({
-              status: "success",
-              title: `Reservation created for ${guestName(r)}`,
-              message: `Room ${roomLabel(r)}`,
-            });
           }}
         />
       )}
-
-      <ReservationFeedbackPopup feedback={toast} onDismiss={dismissToast} />
     </main>
   );
 }
