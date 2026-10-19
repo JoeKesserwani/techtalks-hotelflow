@@ -156,16 +156,18 @@ export function ReservationsBoard({
   const checkOutAfterTask = async (r: Reservation) => {
     if (markPaidAfterTask && !(await markPaid(r))) {
       throw new Error(
-        "The housekeeping task was created, but payment could not be updated. Retry to continue check-out.",
+        "Payment could not be updated, so check-out and task assignment were stopped.",
       );
     }
 
     const checkedOut = await checkOut(r);
     if (!checkedOut) {
       throw new Error(
-        "The housekeeping task was created, but check-out failed. Retry check-out or close this dialog.",
+        "Check-out failed, so no housekeeping task was created.",
       );
     }
+  };
+  const finishCheckoutTaskFlow = () => {
     setTaskReservation(null);
     setMarkPaidAfterTask(false);
   };
@@ -414,7 +416,8 @@ export function ReservationsBoard({
             setTaskReservation(null);
             setMarkPaidAfterTask(false);
           }}
-          onCreated={() => checkOutAfterTask(taskReservation)}
+          onBeforeCreate={() => checkOutAfterTask(taskReservation)}
+          onCreated={finishCheckoutTaskFlow}
         />
       )}
     </>

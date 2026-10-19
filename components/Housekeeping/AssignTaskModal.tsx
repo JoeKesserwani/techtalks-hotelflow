@@ -16,6 +16,7 @@ type AssignTaskModalProps = {
   roomId: string;
   roomNumber: string;
   onClose: () => void;
+  onBeforeCreate?: () => void | Promise<void>;
   onCreated?: () => void | Promise<void>;
   disableCloseButtons?: boolean;
 };
@@ -25,6 +26,7 @@ export default function AssignTaskModal({
   roomId,
   roomNumber,
   onClose,
+  onBeforeCreate,
   onCreated,
   disableCloseButtons = false,
 }: AssignTaskModalProps) {
@@ -35,7 +37,6 @@ export default function AssignTaskModal({
   const [taskComment, setTaskComment] = useState("");
   const [isLoadingHousekeepers, setIsLoadingHousekeepers] = useState(false);
   const [isSavingTask, setIsSavingTask] = useState(false);
-  const [taskCreated, setTaskCreated] = useState(false);
   const [taskError, setTaskError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -94,30 +95,6 @@ export default function AssignTaskModal({
   }
 
   async function createTask() {
-    if (taskCreated) {
-      try {
-        setIsSavingTask(true);
-        setTaskError(null);
-        await onCreated?.();
-        notify({
-          kind: "success",
-          title: "Cleaning task assigned and check-out completed",
-        });
-      } catch (error) {
-        notify({
-          kind: "error",
-          title: "Check-out was not completed",
-          description:
-            error instanceof Error
-              ? error.message
-              : "The task was assigned, but check-out failed.",
-        });
-      } finally {
-        setIsSavingTask(false);
-      }
-      return;
-    }
-
     if (!selectedHousekeeperId) {
       setTaskError("Select a housekeeper before assigning the task.");
       return;
@@ -126,7 +103,11 @@ export default function AssignTaskModal({
     setIsSavingTask(true);
     setTaskError(null);
 
+    let checkoutComplete = false;
     try {
+      await onBeforeCreate?.();
+      checkoutComplete = true;
+
       const response = await fetch("/api/v1/housekeeping/tasks", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -143,13 +124,15 @@ export default function AssignTaskModal({
       }
 
       setTaskComment("");
-      if (onCreated) setTaskCreated(true);
       await onCreated?.();
       notify({ kind: "success", title: "Cleaning task assigned" });
     } catch (error) {
       notify({
         kind: "error",
-        title: "Cleaning task was not assigned",
+        title:
+          onBeforeCreate && !checkoutComplete
+            ? "Check-out failed"
+            : "Cleaning task was not assigned",
         description:
           error instanceof Error ? error.message : "Unable to create the task.",
       });
@@ -243,16 +226,10 @@ export default function AssignTaskModal({
             disabled={
               isLoadingHousekeepers ||
               isSavingTask ||
-              (!taskCreated && housekeepers.length === 0)
+              housekeepers.length === 0
             }
           >
-            {isSavingTask
-              ? taskCreated
-                ? "Checking out..."
-                : "Assigning..."
-              : taskCreated
-                ? "Retry check-out"
-                : "Assign task"}
+            {isSavingTask ? "Processing..." : "Assign task"}
           </button>
         </div>
       </section>
