@@ -171,21 +171,6 @@ export async function POST(
 
     const updated = await prisma.$transaction(async (tx) => {
       /*
-       * Get the room again inside
-       * the transaction.
-       */
-      const room = await tx.room.findFirst({
-        where: {
-          id: reservation.roomId,
-          hotelId: user.hotelId,
-        },
-      });
-
-      if (!room) {
-        throw new ApiError("Room not found", 404);
-      }
-
-      /*
        * Price comes from the reservation.
        *
        * This preserves the price that
@@ -223,6 +208,7 @@ export async function POST(
       await tx.room.update({
         where: {
           id: reservation.roomId,
+          hotelId: user.hotelId,
         },
 
         data: {
@@ -260,7 +246,7 @@ export async function POST(
       });
 
       return result;
-    });
+    }, { timeout: 10000 });
 
     return Response.json(updated);
   } catch (err) {

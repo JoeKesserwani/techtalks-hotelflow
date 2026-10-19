@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { usePopupMessage } from "@/components/PopupMessage";
 import styles from "./page.module.css";
 import Header from "@/components/Header/Header";
+import { useAuth } from "@/components/Auth/AuthProvider";
 
 type HotelSettings = {
   id: string;
@@ -23,12 +25,12 @@ const CURRENCIES = [
 ];
 
 export default function HotelSettingsPage() {
+  const { notify } = usePopupMessage();
+  const { setHotelCurrency } = useAuth();
   const [settings, setSettings] = useState<HotelSettings | null>(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
-  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -56,14 +58,11 @@ export default function HotelSettingsPage() {
 
   function updateField(field: keyof HotelSettings, value: string) {
     setSettings((prev) => (prev ? { ...prev, [field]: value } : prev));
-    setSaved(false);
-    setSaveError(null);
   }
 
   async function handleSave() {
     if (!settings) return;
     setSaving(true);
-    setSaveError(null);
 
     try {
       // `id` is the primary key — never send it as an editable field.
@@ -75,13 +74,23 @@ export default function HotelSettingsPage() {
       });
 
       if (res.ok) {
+        notify({ kind: "success", title: "Hotel settings saved" });
+        setHotelCurrency(settings.currency);
         setSaved(true);
       } else {
         const data = await res.json().catch(() => ({}));
-        setSaveError(data.error ?? "Could not save changes.");
+        notify({
+          kind: "error",
+          title: "Settings were not saved",
+          description: data.error ?? "Could not save changes.",
+        });
       }
     } catch {
-      setSaveError("Something went wrong saving your changes.");
+      notify({
+        kind: "error",
+        title: "Settings were not saved",
+        description: "Something went wrong saving your changes.",
+      });
     } finally {
       setSaving(false);
     }
@@ -104,7 +113,6 @@ export default function HotelSettingsPage() {
 
   return (
     <main className={styles.page}>
-
       <Header
         title="Hotel Settings"
         subtitle="Manage your hotel information and preferences"
@@ -227,16 +235,6 @@ export default function HotelSettingsPage() {
         >
           {saving ? "Saving…" : "Save changes"}
         </button>
-        {saved && (
-          <span className={styles.savedMessage} role="status">
-            Saved
-          </span>
-        )}
-        {saveError && (
-          <span className={styles.errorMessage} role="alert">
-            {saveError}
-          </span>
-        )}
       </div>
     </main>
   );

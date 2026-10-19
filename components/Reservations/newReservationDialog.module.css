@@ -154,7 +154,8 @@
   color: var(--muted);
 }
 .dialog input[type="date"],
-.dialog input[type="search"] {
+.dialog input[type="search"],
+.dialog input[type="number"] {
   width: 100%;
   margin-top: 4px;
   height: 40px;
@@ -169,6 +170,112 @@
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
+}
+.partialPayment {
+  margin-top: 12px;
+  padding: 14px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: var(--bg);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  align-items: start;
+  gap: 14px;
+  animation: partialIn 0.15s ease-out;
+}
+@keyframes partialIn {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .partialPayment {
+    animation: none;
+  }
+}
+.amountEntry label {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--ink);
+  font-weight: 600;
+}
+.amountInput {
+  display: flex;
+  align-items: stretch;
+  min-height: 46px;
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  transition:
+    border-color 120ms ease,
+    box-shadow 120ms ease;
+}
+.amountInput:focus-within {
+  border-color: var(--sage);
+  box-shadow: 0 0 0 3px rgb(123 144 79 / 18%);
+}
+.currencyPrefix {
+  display: grid;
+  flex: 0 0 42px;
+  place-items: center;
+  border-right: 1px solid var(--line);
+  background: var(--chip);
+  color: var(--olive);
+  font-size: 15px;
+  font-weight: 700;
+}
+.amountInput input[type="number"] {
+  width: 0;
+  min-width: 0;
+  flex: 1;
+  height: auto;
+  margin: 0;
+  padding: 0 12px;
+  border: 0;
+  border-radius: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.amountInput input[type="number"]:focus-visible {
+  outline: 0;
+  box-shadow: none;
+}
+
+/* Right column: same box for the hint and the balance, so nothing jumps */
+.partialBalance,
+.partialPayment .hint {
+  margin: 0;
+  min-height: 40px;
+  align-self: end; /* lines up with the input, not its label */
+  padding: 0 0 0 12px;
+  border-left: 3px solid var(--sage);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--muted);
+  font-size: 12.5px;
+  line-height: 1.35;
+}
+.partialPayment .hint {
+  border-left-color: var(--line);
+}
+.partialBalance {
+  justify-content: space-between;
+}
+.partialBalance strong {
+  color: var(--ink);
+  font-size: 15px;
+  font-variant-numeric: tabular-nums;
 }
 .pick {
   list-style: none;
@@ -224,6 +331,18 @@
   min-height: 44px;
   cursor: pointer;
 }
+.radio:hover {
+  background: var(--chip);
+}
+.radio:has(input:checked) {
+  border-color: var(--sage);
+  background: #eef2e0;
+}
+.radio input {
+  flex: 0 0 auto;
+  margin: 0;
+  accent-color: var(--olive);
+}
 .warn {
   margin-top: 10px;
   padding: 10px 12px;
@@ -257,6 +376,24 @@
     flex-basis: 100%;
   }
   .twoCol {
+    grid-template-columns: 1fr;
+  }
+  .partialPayment {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+  .partialBalance,
+  .partialPayment .hint {
+    align-self: stretch;
+  }
+}
+
+/* Payment options: three in one row on desktop */
+.payOptions {
+  grid-template-columns: repeat(3, 1fr);
+}
+@media (max-width: 560px) {
+  .payOptions {
     grid-template-columns: 1fr;
   }
 }

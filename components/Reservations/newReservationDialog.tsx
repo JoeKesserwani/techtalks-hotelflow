@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { usePopupMessage } from "@/components/PopupMessage";
 import s from "./newReservationDialog.module.css";
 import { Dialog } from "../../app/Pages/Reservations/dialogs";
 import {
@@ -18,6 +19,7 @@ import {
   type Reservation,
   type Room,
 } from "../../app/Pages/Reservations/frontdesk";
+import { useAuth } from "../Auth/AuthProvider";
 
 export function NewReservationDialog({
   defaultDate,
@@ -40,6 +42,8 @@ export function NewReservationDialog({
   onCreated: (r: Reservation) => void;
   onConflict: () => void;
 }) {
+  const { notify } = usePopupMessage();
+  const { currencySymbol } = useAuth();
   const [guests, setGuests] = useState<Guest[] | null>(null);
   const [q, setQ] = useState("");
   const [guestId, setGuestId] = useState(initialGuestId ?? "");
@@ -48,9 +52,9 @@ export function NewReservationDialog({
     shiftDate(defaultDate < today ? today : defaultDate, 1),
   );
   const [roomId, setRoomId] = useState(initialRoomId ?? "");
-  const [pay, setPay] = useState<"UNPAID" | "PAID">("UNPAID");
+  const [pay, setPay] = useState<"UNPAID" | "PARTIAL" | "PAID">("UNPAID");
+  const [amountPaid, setAmountPaid] = useState("");
   const [ack, setAck] = useState(false);
-  const [err, setErr] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
   const dlg = useRef<HTMLFormElement>(null);
 
@@ -59,9 +63,13 @@ export function NewReservationDialog({
       .then(setGuests)
       .catch((e) => {
         setGuests([]);
-        setErr(e.message);
+        notify({
+          kind: "error",
+          title: "Guest list could not be loaded",
+          description: e instanceof Error ? e.message : "Please try again.",
+        });
       });
-  }, []);
+  }, [notify]);
 
   const datesOk = inD >= today && outD > inD;
   const nights = datesOk ? nightsBetween(inD, outD) : 0;
@@ -86,6 +94,16 @@ export function NewReservationDialog({
   );
 
   const chosen = options.find((o) => o.room.id === roomId && !o.reason)?.room;
+  const totalPrice = chosen && nights ? Number(chosen.basePrice) * nights : 0;
+  const partialAmount = Number(amountPaid);
+  const partialAmountCents = Math.round(partialAmount * 100);
+  const totalPriceCents = Math.round(totalPrice * 100);
+  const partialAmountValid =
+    amountPaid.trim() !== "" &&
+    Number.isFinite(partialAmount) &&
+    partialAmount > 0 &&
+    Math.abs(partialAmountCents - partialAmount * 100) <= 1e-7 &&
+    partialAmountCents <= totalPriceCents;
   const gConflict =
     guestId && datesOk
       ? findGuestConflict(reservations, guestId, inD, outD)
@@ -96,29 +114,43 @@ export function NewReservationDialog({
       .includes(q.toLowerCase()),
   );
   const canSave =
-    !!guestId && !!chosen && datesOk && (!gConflict || ack) && !saving;
+    !!guestId &&
+    !!chosen &&
+    datesOk &&
+    (!gConflict || ack) &&
+    (pay !== "PARTIAL" || partialAmountValid) &&
+    !saving;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     if (!canSave) return;
     setSaving(true);
-    setErr(null);
     try {
-      onCreated(
-        await api<Reservation>("/reservations", {
-          method: "POST",
-          body: JSON.stringify({
-            roomId,
-            guestId,
-            checkInDate: inD,
-            checkOutDate: outD,
-            paymentStatus: pay,
-          }),
+      const reservation = await api<Reservation>("/reservations", {
+        method: "POST",
+        body: JSON.stringify({
+          roomId,
+          guestId,
+          checkInDate: inD,
+          checkOutDate: outD,
+          paymentStatus: pay,
+          amountPaid: pay === "PARTIAL" ? partialAmount : undefined,
         }),
-      );
+      });
+      onCreated(reservation);
+      notify({
+        kind: "success",
+        title: `Reservation created for ${guestName(reservation)}`,
+        description: `Room ${roomLabel(reservation)}`,
+      });
       dlg.current?.closest("dialog")?.close();
     } catch (e) {
-      setErr((e as Error).message);
+      const message = e instanceof Error ? e.message : "Please try again.";
+      notify({
+        kind: "error",
+        title: "Reservation was not created",
+        description: message,
+      });
       if ((e as ApiError).status === 409) {
         setRoomId("");
         onConflict();
@@ -244,7 +276,7 @@ export function NewReservationDialog({
                       </strong>
                       <small>
                         {reason ??
-                          `${money(room.basePrice)} / night${room.capacity ? ` · sleeps ${room.capacity}` : ""}`}
+                          `${money(room.basePrice, currencySymbol)} / night${room.capacity ? ` · sleeps ${room.capacity}` : ""}`}
                       </small>
                     </span>
                   </label>
@@ -255,10 +287,11 @@ export function NewReservationDialog({
 
           <fieldset>
             <legend>4 · Payment</legend>
-            <div className={s.twoCol}>
+            <div className={`${s.twoCol} ${s.payOptions}`}>
               <label className={s.radio}>
                 <input
                   type="radio"
+                  name="payment"
                   checked={pay === "UNPAID"}
                   onChange={() => setPay("UNPAID")}
                 />{" "}
@@ -267,25 +300,74 @@ export function NewReservationDialog({
               <label className={s.radio}>
                 <input
                   type="radio"
+                  name="payment"
                   checked={pay === "PAID"}
                   onChange={() => setPay("PAID")}
                 />{" "}
                 Paid in full
               </label>
+              <label className={s.radio}>
+                <input
+                  type="radio"
+                  name="payment"
+                  checked={pay === "PARTIAL"}
+                  onChange={() => setPay("PARTIAL")}
+                />{" "}
+                Partially paid
+              </label>
             </div>
+            {pay === "PARTIAL" && (
+              <div className={s.partialPayment}>
+                <div className={s.amountEntry}>
+                  <label htmlFor="reservation-amount-paid">
+                    Amount received
+                  </label>
+                  <div className={s.amountInput}>
+                    <span className={s.currencyPrefix} aria-hidden="true">
+                      $
+                    </span>
+                    <input
+                      id="reservation-amount-paid"
+                      type="number"
+                      min="0.01"
+                      max={totalPrice > 0 ? totalPrice : undefined}
+                      step="0.01"
+                      value={amountPaid}
+                      required
+                      aria-describedby="partial-payment-feedback"
+                      onChange={(e) => setAmountPaid(e.target.value)}
+                    />
+                  </div>
+                </div>
+                {partialAmountValid ? (
+                  <div
+                    className={s.partialBalance}
+                    id="partial-payment-feedback"
+                    aria-live="polite"
+                  >
+                    <span>Remaining balance</span>
+                    <strong>{money(totalPrice - partialAmount)}</strong>
+                  </div>
+                ) : (
+                  <p
+                    className={s.hint}
+                    id="partial-payment-feedback"
+                    aria-live="polite"
+                  >
+                    {chosen && nights
+                      ? `Enter an amount from $0.01 up to ${money(totalPrice)}.`
+                      : "Select dates and a room to calculate the reservation total."}
+                  </p>
+                )}
+              </div>
+            )}
           </fieldset>
-
-          {err && (
-            <div className={s.warn} role="alert">
-              {err}
-            </div>
-          )}
         </div>
 
         <div className={s.dlgFoot}>
           <span className={s.total}>
             {chosen && nights
-              ? `${plural(nights)} · ${money(Number(chosen.basePrice) * nights)}`
+              ? `${plural(nights)} · ${money(Number(chosen.basePrice) * nights, currencySymbol)}`
               : "Select dates, guest and room"}
           </span>
           <button

@@ -3,6 +3,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+import { usePopupMessage } from "@/components/PopupMessage";
 import styles from "./AddGuestModal.module.css";
 
 export default function AddGuestModal({
@@ -12,7 +13,16 @@ export default function AddGuestModal({
   onClose: () => void;
   onCreated?: () => void;
 }) {
+  const { notify } = usePopupMessage();
   const [fullName, setFullName] = useState("");
+  const initials =
+    fullName
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0].toUpperCase())
+      .join("") || "GS";
   const [phone, setPhone] = useState("");
   const [passportNumber, setPassportNumber] = useState("");
   const [email, setEmail] = useState("");
@@ -99,14 +109,27 @@ export default function AddGuestModal({
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error ?? "Could not save guest.");
+        notify({
+          kind: "error",
+          title: "Guest was not added",
+          description: data.error ?? "Could not save guest.",
+        });
         return;
       }
 
       onClose();
       onCreated?.();
+      notify({ kind: "success", title: "Guest added" });
+      onClose();
+      // Ideally trigger a re-fetch of the guests list here (e.g. via a
+      // callback prop or a shared data layer) so the new guest shows up
+      // without a full page reload.
     } catch {
-      setError("Something went wrong. Please try again.");
+      notify({
+        kind: "error",
+        title: "Guest was not added",
+        description: "Something went wrong. Please try again.",
+      });
     } finally {
       setIsSaving(false);
     }
@@ -134,44 +157,17 @@ export default function AddGuestModal({
       <div
         ref={modalRef}
         className={styles.modal}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="guest-modal-title"
-        aria-describedby="guest-modal-description"
+        onClick={(e) => e.stopPropagation()}
       >
-        <div className={styles.modalHeader}>
-          <div className={styles.headingGroup}>
-            <span className={styles.eyebrow}>GUEST MANAGEMENT</span>
-            <h2 id="guest-modal-title">New guest profile</h2>
-            <p id="guest-modal-description" className={styles.subtitle}>
-              Add guest information to your hotel records.
-            </p>
-          </div>
-
-          <button
-            type="button"
-            className={styles.closeButton}
-            onClick={onClose}
-            disabled={isSaving}
-            aria-label="Close new guest form"
-          >
-            ×
-          </button>
-        </div>
-
-        <div className={styles.guestPreview}>
-          <div className={styles.chipAvatar} aria-hidden="true">
-            {guestInitials}
-          </div>
-
+        <h3>New guest profile</h3>
+        <div className={styles.selectedChip}>
+          <span className={styles.chipAvatar}>{initials}</span>
           <div className={styles.chipText}>
             <strong>{fullName.trim() || "Guest name"}</strong>
             <span>
               {phone.trim() || "Phone number not added"}
             </span>
           </div>
-
-          <span className={styles.previewLabel}>NEW PROFILE</span>
         </div>
 
         <div className={styles.form}>
@@ -239,30 +235,17 @@ export default function AddGuestModal({
             />
           </div>
 
-          <div className={styles.field}>
-            <label className={styles.label} htmlFor="note">
-              Notes <span className={styles.optional}>(optional)</span>
-            </label>
-            <textarea
-              id="note"
-              className={styles.textarea}
-              placeholder="Add any relevant information about this guest..."
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              maxLength={250}
-              rows={3}
-            />
-            <span className={styles.characterCount}>
-              {note.length}/250
-            </span>
-          </div>
-        </div>
-
-        {error && (
-          <p className={styles.errorText} role="alert">
-            {error}
-          </p>
-        )}
+        <label className={styles.label} htmlFor="note">
+          Note
+        </label>
+        <textarea
+          id="note"
+          className={styles.textarea}
+          placeholder="Notes"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          maxLength={250}
+        />
 
         <div className={styles.actions}>
           <button

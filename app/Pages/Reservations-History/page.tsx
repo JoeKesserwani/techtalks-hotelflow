@@ -8,8 +8,10 @@ import React, {
   useState,
 } from "react";
 import Pagination from "@/components/Pagination";
+import { usePopupMessage } from "@/components/PopupMessage";
 import styles from "./page.module.css";
 import Header from "@/components/Header/Header";
+import { useAuth } from "@/components/Auth/AuthProvider";
 
 /*
  * ================================
@@ -34,7 +36,13 @@ type Reservation = {
   room?: Room;
 };
 
-type Period = "all" | "this_month" | "last_30" | "this_year" | "custom";
+type Period =
+  | "today"
+  | "all"
+  | "this_month"
+  | "last_30"
+  | "this_year"
+  | "custom";
 type PayFilter = "all" | "PAID" | "PARTIAL" | "UNPAID";
 type SortKey = "newest" | "oldest" | "highest" | "guest";
 type PayKind = "PAID" | "PARTIAL" | "UNPAID";
@@ -84,9 +92,9 @@ const formatDate = (value: string) => {
   }).format(toUtc(day));
 };
 
-const formatMoney = (value: string | number) => {
+const formatMoney = (value: string | number, currencySymbol: string) => {
   const n = Number(value);
-  return `$${(Number.isFinite(n) ? n : 0).toLocaleString("en-US", {
+  return `${currencySymbol}${(Number.isFinite(n) ? n : 0).toLocaleString("en-US", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
@@ -141,16 +149,17 @@ const readApiResponse = async (response: Response) => {
  */
 
 export default function ReservationHistoryPage() {
+  const { notify } = usePopupMessage();
+  const { currencySymbol } = useAuth();
   const [reservations, setReservations] = useState<Reservation[]>([]);
   const [me, setMe] = useState<{ fullName: string; role: string } | null>(null);
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [expired, setExpired] = useState(false);
-  const [notice, setNotice] = useState("");
 
   const [search, setSearch] = useState("");
-  const [period, setPeriod] = useState<Period>("all");
+  const [period, setPeriod] = useState<Period>("today");
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [payFilter, setPayFilter] = useState<PayFilter>("all");
@@ -159,7 +168,6 @@ export default function ReservationHistoryPage() {
 
   const [toDelete, setToDelete] = useState<Reservation | null>(null);
   const [deleting, setDeleting] = useState(false);
-  const [deleteError, setDeleteError] = useState("");
 
   const today = getTodayString();
 
@@ -167,10 +175,22 @@ export default function ReservationHistoryPage() {
 
   const loadData = useCallback(async () => {
     try {
-      const response = await fetch("/api/v1/reservations", {
-        credentials: "include",
-        cache: "no-store",
-      });
+      const request = () =>
+        fetch("/api/v1/reservations", {
+          credentials: "include",
+          cache: "no-store",
+        });
+      let response = await request();
+
+      if (response.status === 401) {
+        const refreshResponse = await fetch("/api/v1/auth/refresh", {
+          method: "POST",
+          credentials: "include",
+          cache: "no-store",
+        });
+        if (refreshResponse.ok) response = await request();
+      }
+
       const data = await readApiResponse(response);
 
       if (response.status === 401) {
@@ -211,12 +231,6 @@ export default function ReservationHistoryPage() {
       .catch(() => {});
   }, []);
 
-  useEffect(() => {
-    if (!notice) return;
-    const timer = setTimeout(() => setNotice(""), 4000);
-    return () => clearTimeout(timer);
-  }, [notice]);
-
   /* ---------- derived data ---------- */
 
   /* History = stays that are finished. Everything else lives on the front-desk page. */
@@ -232,6 +246,8 @@ export default function ReservationHistoryPage() {
       let start: string | undefined;
       let end: string | undefined;
       switch (period) {
+        case "today":
+          return dayOnly(r.checkOutDate) === today;
         case "this_month":
           start = `${today.slice(0, 7)}-01`;
           end = today;
@@ -328,12 +344,12 @@ export default function ReservationHistoryPage() {
   );
 
   const hasFilters =
-    search.trim() !== "" || period !== "all" || payFilter !== "all";
+    search.trim() !== "" || period !== "today" || payFilter !== "all";
 
   const resetPage = () => setCurrentPage(1);
   const clearFilters = () => {
     setSearch("");
-    setPeriod("all");
+    setPeriod("today");
     setFrom("");
     setTo("");
     setPayFilter("all");
@@ -384,7 +400,6 @@ export default function ReservationHistoryPage() {
   const confirmDelete = async () => {
     if (!toDelete) return;
     setDeleting(true);
-    setDeleteError("");
 
     try {
       const response = await fetch(`/api/v1/reservations/${toDelete.id}`, {
@@ -400,15 +415,20 @@ export default function ReservationHistoryPage() {
       }
 
       setReservations((current) => current.filter((r) => r.id !== toDelete.id));
-      setNotice(
-        `Deleted the stay of ${toDelete.guest?.fullName ?? "the guest"} from history.`,
-      );
+      notify({
+        kind: "success",
+        title: "Reservation deleted",
+        description: `Removed the stay of ${toDelete.guest?.fullName ?? "the guest"} from history.`,
+      });
       setToDelete(null);
     } catch (err) {
       console.error(err);
-      setDeleteError(
-        err instanceof Error ? err.message : "Failed to delete reservation",
-      );
+      notify({
+        kind: "error",
+        title: "Reservation was not deleted",
+        description:
+          err instanceof Error ? err.message : "Failed to delete reservation",
+      });
     } finally {
       setDeleting(false);
     }
@@ -445,14 +465,14 @@ export default function ReservationHistoryPage() {
           </div>
           <div className={styles.stat}>
             <span>Total billed</span>
-            <strong>{formatMoney(stats.billed)}</strong>
+            <strong>{formatMoney(stats.billed, currencySymbol)}</strong>
             <small>Across the stays shown</small>
           </div>
           <div
             className={`${styles.stat} ${stats.unpaidCount ? styles.statWarn : ""}`}
           >
             <span>Unpaid</span>
-            <strong>{formatMoney(stats.unpaid)}</strong>
+            <strong>{formatMoney(stats.unpaid, currencySymbol)}</strong>
             <small>
               {stats.unpaidCount} unpaid · {stats.partialCount} partial
             </small>
@@ -482,6 +502,7 @@ export default function ReservationHistoryPage() {
               resetPage();
             }}
           >
+            <option value="today">Today</option>
             <option value="all">All time</option>
             <option value="this_month">This month</option>
             <option value="last_30">Last 30 days</option>
@@ -671,7 +692,7 @@ export default function ReservationHistoryPage() {
 
                         <td data-label="Total" className={styles.num}>
                           <span className={styles.cellMain}>
-                            {formatMoney(reservation.totalPrice)}
+                            {formatMoney(reservation.totalPrice, currencySymbol)}
                           </span>
                         </td>
 
@@ -679,10 +700,10 @@ export default function ReservationHistoryPage() {
                           <button
                             className={styles.deleteButton}
                             onClick={() => {
-                              setDeleteError("");
                               setToDelete(reservation);
                             }}
                             aria-label={`Delete the stay of ${name}`}
+                            style={{ display: me?.role === "RECEPTIONIST" ?  "none" :"inline-block" }}
                           >
                             Delete
                           </button>
@@ -709,15 +730,10 @@ export default function ReservationHistoryPage() {
           <ConfirmDelete
             reservation={toDelete}
             busy={deleting}
-            error={deleteError}
             onCancel={() => !deleting && setToDelete(null)}
             onConfirm={confirmDelete}
           />
         )}
-
-        <div className={styles.toast} role="status" aria-live="polite">
-          {notice}
-        </div>
       </main>
     </div>
   );
@@ -734,16 +750,15 @@ export default function ReservationHistoryPage() {
 function ConfirmDelete({
   reservation,
   busy,
-  error,
   onCancel,
   onConfirm,
 }: {
   reservation: Reservation;
   busy: boolean;
-  error: string;
   onCancel: () => void;
   onConfirm: () => void;
 }) {
+  const { currencySymbol } = useAuth();
   const ref = useRef<HTMLDialogElement>(null);
 
   useEffect(() => {
@@ -786,7 +801,7 @@ function ConfirmDelete({
           <div>
             <dt>Total</dt>
             <dd>
-              {formatMoney(reservation.totalPrice)} · {PAY_LABEL[kind]}
+              {formatMoney(reservation.totalPrice, currencySymbol)} · {PAY_LABEL[kind]}
             </dd>
           </div>
         </dl>
@@ -800,12 +815,6 @@ function ConfirmDelete({
           <p className={styles.dialogWarn}>
             This stay is <strong>{PAY_LABEL[kind].toLowerCase()}</strong>.
             Deleting it also discards the outstanding balance.
-          </p>
-        )}
-
-        {error && (
-          <p className={styles.dialogError} role="alert">
-            {error}
           </p>
         )}
       </div>

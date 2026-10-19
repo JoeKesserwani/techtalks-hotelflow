@@ -3,6 +3,7 @@
 import React from "react";
 import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
+import { usePopupMessage } from "@/components/PopupMessage";
 import rawStyles from "./housekeepingApproval.module.css";
 
 // --------------------------------------------------
@@ -58,8 +59,7 @@ export interface HousekeepingReviewProps {
   maxItems?: number;
 }
 
-type ModalType = "photo" | "reject" | "approve" | "success" | null;
-type ResultType = "approved" | "rejected" | null;
+type ModalType = "photo" | "reject" | "approve" | null;
 
 const REVIEW_ENDPOINT = (taskId: string) =>
   `/api/v1/housekeeping/tasks/${taskId}/review`;
@@ -118,12 +118,12 @@ const HousekeepingReview = ({
   maxItems,
 }: HousekeepingReviewProps) => {
   const router = useRouter();
+  const { notify } = usePopupMessage();
 
   const [selectedTask, setSelectedTask] =
     React.useState<HousekeepingTask | null>(null);
 
   const [activeModal, setActiveModal] = React.useState<ModalType>(null);
-  const [resultType, setResultType] = React.useState<ResultType>(null);
   const [selectedPhotoIndex, setSelectedPhotoIndex] = React.useState(0);
   const [photoLoadState, setPhotoLoadState] = React.useState<
     "loading" | "loaded" | "error"
@@ -158,9 +158,7 @@ const HousekeepingReview = ({
 
   const visibleTasks =
     typeof maxItems === "number" ? tasks.slice(0, maxItems) : tasks;
-  const selectedPhotoUrls = selectedTask
-    ? getTaskPhotoUrls(selectedTask)
-    : [];
+  const selectedPhotoUrls = selectedTask ? getTaskPhotoUrls(selectedTask) : [];
   const selectedPhotoUrl = selectedPhotoUrls[selectedPhotoIndex];
 
   // --------------------------------------------------
@@ -226,14 +224,25 @@ const HousekeepingReview = ({
       });
       await onTaskReviewed?.(selectedTask, action);
 
-      setResultType(action === "approve" ? "approved" : "rejected");
-      setActiveModal("success");
+      notify({
+        kind: "success",
+        title: action === "approve" ? "Task approved" : "Task rejected",
+      });
+      setActiveModal(null);
+      setSelectedTask(null);
+      setCommentText("");
     } catch (error) {
-      setTaskActionError(
-        error instanceof Error
-          ? error.message
-          : `Unable to ${action} housekeeping task.`,
-      );
+      notify({
+        kind: "error",
+        title:
+          action === "approve"
+            ? "Task was not approved"
+            : "Task was not rejected",
+        description:
+          error instanceof Error
+            ? error.message
+            : `Unable to ${action} housekeeping task.`,
+      });
     } finally {
       setIsUpdatingTask(false);
     }
@@ -248,7 +257,6 @@ const HousekeepingReview = ({
 
     setActiveModal(null);
     setSelectedTask(null);
-    setResultType(null);
     setSelectedPhotoIndex(0);
     setPhotoZoom(1);
     setPhotoZoomOrigin("50% 50%");
@@ -315,20 +323,15 @@ const HousekeepingReview = ({
             ×
           </button>
 
-          {activeModal !== "success" && (
-            <h2 className={hk("modalTitle", "hk-modalTitle")}>
-              {activeModal === "photo" && "Housekeeping Photo"}
-              {activeModal === "reject" && "Reject Task"}
-              {activeModal === "approve" && "Approve Task"}
-            </h2>
-          )}
+          <h2 className={hk("modalTitle", "hk-modalTitle")}>
+            {activeModal === "photo" && "Housekeeping Photo"}
+            {activeModal === "reject" && "Reject Task"}
+            {activeModal === "approve" && "Approve Task"}
+          </h2>
 
-          {activeModal !== "success" && (
-            <p className={hk("modalRoom", "hk-modalRoom")}>
-              Room {selectedTask.room?.roomNumber} •{" "}
-              {selectedTask.room?.roomType}
-            </p>
-          )}
+          <p className={hk("modalRoom", "hk-modalRoom")}>
+            Room {selectedTask.room?.roomNumber} • {selectedTask.room?.roomType}
+          </p>
 
           {/* PHOTO MODAL */}
           {activeModal === "photo" && (
@@ -350,9 +353,7 @@ const HousekeepingReview = ({
                 {selectedPhotoUrl ? (
                   <img
                     className={`${hk("modalImg", "hk-modalImg")} ${
-                      photoZoom >= 3
-                        ? hk("zoomedPhoto", "hk-zoomedPhoto")
-                        : ""
+                      photoZoom >= 3 ? hk("zoomedPhoto", "hk-zoomedPhoto") : ""
                     }`}
                     src={selectedPhotoUrl}
                     alt={`Housekeeping photo ${selectedPhotoIndex + 1} of ${selectedPhotoUrls.length} for room ${selectedTask.room?.roomNumber}`}
@@ -373,7 +374,8 @@ const HousekeepingReview = ({
                         : "Zoom in at pointer location"
                     }
                     style={{
-                      visibility: photoLoadState === "loaded" ? "visible" : "hidden",
+                      visibility:
+                        photoLoadState === "loaded" ? "visible" : "hidden",
                       transform: `scale(${photoZoom})`,
                       transformOrigin: photoZoomOrigin,
                     }}
@@ -390,18 +392,16 @@ const HousekeepingReview = ({
                   <button
                     type="button"
                     className={hk("photoNavButton", "hk-photoNavButton")}
-                    onClick={() =>
-                      {
-                        setPhotoLoadState("loading");
-                        setPhotoZoom(1);
-                        setPhotoZoomOrigin("50% 50%");
-                        setSelectedPhotoIndex(
-                          (index) =>
-                            (index - 1 + selectedPhotoUrls.length) %
-                            selectedPhotoUrls.length,
-                        );
-                      }
-                    }
+                    onClick={() => {
+                      setPhotoLoadState("loading");
+                      setPhotoZoom(1);
+                      setPhotoZoomOrigin("50% 50%");
+                      setSelectedPhotoIndex(
+                        (index) =>
+                          (index - 1 + selectedPhotoUrls.length) %
+                          selectedPhotoUrls.length,
+                      );
+                    }}
                     aria-label="Previous photo"
                   >
                     Previous
@@ -412,16 +412,14 @@ const HousekeepingReview = ({
                   <button
                     type="button"
                     className={hk("photoNavButton", "hk-photoNavButton")}
-                    onClick={() =>
-                      {
-                        setPhotoLoadState("loading");
-                        setPhotoZoom(1);
-                        setPhotoZoomOrigin("50% 50%");
-                        setSelectedPhotoIndex(
-                          (index) => (index + 1) % selectedPhotoUrls.length,
-                        );
-                      }
-                    }
+                    onClick={() => {
+                      setPhotoLoadState("loading");
+                      setPhotoZoom(1);
+                      setPhotoZoomOrigin("50% 50%");
+                      setSelectedPhotoIndex(
+                        (index) => (index + 1) % selectedPhotoUrls.length,
+                      );
+                    }}
                     aria-label="Next photo"
                   >
                     Next
@@ -489,51 +487,6 @@ const HousekeepingReview = ({
                   : activeModal === "reject"
                     ? "Reject Task"
                     : "Approve Task"}
-              </button>
-            </>
-          )}
-
-          {/* SUCCESS MODAL */}
-          {activeModal === "success" && (
-            <>
-              <div
-                className={`${hk("resultIcon", "hk-resultIcon")} ${
-                  resultType === "approved"
-                    ? hk("approvedIcon", "hk-approvedIcon")
-                    : hk("rejectedIcon", "hk-rejectedIcon")
-                }`}
-              >
-                {resultType === "rejected" ? "×" : "✓"}
-              </div>
-
-              <h3
-                className={`${hk("resultTitle", "hk-resultTitle")} ${
-                  resultType === "approved"
-                    ? hk("approvedTitle", "hk-approvedTitle")
-                    : hk("rejectedTitle", "hk-rejectedTitle")
-                }`}
-              >
-                {resultType === "approved"
-                  ? "Task Approved"
-                  : "Task Rejected"}
-              </h3>
-
-              <p className={hk("modalSuccessText", "hk-modalSuccessText")}>
-                {resultType === "approved"
-                  ? "The housekeeping task has been approved."
-                  : "The housekeeping task has been rejected."}
-              </p>
-
-              <button
-                type="button"
-                className={
-                  resultType === "rejected"
-                    ? hk("modalRejectButton", "hk-modalRejectButton")
-                    : hk("modalApproveButton", "hk-modalApproveButton")
-                }
-                onClick={resetModalState}
-              >
-                Done
               </button>
             </>
           )}

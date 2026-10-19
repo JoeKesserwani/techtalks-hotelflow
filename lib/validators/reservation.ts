@@ -14,6 +14,23 @@ export const createReservationSchema = z
       .enum(["UNPAID", "PARTIAL", "PAID"])
       .optional()
       .default("UNPAID"),
+    amountPaid: z.number().finite().positive().optional(),
+  })
+  .superRefine((data, ctx) => {
+    if (data.paymentStatus === "PARTIAL" && data.amountPaid === undefined) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Enter the amount already paid",
+        path: ["amountPaid"],
+      });
+    }
+    if (data.paymentStatus !== "PARTIAL" && data.amountPaid !== undefined) {
+      ctx.addIssue({
+        code: "custom",
+        message: "Amount paid is only accepted for partial payments",
+        path: ["amountPaid"],
+      });
+    }
   })
   .refine((data) => data.checkOutDate > data.checkInDate, {
     message: "Check-out date must be after check-in date",
@@ -41,5 +58,5 @@ export const updateReservationSchema = z
     {
       message: "Check-out date must be after check-in date",
       path: ["checkOutDate"],
-    }
+    },
   );

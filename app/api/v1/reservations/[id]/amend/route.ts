@@ -193,6 +193,12 @@ export async function PATCH(
         throw new ApiError("Reservation must be at least one night", 400);
       const totalPrice = pricePerNight.mul(nights);
 
+      const amountPaid =
+        current.paymentStatus === "PAID"
+          ? totalPrice.greaterThan(current.totalPrice)
+            ? (current.amountPaid ?? current.totalPrice)
+            : totalPrice
+          : current.amountPaid;
       const paymentStatus = (
         current.paymentStatus === "PAID" &&
         totalPrice.greaterThan(current.totalPrice)
@@ -209,6 +215,7 @@ export async function PATCH(
           pricePerNight,
           totalPrice,
           paymentStatus,
+          amountPaid,
         },
         include: { room: true, guest: true },
       });

@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState, type MouseEvent } from "react";
+import { usePopupMessage } from "@/components/PopupMessage";
 import styles from "./HousekeepingReview.module.css";
 import { useAuth } from "@/components/Auth/AuthProvider";
-import  Header  from "@/components/Header/Header";
+import Header from "@/components/Header/Header";
 
 type Status = "active" | "awaiting" | "approved" | "pending" | "in-progress";
 
@@ -96,6 +97,7 @@ function formatTaskDate(value: string) {
 }
 
 export default function HousekeepingReviewPage() {
+  const { notify } = usePopupMessage();
   const [tasks, setTasks] = useState<HousekeepingTask[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -191,11 +193,24 @@ export default function HousekeepingReviewPage() {
       return;
     }
 
-    const response = await submitReview(
-      reviewTask.id,
-      reviewAction === "approved" ? "approve" : "reject",
-      comment.trim() || undefined,
-    );
+    let response: Response;
+    try {
+      response = await submitReview(
+        reviewTask.id,
+        reviewAction === "approved" ? "approve" : "reject",
+        comment.trim() || undefined,
+      );
+    } catch (error) {
+      notify({
+        kind: "error",
+        title: `Task was not ${reviewAction}`,
+        description:
+          error instanceof Error
+            ? error.message
+            : "Unable to review housekeeping task.",
+      });
+      return;
+    }
 
     if (response.status === 409) {
       const refreshResponse = await fetch("/api/v1/housekeeping/tasks");
@@ -206,13 +221,22 @@ export default function HousekeepingReviewPage() {
 
       setReviewTask(null);
       setReviewAction(null);
-      setReviewError("This task changed status. The task list was refreshed.");
+      notify({
+        kind: "warning",
+        title: "Task status changed",
+        description:
+          "The task list was refreshed. Review the current status before continuing.",
+      });
       return;
     }
 
     const data = await response.json();
     if (!response.ok) {
-      setReviewError(data.error ?? "Unable to review housekeeping task.");
+      notify({
+        kind: "error",
+        title: `Task was not ${reviewAction}`,
+        description: data.error ?? "Unable to review housekeeping task.",
+      });
       return;
     }
 
@@ -228,19 +252,19 @@ export default function HousekeepingReviewPage() {
           : task,
       ),
     );
-    
+
     setReviewTask(null);
     setReviewAction(null);
     setComment("");
+    notify({
+      kind: "success",
+      title: reviewAction === "approved" ? "Task approved" : "Task rejected",
+    });
 
     setActiveTab(reviewAction === "approved" ? "approved" : "active");
   }
 
-  function openImage(
-    images: string[],
-    index: number,
-    task: HousekeepingTask,
-  ) {
+  function openImage(images: string[], index: number, task: HousekeepingTask) {
     setSelectedImages(images);
     setSelectedImageIndex(index);
     setSelectedPhotoTask(task);
@@ -257,7 +281,9 @@ export default function HousekeepingReviewPage() {
   }
 
   function changeImage(index: number) {
-    setSelectedImageIndex((index + selectedImages.length) % selectedImages.length);
+    setSelectedImageIndex(
+      (index + selectedImages.length) % selectedImages.length,
+    );
     setZoom(1);
     setZoomOrigin("50% 50%");
   }
@@ -266,7 +292,11 @@ export default function HousekeepingReviewPage() {
     <main className={styles.page}>
       <div className={styles.container}>
         {/* Header */}
-        {Header({ title: "Housekeeping review", subtitle: `${awaitingTasks.length} awaiting - ${approvedTasks.length} done - ${activeTasks.length} active`, userSubtitle: "Currently reviewing rooms" })}
+        {Header({
+          title: "Housekeeping review",
+          subtitle: `${awaitingTasks.length} awaiting - ${approvedTasks.length} done - ${activeTasks.length} active`,
+          userSubtitle: "Currently reviewing rooms",
+        })}
         {/* Tabs */}
         <div className={styles.tabs}>
           <button

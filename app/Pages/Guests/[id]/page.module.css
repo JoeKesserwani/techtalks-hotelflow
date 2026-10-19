@@ -89,6 +89,11 @@
   margin-bottom: 20px;
 }
 
+.profileIdentity {
+  flex: 1;
+  min-width: 0;
+}
+
 .avatar {
   width: 48px;
   height: 48px;
@@ -132,6 +137,125 @@
   display: block;
   font-size: 0.85rem;
   color: var(--color-muted);
+}
+
+.editButton,
+.saveButton,
+.cancelButton {
+  min-height: 40px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-field);
+  padding: 0 16px;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition:
+    background 150ms ease,
+    border-color 150ms ease,
+    opacity 150ms ease;
+}
+
+.editButton,
+.saveButton {
+  background: var(--color-primary);
+  color: var(--color-on-accent);
+}
+
+.editButton:hover,
+.saveButton:hover:not(:disabled) {
+  opacity: 0.88;
+}
+
+.editForm {
+  display: grid;
+  gap: 20px;
+}
+
+.formGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px 20px;
+}
+
+.formField {
+  display: grid;
+  gap: 7px;
+  min-width: 0;
+  color: var(--color-label);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.formField input,
+.formField textarea {
+  width: 100%;
+  min-width: 0;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-field);
+  padding: 10px 12px;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 400;
+  outline: none;
+  transition:
+    border-color 150ms ease,
+    box-shadow 150ms ease;
+}
+
+.formField input:focus,
+.formField textarea:focus {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px
+    color-mix(in srgb, var(--color-primary) 16%, transparent);
+}
+
+.formField textarea {
+  resize: vertical;
+}
+
+.formFieldWide {
+  grid-column: 1 / -1;
+}
+
+.formActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border-soft);
+}
+
+.cancelButton {
+  border-color: var(--color-border);
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+
+.cancelButton:hover:not(:disabled) {
+  background: var(--color-bg);
+}
+
+.editButton:focus-visible,
+.saveButton:focus-visible,
+.cancelButton:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-primary) 35%, transparent);
+  outline-offset: 2px;
+}
+
+.editButton:disabled,
+.saveButton:disabled,
+.cancelButton:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.formError {
+  margin: 0;
+  color: var(--color-status-cancelled-text);
+  font-size: 0.85rem;
 }
 
 .tableCard {
@@ -183,6 +307,32 @@
 .pillCancelled {
   background: var(--color-status-cancelled);
   color: var(--color-status-cancelled-text);
+}
+
+@media (max-width: 640px) {
+  .main {
+    padding: 24px 16px;
+  }
+
+  .profileCard {
+    padding: 20px 16px;
+  }
+
+  .profileHeader {
+    gap: 12px;
+  }
+
+  .editButton {
+    padding: 0 12px;
+  }
+
+  .formGrid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .formFieldWide {
+    grid-column: auto;
+  }
 }
 
 /* Back navigation */

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useSyncExternalStore } from "react";
+import { usePopupMessage } from "@/components/PopupMessage";
 import styles from "./InstallPrompt.module.css";
 
 type BeforeInstallPromptEvent = Event & {
@@ -66,6 +67,7 @@ function getServerSnapshot() {
 }
 
 export default function InstallPrompt() {
+  const { notify } = usePopupMessage();
   const isIOS = useSyncExternalStore(
     subscribeToNoEvents,
     getIsIOS,
@@ -79,7 +81,6 @@ export default function InstallPrompt() {
   const [installEvent, setInstallEvent] =
     useState<BeforeInstallPromptEvent | null>(null);
   const [showIOSInstructions, setShowIOSInstructions] = useState(false);
-  const [message, setMessage] = useState("");
 
   useEffect(() => {
     function handleBeforeInstallPrompt(event: BeforeInstallPromptEvent) {
@@ -97,7 +98,7 @@ export default function InstallPrompt() {
     };
   }, []);
 
-  if (isStandalone || (!isIOS && !installEvent && !message)) {
+  if (isStandalone || (!isIOS && !installEvent)) {
     return null;
   }
 
@@ -113,11 +114,19 @@ export default function InstallPrompt() {
       setInstallEvent(null);
 
       if (choice.outcome === "dismissed") {
-        setMessage("You can install HotelFlow from your browser menu.");
+        notify({
+          kind: "info",
+          title: "Install later",
+          description: "You can install HotelFlow from your browser menu.",
+        });
       }
     } catch {
       setInstallEvent(null);
-      setMessage("Use your browser menu to install HotelFlow.");
+      notify({
+        kind: "info",
+        title: "Install help",
+        description: "Use your browser menu to install HotelFlow.",
+      });
     }
   }
 
@@ -146,11 +155,6 @@ export default function InstallPrompt() {
         <p className={styles.instructions} role="status">
           Tap the Share button in your browser, then choose “Add to Home
           Screen”.
-        </p>
-      )}
-      {message && (
-        <p className={styles.instructions} role="status">
-          {message}
         </p>
       )}
     </div>

@@ -4,22 +4,22 @@ import styles from "./page.module.css";
 import { useAuth } from "@/components/Auth/AuthProvider";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { usePopupMessage } from "@/components/PopupMessage";
 import InstallPrompt from "@/components/PWA/InstallPrompt";
 import LoginBackground from "@/app/LoginBackground";
 
 export default function Home() {
   const router = useRouter();
   const { setUser } = useAuth();
+  const { notify } = usePopupMessage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showWelcome, setShowWelcome] = useState(false);
   const [welcomeName, setWelcomeName] = useState("");
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    setError(null);
     setIsSubmitting(true);
 
     try {
@@ -51,6 +51,7 @@ export default function Home() {
       }
 
       setUser(data.user);
+      notify({ kind: "success", title: "Signed in successfully" });
       setWelcomeName(data.user.fullName ?? "");
       setShowWelcome(true);
 
@@ -58,11 +59,14 @@ export default function Home() {
         router.push("/Pages/Dashboard");
       }, 1700);
     } catch (error) {
-      setError(
-        error instanceof Error
-          ? error.message
-          : "Unable to sign in. Please try again.",
-      );
+      notify({
+        kind: "error",
+        title: "Sign-in failed",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Unable to sign in. Please try again.",
+      });
     } finally {
       setIsSubmitting(false);
     }
@@ -97,6 +101,9 @@ export default function Home() {
       <div className={styles.container}>
         <section className={styles.leftPanel}>
           <div className={styles.brand}>
+            <div className={styles.logo}>
+              <img src="/favicon.ico" alt="HotelFlow Logo" />
+            </div>
             <div className={styles.logo}>
               <img src="/favicon.ico" alt="HotelFlow Logo" />
             </div>
@@ -157,13 +164,6 @@ export default function Home() {
                   maxLength={20}
                 />
               </div>
-
-              {error && (
-                <div className={styles.loginError} role="alert">
-                  {error}
-                </div>
-              )}
-
               <button
                 type="submit"
                 className={styles.signInButton}
