@@ -251,7 +251,7 @@
 
 .editButton:hover,
 .saveButton:hover:not(:disabled) {
-  background: #b95738;
+  background: #26332a;
 }
 
 /* Edit form */
