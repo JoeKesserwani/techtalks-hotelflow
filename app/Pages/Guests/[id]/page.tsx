@@ -1,10 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import styles from "./page.module.css";
 import Header from "@/components/Header/Header";
+import Pagination from "@/components/Pagination";
 
 type Room = { roomNumber: string };
 type Reservation = {
@@ -70,6 +71,31 @@ export default function GuestDetailPage() {
   const [guest, setGuest] = useState<Guest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
+const [currentPage, setCurrentPage] = useState(1);
+const reservationsPerPage = 5;
+
+const totalReservations = guest?.reservations.length ?? 0;
+const totalPages = Math.ceil(totalReservations / reservationsPerPage);
+
+const startIndex = (currentPage - 1) * reservationsPerPage;
+
+const paginatedReservations =
+  guest?.reservations.slice(
+    startIndex,
+    startIndex + reservationsPerPage,
+  ) ?? [];
+const [isEditing, setIsEditing] = useState(false);
+const [isSaving, setIsSaving] = useState(false);
+const [saveError, setSaveError] = useState<string | null>(null);
+
+const [editForm, setEditForm] = useState({
+  fullName: "",
+  phone: "",
+  email: "",
+  passportNumber: "",
+  note: "",
+});
 
   useEffect(() => {
     if (!guestId) return;
@@ -95,29 +121,73 @@ export default function GuestDetailPage() {
 
     loadGuest();
   }, [guestId]);
+  function startEditing() {
+  if (!guest) return;
+
+  setEditForm({
+    fullName: guest.fullName,
+    phone: guest.phone ?? "",
+    email: guest.email ?? "",
+    passportNumber: guest.passportNumber ?? "",
+    note: guest.note ?? "",
+  });
+
+  setSaveError(null);
+  setIsEditing(true);
+}
+
+async function saveGuest() {
+  if (!guest) return;
+
+  if (!editForm.fullName.trim()) {
+    setSaveError("Guest name is required.");
+    return;
+  }
+
+  setIsSaving(true);
+  setSaveError(null);
+
+  try {
+    const res = await fetch(`/api/v1/guests/${guest.id}`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        fullName: editForm.fullName.trim(),
+        phone: editForm.phone.trim() || null,
+        email: editForm.email.trim() || null,
+        passportNumber: editForm.passportNumber.trim() || null,
+        note: editForm.note.trim() || null,
+      }),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      throw new Error(data.error ?? "Unable to update guest.");
+    }
+
+    setGuest((current) =>
+      current ? { ...current, ...data } : current,
+    );
+
+    setIsEditing(false);
+  } catch (err) {
+    setSaveError(
+      err instanceof Error ? err.message : "Unable to update guest.",
+    );
+  } finally {
+    setIsSaving(false);
+  }
+}
+
 
   return (
     <div className={styles.layout}>
       <main className={styles.main}>
-        <Link href="/Pages/Guests" className={styles.backLink}>
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M15 18L9 12L15 6"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          Back to guests
-        </Link>
-        {Header({
+      
+{Header({
           title: "Guests",
           subtitle: `Guests \u2192 `+ `${guest ? guest.fullName : "Loading..."}`,
           userSubtitle: "Checking guests",
@@ -129,65 +199,184 @@ export default function GuestDetailPage() {
           <>
             <section className={styles.profileCard}>
               <div className={styles.profileHeader}>
-                <span className={styles.avatar}>
-                  {initials(guest.fullName)}
-                </span>
-                <div>
-                  <h3>{guest.fullName}</h3>
-                  <p className={styles.contactLine}>
-                    {guest.phone ?? "No phone on file"} ·{" "}
-                    {guest.email ?? "No email on file"}
-                  </p>
-                </div>
-              </div>
+  <span className={styles.avatar}>
+    {initials(guest.fullName)}
+  </span>
 
-              <div className={styles.detailsGrid}>
-                <div>
-                  <span className={styles.detailLabel}>Passport Number</span>
-                  <span className={styles.detailValue}>
-                    {guest.passportNumber ?? "—"}
-                  </span>
-                </div>
-                <div>
-                  <span className={styles.detailLabel}>Note</span>
-                  <span className={styles.detailValue}>
-                    {guest.note ?? "—"}
-                  </span>
-                </div>
-              </div>
+  <div className={styles.profileInfo}>
+    <h3>{guest.fullName}</h3>
+    <p className={styles.contactLine}>
+      {guest.phone ?? "No phone on file"} ·{" "}
+      {guest.email ?? "No email on file"}
+    </p>
+  </div>
+
+  {!isEditing && (
+    <button
+      type="button"
+      className={styles.editButton}
+      onClick={startEditing}
+    >
+      Edit guest
+    </button>
+  )}
+</div>
+
+             {isEditing ? (
+  <div className={styles.editForm}>
+    <label className={styles.formField}>
+      Full name *
+      <input
+        value={editForm.fullName}
+        onChange={(e) =>
+          setEditForm({ ...editForm, fullName: e.target.value })
+        }
+        required
+      />
+    </label>
+
+    <label className={styles.formField}>
+      Phone
+      <input
+        type="tel"
+        value={editForm.phone}
+        onChange={(e) =>
+          setEditForm({ ...editForm, phone: e.target.value })
+        }
+      />
+    </label>
+
+    <label className={styles.formField}>
+      Email
+      <input
+        type="email"
+        value={editForm.email}
+        onChange={(e) =>
+          setEditForm({ ...editForm, email: e.target.value })
+        }
+      />
+    </label>
+
+    <label className={styles.formField}>
+      Passport number
+      <input
+        value={editForm.passportNumber}
+        onChange={(e) =>
+          setEditForm({ ...editForm, passportNumber: e.target.value })
+        }
+      />
+    </label>
+
+    <label className={`${styles.formField} ${styles.fullWidth}`}>
+      Note
+      <textarea
+        rows={3}
+        value={editForm.note}
+        onChange={(e) =>
+          setEditForm({ ...editForm, note: e.target.value })
+        }
+      />
+    </label>
+
+    {saveError && (
+      <p className={styles.saveError}>{saveError}</p>
+    )}
+
+    <div className={styles.editActions}>
+      <button
+        type="button"
+        className={styles.cancelButton}
+        disabled={isSaving}
+        onClick={() => {
+          setIsEditing(false);
+          setSaveError(null);
+        }}
+      >
+        Cancel
+      </button>
+
+      <button
+        type="button"
+        className={styles.saveButton}
+        disabled={isSaving}
+        onClick={saveGuest}
+      >
+        {isSaving ? "Saving..." : "Save changes"}
+      </button>
+    </div>
+  </div>
+) : (
+  <div className={styles.detailsGrid}>
+    <div>
+      <span className={styles.detailLabel}>Passport Number</span>
+      <span className={styles.detailValue}>
+        {guest.passportNumber ?? "—"}
+      </span>
+    </div>
+
+    <div>
+      <span className={styles.detailLabel}>Note</span>
+      <span className={styles.detailValue}>
+        {guest.note ?? "—"}
+      </span>
+    </div>
+  </div>
+)}
             </section>
 
             <div className={styles.tableCard}>
-              <div className={styles.tableHeaderRow}>
-                <span>Dates</span>
-                <span>Room</span>
-                <span>Nights</span>
-                <span>status</span>
-              </div>
+  <div className={styles.tableHeaderRow}>
+    <span>Dates</span>
+    <span>Room</span>
+    <span>Nights</span>
+    <span>Status</span>
+  </div>
 
-              {guest.reservations.length === 0 && (
-                <div className={styles.stateText}>No reservations yet.</div>
-              )}
+  {totalReservations === 0 ? (
+    <div className={styles.stateText}>
+      No reservations yet.
+    </div>
+  ) : (
+    paginatedReservations.map((stay) => (
+      <div className={styles.tableRow} key={stay.id}>
+        <span>
+          {new Date(stay.checkInDate).toLocaleDateString()} &rarr;{" "}
+          {new Date(stay.checkOutDate).toLocaleDateString()}
+        </span>
 
-              {guest.reservations.map((stay) => (
-                <div className={styles.tableRow} key={stay.id}>
-                  <span>
-                    {new Date(stay.checkInDate).toLocaleDateString()} &rarr;{" "}
-                    {new Date(stay.checkOutDate).toLocaleDateString()}
-                  </span>
-                  <span>
-                    {stay.status === "CHECKED_IN"
-                      ? `Currently in room ${stay.room.roomNumber}`
-                      : `Room ${stay.room.roomNumber}`}
-                  </span>
-                  <span>{nights(stay.checkInDate, stay.checkOutDate)}</span>
-                  <span>
-                    <span className={statusPillClass(stay.status, styles)}>
-                      {statusLabel(stay.status)}
-                    </span>
-                  </span>
-                </div>
-              ))}
+        <span>
+          {stay.status === "CHECKED_IN"
+            ? `Currently in room ${stay.room.roomNumber}`
+            : `Room ${stay.room.roomNumber}`}
+        </span>
+
+        <span>{nights(stay.checkInDate, stay.checkOutDate)}</span>
+
+        <span>
+          <span className={statusPillClass(stay.status, styles)}>
+            {statusLabel(stay.status)}
+          </span>
+        </span>
+      </div>
+    ))
+  )}
+
+  <Pagination
+    currentPage={currentPage}
+    totalPages={totalPages}
+    onPageChange={setCurrentPage}
+    totalItems={totalReservations}
+    itemsPerPage={reservationsPerPage}
+  />
+</div>
+            <div className={styles.backButtonContainer}>
+              <button
+                type="button"
+                className={styles.backButton}
+                onClick={() => router.push("/Pages/Guests")}
+              >
+                Back to guests
+              </button>
             </div>
           </>
         )}

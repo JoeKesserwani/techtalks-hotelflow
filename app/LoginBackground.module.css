@@ -1,0 +1,129 @@
+/* components/Auth/LoginBackground.module.css  (simple + cute version) */
+
+.scene {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #faf2e5;
+}
+
+/* two big soft color washes, no blur filter needed (cheap to render) */
+.blob {
+  position: absolute;
+  border-radius: 50%;
+}
+
+.blobSage {
+  top: -220px;
+  left: -200px;
+  width: 640px;
+  height: 640px;
+  background: radial-gradient(circle, rgb(147 163 130 / 38%) 0%, transparent 68%);
+}
+
+.blobClay {
+  right: -220px;
+  bottom: -240px;
+  width: 680px;
+  height: 680px;
+  background: radial-gradient(circle, rgb(221 160 132 / 38%) 0%, transparent 68%);
+}
+
+/* ----- stickers ----- */
+
+/* the slot only positions; the sticker inside does the animating */
+
+/* The slot positions each icon; the sticker animates inside it */
+.slot {
+  position: absolute;
+  transform: translate(-50%, -50%);
+}
+
+.sticker {
+  display: grid;
+  place-items: center;
+  border: 3px solid #fff;
+  border-radius: 22px;
+  background: var(--bg);
+  color: var(--fg);
+  box-shadow: 0 10px 24px rgb(67 82 56 / 14%);
+  transform: rotate(var(--r));
+  transform-origin: center;
+  will-change: transform;
+  animation: bob 5s ease-in-out infinite;
+  animation-delay: var(--delay, 0s);
+}
+
+.round {
+  border-radius: 50%;
+}
+
+@keyframes bob {
+  0% {
+    transform: translate(0, 0) rotate(var(--r)) scale(1);
+  }
+
+  20% {
+    transform: translate(12px, -22px)
+      rotate(calc(var(--r) + 8deg)) scale(1.06);
+  }
+
+  45% {
+    transform: translate(-8px, -38px)
+      rotate(calc(var(--r) - 5deg)) scale(1.02);
+  }
+
+  70% {
+    transform: translate(-16px, -15px)
+      rotate(calc(var(--r) + 6deg)) scale(1.08);
+  }
+
+  100% {
+    transform: translate(0, 0) rotate(var(--r)) scale(1);
+  }
+}
+
+/* ----- sparkles ----- */
+
+.sparkle {
+  position: absolute;
+  fill: #e3c58f;
+  opacity: 0.8;
+  animation: twinkle 3.6s ease-in-out infinite;
+}
+
+@keyframes twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+    transform: scale(0.7) rotate(0deg);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.15) rotate(20deg);
+  }
+}
+
+/* ----- responsive ----- */
+
+/* on phones the login panel fills the screen, so there is nothing to show */
+@media (max-width: 600px) {
+  .scene {
+    display: none;
+  }
+}
+
+/* ----- accessibility ----- */
+
+@media (prefers-reduced-motion: reduce) {
+  .sticker,
+  .sparkle {
+    animation: none;
+  }
+
+  .sparkle {
+    opacity: 0.7;
+  }
+}

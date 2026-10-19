@@ -1,9 +1,9 @@
+
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { Role } from "@/app/generated/prisma/enums";
 import styles from "./page.module.css";
-import { useAuth } from "@/components/Auth/AuthProvider";
 import Pagination from "@/components/Pagination";
 import Header from "@/components/Header/Header";
 
@@ -23,7 +23,19 @@ type StaffForm = {
   role: Role;
 };
 
-const roleOptions = Object.values(Role).filter((role) => role !== Role.ADMIN);
+const roleOptions = Object.values(Role).filter(
+  (role) => role !== Role.ADMIN,
+);
+
+const AVATAR_COLORS = [
+  "#4c5a3e",
+  "#a15a3d",
+  "#8a8f5c",
+  "#c1573c",
+];
+
+const PAGE_SIZE = 8;
+
 const emptyForm: StaffForm = {
   fullName: "",
   email: "",
@@ -49,26 +61,36 @@ export default function StaffPage() {
   const [error, setError] = useState<string | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
   const [mode, setMode] = useState<"create" | "edit" | null>(null);
-  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
+  const [selectedStaff, setSelectedStaff] =
+    useState<StaffMember | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [form, setForm] = useState<StaffForm>(emptyForm);
-  const { user } = useAuth();
 
   async function loadStaff() {
     setIsLoading(true);
     setError(null);
 
     try {
-      const response = await fetch("/api/v1/users");
+      const response = await fetch("/api/v1/users", {
+        cache: "no-store",
+      });
 
       if (!response.ok) {
-        throw new Error("Unable to load staff members.");
+        const result = await response.json().catch(() => null);
+        throw new Error(
+          result?.message ??
+            result?.error ??
+            "Unable to load staff members.",
+        );
       }
 
-      setStaff(await response.json());
+      const data: StaffMember[] = await response.json();
+      setStaff(data);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Unable to load staff members.",
+        err instanceof Error
+          ? err.message
+          : "Unable to load staff members.",
       );
     } finally {
       setIsLoading(false);
@@ -80,14 +102,25 @@ export default function StaffPage() {
 
     async function fetchStaff() {
       try {
-        const response = await fetch("/api/v1/users");
+        const response = await fetch("/api/v1/users", {
+          cache: "no-store",
+        });
 
         if (!response.ok) {
-          throw new Error("Unable to load staff members.");
+          const result = await response.json().catch(() => null);
+          throw new Error(
+            result?.message ??
+              result?.error ??
+              "Unable to load staff members.",
+          );
         }
 
-        const data = await response.json();
-        if (!cancelled) setStaff(data);
+        const data: StaffMember[] = await response.json();
+
+        if (!cancelled) {
+          setStaff(data);
+          setError(null);
+        }
       } catch (err) {
         if (!cancelled) {
           setError(
@@ -97,7 +130,9 @@ export default function StaffPage() {
           );
         }
       } finally {
-        if (!cancelled) setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     }
 
@@ -111,36 +146,41 @@ export default function StaffPage() {
   const filteredStaff = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    return normalizedQuery
-      ? staff.filter((member) =>
-          [member.fullName, member.email, formatRole(member.role)]
-            .join(" ")
-            .toLowerCase()
-            .includes(normalizedQuery),
-        )
-      : staff;
+    if (!normalizedQuery) {
+      return staff;
+    }
+
+    return staff.filter((member) =>
+      [member.fullName, member.email, formatRole(member.role)]
+        .join(" ")
+        .toLowerCase()
+        .includes(normalizedQuery),
+    );
   }, [query, staff]);
 
-  const pageSize = 5;
-  const totalPages = Math.max(1, Math.ceil(filteredStaff.length / pageSize));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredStaff.length / PAGE_SIZE),
+  );
+
   const safeCurrentPage = Math.min(currentPage, totalPages);
 
   const paginatedStaff = useMemo(() => {
-    if (filteredStaff.length <= pageSize) {
-      return filteredStaff;
-    }
+    const startIndex = (safeCurrentPage - 1) * PAGE_SIZE;
 
-    const startIndex = (safeCurrentPage - 1) * pageSize;
-    return filteredStaff.slice(startIndex, startIndex + pageSize);
-  }, [filteredStaff, pageSize, safeCurrentPage]);
+    return filteredStaff.slice(
+      startIndex,
+      startIndex + PAGE_SIZE,
+    );
+  }, [filteredStaff, safeCurrentPage]);
 
   function closeDialog() {
-    if (!isSaving) {
-      setMode(null);
-      setSelectedStaff(null);
-      setForm(emptyForm);
-      setFormError(null);
-    }
+    if (isSaving) return;
+
+    setMode(null);
+    setSelectedStaff(null);
+    setForm(emptyForm);
+    setFormError(null);
   }
 
   function openCreateDialog() {
@@ -166,48 +206,67 @@ export default function StaffPage() {
     key: Key,
     value: StaffForm[Key],
   ) {
-    setForm((current) => ({ ...current, [key]: value }));
+    setForm((current) => ({
+      ...current,
+      [key]: value,
+    }));
   }
 
   async function saveStaff(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+
+    if (!mode) return;
+
     setFormError(null);
     setIsSaving(true);
 
     const isCreate = mode === "create";
+
     const payload = isCreate
       ? form
       : {
           fullName: form.fullName,
           email: form.email,
           role: form.role,
-          ...(form.password ? { password: form.password } : {}),
+          ...(form.password
+            ? { password: form.password }
+            : {}),
         };
 
     try {
       const response = await fetch(
-        isCreate ? "/api/v1/users" : `/api/v1/users/${selectedStaff?.id}`,
+        isCreate
+          ? "/api/v1/users"
+          : `/api/v1/users/${selectedStaff?.id}`,
         {
           method: isCreate ? "POST" : "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(payload),
         },
       );
+
       const result = await response.json().catch(() => null);
 
       if (!response.ok) {
         throw new Error(
-          result?.message ?? result?.error ?? "Unable to save staff member.",
+          result?.message ??
+            result?.error ??
+            "Unable to save staff member.",
         );
       }
 
-      await loadStaff();
       setMode(null);
       setSelectedStaff(null);
       setForm(emptyForm);
+
+      await loadStaff();
     } catch (err) {
       setFormError(
-        err instanceof Error ? err.message : "Unable to save staff member.",
+        err instanceof Error
+          ? err.message
+          : "Unable to save staff member.",
       );
     } finally {
       setIsSaving(false);
@@ -217,7 +276,9 @@ export default function StaffPage() {
   async function deactivateStaff() {
     if (
       !selectedStaff ||
-      !window.confirm(`Deactivate ${selectedStaff.fullName}?`)
+      !window.confirm(
+        `Deactivate ${selectedStaff.fullName}?`,
+      )
     ) {
       return;
     }
@@ -226,11 +287,19 @@ export default function StaffPage() {
     setIsSaving(true);
 
     try {
-      const response = await fetch(`/api/v1/users/${selectedStaff.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: false }),
-      });
+      const response = await fetch(
+        `/api/v1/users/${selectedStaff.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            isActive: false,
+          }),
+        },
+      );
+
       const result = await response.json().catch(() => null);
 
       if (!response.ok) {
@@ -241,10 +310,11 @@ export default function StaffPage() {
         );
       }
 
-      await loadStaff();
       setMode(null);
       setSelectedStaff(null);
       setForm(emptyForm);
+
+      await loadStaff();
     } catch (err) {
       setFormError(
         err instanceof Error
@@ -260,10 +330,16 @@ export default function StaffPage() {
     <main className={styles.page}>
       {Header({
         title: "Staff Management",
-        subtitle: `${staff.length} ${staff.length === 1 ? "account" : "accounts"} · Manage roles and access`,
+        subtitle: `${staff.length} ${
+          staff.length === 1 ? "account" : "accounts"
+        } · Manage roles and access`,
         userSubtitle: "Currently reviewing rooms",
       })}
-      <section className={styles.toolbar} aria-label="Staff controls">
+
+      <section
+        className={styles.toolbar}
+        aria-label="Staff controls"
+      >
         <label className={styles.searchLabel}>
           <span className="sr-only">Search staff</span>
           <input
@@ -277,6 +353,7 @@ export default function StaffPage() {
             maxLength={30}
           />
         </label>
+
         <button
           type="button"
           className={styles.addButton}
@@ -286,55 +363,97 @@ export default function StaffPage() {
         </button>
       </section>
 
-      {error ? (
-        <div className={styles.message} role="alert">
-          <p>{error}</p>
-          <button type="button" onClick={() => void loadStaff()}>
-            Try again
-          </button>
-        </div>
-      ) : isLoading ? (
-        <p className={styles.loading}>Loading staff…</p>
-      ) : (
-        <>
-          <div className={styles.tableWrap}>
-            <table className={styles.table}>
-              <thead>
-                <tr>
-                  <th scope="col">Name</th>
-                  <th scope="col">Role</th>
-                  <th scope="col">Status</th>
-                  <th scope="col">Added</th>
-                  <th scope="col">
-                    <span className="sr-only">Actions</span>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {paginatedStaff.map((member) => (
+      <div className={styles.tableWrap}>
+        <table className={styles.table}>
+          <thead>
+            <tr>
+              <th scope="col">Name</th>
+              <th scope="col">Role</th>
+              <th scope="col">Status</th>
+              <th scope="col">Added</th>
+              <th scope="col">
+                <span className="sr-only">Actions</span>
+              </th>
+            </tr>
+          </thead>
+
+          <tbody>
+            {isLoading ? (
+              <tr>
+                <td className={styles.empty} colSpan={5}>
+                  Loading staff…
+                </td>
+              </tr>
+            ) : error ? (
+              <tr>
+                <td className={styles.empty} colSpan={5}>
+                  <p role="alert">{error}</p>
+                  <button
+                    type="button"
+                    onClick={() => void loadStaff()}
+                  >
+                    Try again
+                  </button>
+                </td>
+              </tr>
+            ) : filteredStaff.length === 0 ? (
+              <tr>
+                <td className={styles.empty} colSpan={5}>
+                  {query.trim()
+                    ? "No staff members match your search."
+                    : "No staff members found."}
+                </td>
+              </tr>
+            ) : (
+              paginatedStaff.map((member, index) => {
+                const absoluteIndex =
+                  (safeCurrentPage - 1) * PAGE_SIZE + index;
+
+                return (
                   <tr key={member.id}>
                     <td>
                       <div className={styles.member}>
-                        <span className={styles.avatar} aria-hidden="true">
-                          {member.fullName.charAt(0).toUpperCase()}
+                        <span
+                          className={styles.avatar}
+                          style={{
+                            background:
+                              AVATAR_COLORS[
+                                absoluteIndex %
+                                  AVATAR_COLORS.length
+                              ],
+                          }}
+                          aria-hidden="true"
+                        >
+                          {member.fullName
+                            .charAt(0)
+                            .toUpperCase()}
                         </span>
+
                         <span>
                           <strong>{member.fullName}</strong>
                           <small>{member.email}</small>
                         </span>
                       </div>
                     </td>
+
                     <td>{formatRole(member.role)}</td>
+
                     <td>
                       <span
                         className={
-                          member.isActive ? styles.active : styles.inactive
+                          member.isActive
+                            ? styles.active
+                            : styles.inactive
                         }
                       >
-                        {member.isActive ? "Active" : "Inactive"}
+                        {member.isActive
+                          ? "Active"
+                          : "Inactive"}
                       </span>
                     </td>
+
                     <td>{formatDate(member.createdAt)}</td>
+
                     <td>
                       <button
                         type="button"
@@ -345,28 +464,21 @@ export default function StaffPage() {
                       </button>
                     </td>
                   </tr>
-                ))}
-                {filteredStaff.length === 0 && (
-                  <tr>
-                    <td className={styles.empty} colSpan={5}>
-                      No staff members match your search.
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
-          </div>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
 
-          {filteredStaff.length > 0 && (
-            <Pagination
-              currentPage={safeCurrentPage}
-              totalPages={totalPages}
-              totalItems={filteredStaff.length}
-              itemsPerPage={pageSize}
-              onPageChange={setCurrentPage}
-            />
-          )}
-        </>
+      {!isLoading && !error && filteredStaff.length > 0 && (
+        <Pagination
+          currentPage={safeCurrentPage}
+          totalPages={totalPages}
+          totalItems={filteredStaff.length}
+          itemsPerPage={PAGE_SIZE}
+          onPageChange={setCurrentPage}
+        />
       )}
 
       {mode && (
@@ -385,14 +497,18 @@ export default function StaffPage() {
             <div className={styles.dialogHeader}>
               <div>
                 <h2 id="staff-dialog-title">
-                  {mode === "create" ? "Add staff member" : "Edit staff member"}
+                  {mode === "create"
+                    ? "Add staff member"
+                    : "Edit staff member"}
                 </h2>
+
                 <p>
                   {mode === "create"
                     ? "Create a new account and assign access."
                     : "Update access and account details."}
                 </p>
               </div>
+
               <button
                 type="button"
                 className={styles.closeButton}
@@ -415,6 +531,7 @@ export default function StaffPage() {
                   }
                 />
               </label>
+
               <label>
                 Email
                 <input
@@ -425,18 +542,23 @@ export default function StaffPage() {
                   data-1pignore="true"
                   maxLength={40}
                   value={form.email}
-                  onChange={(event) => updateForm("email", event.target.value)}
+                  onChange={(event) =>
+                    updateForm("email", event.target.value)
+                  }
                 />
               </label>
+
               <label>
-                {mode === "create" ? "Password" : "New password (optional)"}
+                {mode === "create"
+                  ? "Password"
+                  : "New password (optional)"}
                 <input
                   required={mode === "create"}
                   minLength={8}
                   maxLength={20}
                   type="password"
                   value={form.password}
-                  autoComplete="off"
+                  autoComplete="new-password"
                   data-lpignore="true"
                   data-1pignore="true"
                   onChange={(event) =>
@@ -444,12 +566,16 @@ export default function StaffPage() {
                   }
                 />
               </label>
+
               <label>
                 Role
                 <select
                   value={form.role}
                   onChange={(event) =>
-                    updateForm("role", event.target.value as Role)
+                    updateForm(
+                      "role",
+                      event.target.value as Role,
+                    )
                   }
                 >
                   {roleOptions.map((role) => (
@@ -467,17 +593,20 @@ export default function StaffPage() {
               )}
 
               <div className={styles.dialogActions}>
-                {mode === "edit" && selectedStaff?.isActive && (
-                  <button
-                    type="button"
-                    className={styles.deleteButton}
-                    onClick={() => void deactivateStaff()}
-                    disabled={isSaving}
-                  >
-                    Deactivate
-                  </button>
-                )}
+                {mode === "edit" &&
+                  selectedStaff?.isActive && (
+                    <button
+                      type="button"
+                      className={styles.deleteButton}
+                      onClick={() => void deactivateStaff()}
+                      disabled={isSaving}
+                    >
+                      Deactivate
+                    </button>
+                  )}
+
                 <span />
+
                 <button
                   type="button"
                   className={styles.cancelButton}
@@ -486,6 +615,7 @@ export default function StaffPage() {
                 >
                   Cancel
                 </button>
+
                 <button
                   type="submit"
                   className={styles.saveButton}

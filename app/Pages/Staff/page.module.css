@@ -1,16 +1,55 @@
-﻿.page {
-  min-height: 100vh;
-  padding: 28px clamp(3px, 4vw, 6px) 48px;
-  background: #f5f1e7;
-  color: #2e2a25;
-  display: flex;
+﻿
+/* ========================================
+   ROOMS PAGE — LAYOUT
+======================================== */
+
+.main {
+  flex: 1;
+  min-width: 0;
+  width: 100%;
+  padding: 38px 42px;
 }
+
 .page {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
   min-height: 100vh;
-  padding: 28px clamp(16px, 4vw, 34px) 48px;
-  background: #f5f1e7;
-  color: #2e2a25;
+  padding: 38px 42px 48px;
+  background: var(--color-bg);
+  color: var(--color-text);
 }
+
+/* ========================================
+   HEADER
+======================================== */
+
+.header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+  padding-bottom: 20px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.header h1 {
+  margin: 0;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: clamp(28px, 3vw, 40px);
+  font-weight: 500;
+}
+
+.header p {
+  margin: 2px 0 0;
+  color: var(--color-muted);
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 14px;
+}
+
+/* User role */
+
 .role {
   display: flex;
   align-items: center;
@@ -26,158 +65,184 @@
 }
 
 .roleInfo span {
-  color: #99958a;
   margin-top: 3px;
+  color: var(--color-muted);
 }
 
 .roleBadge {
-  background: #c76543;
-  color: white;
   padding: 9px 18px;
+  background: var(--color-primary);
+  color: var(--color-on-accent);
   font-size: 13px;
   font-weight: 600;
-}
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  padding-bottom: 20px;
-  margin-bottom: 20px;
-  border-bottom: 1px solid #d9d3c4;
+  border-radius: var(--radius-field);
 }
 
-.header h1 {
-  margin: 0;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: clamp(28px, 3vw, 40px);
-  font-weight: 500;
-}
-
-.header p {
-  margin: 2px 0 0;
-  color: #887f71;
-  font-family: Georgia, "Times New Roman", serif;
-  font-size: 14px;
-}
+/* ========================================
+   TOOLBAR AND SEARCH
+======================================== */
 
 .toolbar {
   display: flex;
-  gap: 7px;
-  margin: 19px 0 10px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  margin: 0px 0 14px;
 }
 
 .searchLabel {
   flex: 1;
-}
-
-.searchLabel input,
-.dialog input,
-.dialog select {
-  width: 100%;
-  border: 1px solid #dcd3c3;
-  border-radius: 2px;
-  background: #fffdfa;
-  color: #302c26;
-  font: inherit;
+  min-width: 0;
 }
 
 .searchLabel input {
+  display: block;
+  box-sizing: border-box;
+  width: 100%;
+  min-width: 0;
   height: 38px;
-  padding: 0 13px;
-  font-size: 14px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-field);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 12px;
+  outline: none;
 }
 
-.searchLabel input:focus,
-.dialog input:focus,
-.dialog select:focus {
-  outline: 2px solid #c9613e;
-  outline-offset: 1px;
+.searchLabel input::placeholder {
+  color: var(--color-faint);
 }
 
-.addButton,
-.saveButton {
-  border: 0;
-  border-radius: 2px;
-  background: #c9613e;
-  color: white;
-  cursor: pointer;
-  font-weight: 600;
+.searchLabel input:focus-visible {
+  border-color: var(--color-primary);
 }
+
+/* ========================================
+   BUTTONS
+======================================== */
+
+/* Add button — matches Guests */
 
 .addButton {
-  min-width: 114px;
-  padding: 0 17px;
-  font-size: 14px;
+  flex-shrink: 0;
+  height: 38px;
+  margin-left: auto;
+  padding: 0 18px;
+  border: none;
+  border-radius: var(--radius-field);
+  background: var(--color-primary);
+  color: var(--color-on-accent);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background-color 0.15s ease;
 }
 
-.addButton:hover,
-.saveButton:hover {
-  background: #b55232;
+.addButton:hover {
+  background: var(--color-primary-hover);
 }
+
+.addButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Edit button — compact table action */
+
+.editButton {
+  height: 32px;
+  padding: 0 12px;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-field);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background-color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.editButton:hover {
+  background: var(--color-surface);
+}
+
+.editButton:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ========================================
+   ROOMS TABLE
+======================================== */
 
 .tableWrap {
   width: 100%;
+  max-width: 100%;
+  min-width: 0;
   height: fit-content;
   min-height: 240px;
-  overflow-y: scroll;
-  border: 1px solid #f5f1e7;
-  border-radius: 6px;
-  background: #fffdfa;
-  box-shadow: 0 8px 22px rgba(74, 61, 43, 0.07);
-  scrollbar-color: #9b907f #eee7da;
-  scrollbar-gutter: stable;
-  scrollbar-width: thin;
-}
-
-.tableWrap::-webkit-scrollbar {
-  width: 10px;
-  height: 10px;
-}
-
-.tableWrap::-webkit-scrollbar-track {
-  background: #eee7da;
-}
-
-.tableWrap::-webkit-scrollbar-thumb {
-  border: 2px solid #eee7da;
-  border-radius: 8px;
-  background: #9b907f;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  background: var(--color-surface-alt);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card);
 }
 
 .table {
   width: 100%;
   min-width: 660px;
   border-collapse: collapse;
-  font-size: 14px;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 12px;
 }
 
 .table th {
-  position: sticky;
-  top: 0;
-  z-index: 1;
-  padding: 11px 14px;
-  background: #ebe4d4;
-  color: #807766;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 0.02em;
+  height: 38px;
+  padding: 0 14px;
+  background: var(--color-surface);
+  color: var(--color-label);
   text-align: left;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 .table td {
-  padding: 12px 14px;
-  border-top: 1px solid #e5ded2;
+  height: 48px;
+  padding: 0 14px;
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
   vertical-align: middle;
 }
 
-.table tbody tr:hover {
-  background: #faf7f0;
+.table tbody tr:last-child td {
+  border-bottom: none;
 }
+
+.table tbody tr:hover {
+  background: var(--color-surface);
+}
+
+/* Member / room information */
 
 .member {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
   min-width: 205px;
 }
 
@@ -187,69 +252,49 @@
 }
 
 .member strong {
+  overflow: hidden;
+  font-size: 12px;
   font-weight: 600;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .member small {
+  overflow: hidden;
   margin-top: 2px;
-  color: #817869;
+  color: var(--color-muted);
   font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
+
+/* Avatar */
 
 .avatar {
-  display: grid;
-  place-items: center;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
   width: 34px;
   height: 34px;
-  flex: none;
-  border-radius: 50%;
-  background: #485d39;
-  color: #fff;
-  font-weight: 700;
-}
-
-.active,
-.inactive {
-  display: inline-block;
-  min-width: 67px;
-  padding: 4px 9px;
-  border-radius: 999px;
-  color: white;
-  font-size: 11px;
-  text-align: center;
-}
-
-.active {
-  background: #6e8558;
-}
-
-.inactive {
-  background: #a59b8e;
-}
-
-.editButton {
-  border: 0;
-  background: transparent;
-  color: #c9613e;
-  cursor: pointer;
+  border-radius: var(--radius-pill);
+  color: var(--color-on-accent);
+  font-size: 12px;
   font-weight: 600;
 }
+/* Empty state */
 
-.editButton:hover {
-  color: #984124;
-  text-decoration: underline;
-}
-
-.loading,
 .empty {
-  padding: 28px;
-  color: #807766;
+  height: 100px;
+  padding: 14px;
+  color: var(--color-muted);
+  font-size: 12px;
   text-align: center;
 }
 
-.empty {
-  font-size: 14px;
-}
+/* ========================================
+   PAGINATION
+======================================== */
 
 .pagination {
   display: flex;
@@ -257,20 +302,27 @@
   justify-content: space-between;
   gap: 12px;
   padding: 14px 16px 18px;
-  border-top: 1px solid #eee7da;
-  background: #fffdfa;
-  color: #574e45;
-  font-size: 14px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 12px;
 }
 
 .pagination button {
-  border: 1px solid #d9d1c2;
-  border-radius: 2px;
-  background: transparent;
-  color: #3d362f;
-  cursor: pointer;
   padding: 8px 12px;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-field);
+  background: transparent;
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 12px;
   font-weight: 600;
+  cursor: pointer;
+}
+
+.pagination button:hover:not(:disabled) {
+  background: var(--color-surface);
 }
 
 .pagination button:disabled {
@@ -282,6 +334,10 @@
   flex: 1;
   text-align: center;
 }
+
+/* ========================================
+   MESSAGE / ERROR BANNER
+======================================== */
 
 .message {
   display: flex;
@@ -299,12 +355,20 @@
 }
 
 .message button {
+  flex-shrink: 0;
+  padding: 6px 10px;
   border: 1px solid #c9613e;
+  border-radius: var(--radius-field);
   background: transparent;
   color: #a8472b;
+  font-family: var(--font-body);
+  font-size: 12px;
   cursor: pointer;
-  padding: 6px 10px;
 }
+
+/* ========================================
+   ADD / EDIT POPUP
+======================================== */
 
 .dialogLayer {
   position: fixed;
@@ -320,10 +384,14 @@
   width: min(100%, 520px);
   max-height: calc(100dvh - 40px);
   overflow-y: auto;
-  border-radius: 4px;
-  background: #f8f5ed;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.25);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-card);
+  background: var(--color-bg);
+  color: var(--color-text);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.2);
 }
+
+/* Popup heading */
 
 .dialogHeader {
   display: flex;
@@ -331,7 +399,7 @@
   justify-content: space-between;
   gap: 14px;
   padding: 24px 25px 18px;
-  border-bottom: 1px solid #f5f1e7;
+  border-bottom: 1px solid var(--color-border);
 }
 
 .dialogHeader h2 {
@@ -343,20 +411,32 @@
 
 .dialogHeader p {
   margin: 5px 0 0;
-  color: #766d60;
+  color: var(--color-muted);
   font-size: 14px;
 }
 
+/* Close button */
+
 .closeButton {
+  display: grid;
+  flex: none;
+  place-items: center;
   width: 32px;
   height: 32px;
-  border: 0;
+  border: none;
+  border-radius: var(--radius-field);
   background: transparent;
-  color: #635b50;
+  color: var(--color-text);
   cursor: pointer;
   font-size: 28px;
   line-height: 1;
 }
+
+.closeButton:hover {
+  background: var(--color-surface);
+}
+
+/* Form layout */
 
 .dialog form {
   display: grid;
@@ -367,76 +447,223 @@
 .dialog label {
   display: grid;
   gap: 7px;
-  color: #584f43;
-  font-size: 14px;
+  color: var(--color-label);
+  font-family: var(--font-body);
+  font-size: 12px;
   font-weight: 600;
 }
 
+/* Form inputs */
+
 .dialog input,
 .dialog select {
-  height: 40px;
-  padding: 0 10px;
+  box-sizing: border-box;
+  width: 100%;
+  height: 38px;
+  padding: 0 14px;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-field);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 12px;
   font-weight: 400;
 }
+
+.dialog input:focus-visible,
+.dialog select:focus-visible {
+  border-color: var(--color-primary);
+  outline: 2px solid var(--color-primary);
+  outline-offset: 1px;
+}
+
+/* Form validation */
 
 .formError {
   margin: 0;
   color: #a23e25;
-  font-size: 14px;
+  font-size: 12px;
 }
 
+/* Popup actions */
+
 .dialogActions {
-  display: grid;
-  grid-template-columns: auto 1fr auto auto;
-  gap: 9px;
+  display: flex;
   align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
   margin-top: 7px;
 }
 
-.deleteButton,
-.cancelButton {
-  border: 1px solid #cfc4b3;
-  border-radius: 2px;
-  background: transparent;
-  color: #544c41;
-  cursor: pointer;
-  padding: 9px 12px;
-  font-weight: 600;
-}
-
-.deleteButton {
-  border-color: #b75235;
-  color: #a54126;
-}
+/* Save button */
 
 .saveButton {
-  padding: 10px 14px;
+  height: 38px;
+  padding: 0 18px;
+  border: none;
+  border-radius: var(--radius-field);
+  background: var(--color-primary);
+  color: var(--color-on-accent);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
 }
 
-.deleteButton:hover {
+.saveButton:hover:not(:disabled) {
+  background: var(--color-primary-hover);
+}
+
+/* Cancel button */
+
+.cancelButton {
+  height: 38px;
+   width: 120px;
+  padding: 0 18px;
+  border: 1px solid var(--color-border-input);
+  border-radius: var(--radius-field);
+  background: var(--color-surface-alt);
+  color: var(--color-text);
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.cancelButton:hover:not(:disabled) {
+  background: var(--color-surface);
+}
+
+/* Delete button */
+
+.deleteButton {
+  padding: 0 12px;
+  height: 38px;
+  border: 1px solid #b75235;
+  border-radius: var(--radius-field);
+  background: transparent;
+  color: #a54126;
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.deleteButton:hover:not(:disabled) {
   background: #fff2ed;
 }
 
-.cancelButton:hover {
-  background: #eee7da;
-}
+/* Disabled popup buttons */
 
 .dialog button:disabled {
   cursor: not-allowed;
   opacity: 0.6;
 }
 
+/* ========================================
+   RESPONSIVE — TABLETS
+======================================== */
+
+@media (max-width: 900px) {
+  .page {
+    padding: 30px 24px 40px;
+  }
+
+  .header h1 {
+    font-size: clamp(26px, 4vw, 34px);
+  }
+}
+
+/* ========================================
+   RESPONSIVE — MOBILE
+======================================== */
+
 @media (max-width: 768px) {
   .page {
-    padding-top: 72px;
+    padding: 72px 16px 32px;
+  }
+
+  .main {
+    padding: 24px 16px;
+  }
+
+  .header {
+    gap: 12px;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+  }
+
+  .header h1 {
+    font-size: 28px;
+  }
+
+  .header p {
+    font-size: 13px;
+  }
+
+  .role {
+    gap: 8px;
+  }
+
+  .roleBadge {
+    padding: 7px 10px;
+    font-size: 11px;
+  }
+
+  .roleInfo {
+    font-size: 11px;
   }
 
   .toolbar {
     flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+    margin: 18px 0 14px;
+  }
+
+  .searchLabel {
+    width: 100%;
   }
 
   .addButton {
-    height: 38px;
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .tableWrap {
+    min-height: 0;
+  }
+
+  .pagination {
+    flex-wrap: wrap;
+    padding: 12px;
+  }
+
+  .pagination span {
+    flex-basis: 100%;
+    order: -1;
+  }
+
+  .dialogLayer {
+    padding: 12px;
+  }
+
+  .dialog {
+    max-height: calc(100dvh - 24px);
+  }
+
+  .dialogHeader {
+    padding: 20px 18px 16px;
+  }
+
+  .dialogHeader h2 {
+    font-size: 23px;
+  }
+
+  .dialog form {
+    gap: 14px;
+    padding: 20px 18px;
   }
 
   .dialogActions {
@@ -449,10 +676,42 @@
 
   .deleteButton {
     grid-column: 1 / -1;
+    grid-row: 2;
   }
 
   .saveButton,
   .cancelButton {
     width: 100%;
+  }
+}
+
+/* ========================================
+   RESPONSIVE — SMALL MOBILE
+======================================== */
+
+@media (max-width: 380px) {
+  .page {
+    padding-right: 12px;
+    padding-left: 12px;
+  }
+
+  .header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .role {
+    align-self: flex-end;
+  }
+
+  .dialogActions {
+    gap: 8px;
+  }
+
+  .saveButton,
+  .cancelButton,
+  .deleteButton {
+    padding: 0 10px;
+    font-size: 11px;
   }
 }
