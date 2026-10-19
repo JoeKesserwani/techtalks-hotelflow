@@ -23,9 +23,17 @@ type Room = {
   capacity: number;
   basePrice: number;
   status: RoomStatus;
-};
-
-/* -------------------------------------------------------------------------- */
+  currentGuest?: {
+    id: string;
+    fullName: string;
+  } | null;
+  currentReservation?: {
+    id: string;
+    checkInDate: string;
+    checkOutDate: string;
+    status: string;
+  } | null;
+};/* -------------------------------------------------------------------------- */
 /* Room Status                                                                */
 /* -------------------------------------------------------------------------- */
 
@@ -75,6 +83,14 @@ function getStatusClass(status: RoomStatus) {
     default:
       return styles.availableStatus;
   }
+}
+function formatStayDate(date: string) {
+  return new Date(date).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+    timeZone: "UTC",
+  });
 }
 
 /* -------------------------------------------------------------------------- */
@@ -213,7 +229,7 @@ const ViewRoomPage = () => {
         {/* Header                                                             */}
         {/* ------------------------------------------------------------------ */}
 
-        <header className={styles.header}>
+        {/* <header className={styles.header}>
 
           <div className={styles.headerLeft}>
 
@@ -226,7 +242,7 @@ const ViewRoomPage = () => {
             </button>
           </div>
 
-        </header>
+        </header> */}
         <p className={styles.label}>
             ROOM DETAILS
         </p>
@@ -240,22 +256,24 @@ const ViewRoomPage = () => {
         {/* ------------------------------------------------------------------ */}
 
         <section className={styles.statusSection}>
+  <div>
+    <p className={styles.cardLabel}>
+      CURRENT STATUS
+    </p>
 
-          <div>
-            <p className={styles.cardLabel}>
-              CURRENT STATUS
-            </p>
+   <h2 className={styles.statusTitle}>
+  {room.status === "OCCUPIED" && room.currentGuest && room.currentReservation
+    ? `Occupied by ${room.currentGuest.fullName} from ${formatStayDate(
+        room.currentReservation.checkInDate
+      )} to ${formatStayDate(room.currentReservation.checkOutDate)}`
+    : getRoomStatusLabel(room.status)}
+</h2>
+</div>
 
-            <h2 className={styles.statusTitle}>
-              {getRoomStatusLabel(room.status)}
-            </h2>
-          </div>
-
-          <span className={getStatusClass(room.status)}>
-            {getRoomStatusLabel(room.status)}
-          </span>
-
-        </section>
+<span className={getStatusClass(room.status)}>
+  {getRoomStatusLabel(room.status)}
+</span>
+</section>
 
         {/* ------------------------------------------------------------------ */}
         {/* Room Information                                                   */}
@@ -339,7 +357,6 @@ const ViewRoomPage = () => {
                 {getRoomStatusLabel(room.status)}
               </strong>
             </div>
-
           </div>
 
         </section>

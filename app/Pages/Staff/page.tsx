@@ -1,4 +1,5 @@
 
+
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
@@ -89,7 +90,8 @@ export default function StaffPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mode, setMode] = useState<"create" | "edit" | null>(null);
-  const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
+  const [selectedStaff, setSelectedStaff] =
+    useState<StaffMember | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [form, setForm] = useState<StaffForm>(emptyForm);
 
@@ -98,16 +100,26 @@ export default function StaffPage() {
     setError(null);
 
     try {
-      const response = await fetch("/api/v1/users");
+      const response = await fetch("/api/v1/users", {
+        cache: "no-store",
+      });
 
       if (!response.ok) {
-        throw new Error("Unable to load staff members.");
+        const result = await response.json().catch(() => null);
+        throw new Error(
+          result?.message ??
+            result?.error ??
+            "Unable to load staff members.",
+        );
       }
 
-      setStaff(await response.json());
+      const data: StaffMember[] = await response.json();
+      setStaff(data);
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Unable to load staff members.",
+        err instanceof Error
+          ? err.message
+          : "Unable to load staff members.",
       );
     } finally {
       setIsLoading(false);
@@ -119,14 +131,25 @@ export default function StaffPage() {
 
     async function fetchStaff() {
       try {
-        const response = await fetch("/api/v1/users");
+        const response = await fetch("/api/v1/users", {
+          cache: "no-store",
+        });
 
         if (!response.ok) {
-          throw new Error("Unable to load staff members.");
+          const result = await response.json().catch(() => null);
+          throw new Error(
+            result?.message ??
+              result?.error ??
+              "Unable to load staff members.",
+          );
         }
 
-        const data = await response.json();
-        if (!cancelled) setStaff(data);
+        const data: StaffMember[] = await response.json();
+
+        if (!cancelled) {
+          setStaff(data);
+          setError(null);
+        }
       } catch (err) {
         if (!cancelled) {
           setError(
@@ -136,7 +159,9 @@ export default function StaffPage() {
           );
         }
       } finally {
-        if (!cancelled) setIsLoading(false);
+        if (!cancelled) {
+          setIsLoading(false);
+        }
       }
     }
 
@@ -211,7 +236,10 @@ export default function StaffPage() {
     key: Key,
     value: StaffForm[Key],
   ) {
-    setForm((current) => ({ ...current, [key]: value }));
+    setForm((current) => ({
+      ...current,
+      [key]: value,
+    }));
   }
 
   async function saveStaff(event: FormEvent<HTMLFormElement>) {
@@ -219,33 +247,42 @@ export default function StaffPage() {
     setIsSaving(true);
 
     const isCreate = mode === "create";
+
     const payload = isCreate
       ? form
       : {
           fullName: form.fullName,
           email: form.email,
           role: form.role,
-          ...(form.password ? { password: form.password } : {}),
+          ...(form.password
+            ? { password: form.password }
+            : {}),
         };
 
     try {
       const response = await fetch(
-        isCreate ? "/api/v1/users" : `/api/v1/users/${selectedStaff?.id}`,
+        isCreate
+          ? "/api/v1/users"
+          : `/api/v1/users/${selectedStaff?.id}`,
         {
           method: isCreate ? "POST" : "PATCH",
-          headers: { "Content-Type": "application/json" },
+          headers: {
+            "Content-Type": "application/json",
+          },
           body: JSON.stringify(payload),
         },
       );
+
       const result = await response.json().catch(() => null);
 
       if (!response.ok) {
         throw new Error(
-          result?.message ?? result?.error ?? "Unable to save staff member.",
+          result?.message ??
+            result?.error ??
+            "Unable to save staff member.",
         );
       }
 
-      await loadStaff();
       setMode(null);
       setSelectedStaff(null);
       setForm(emptyForm);
@@ -270,7 +307,9 @@ export default function StaffPage() {
   async function deactivateStaff() {
     if (
       !selectedStaff ||
-      !window.confirm(`Deactivate ${selectedStaff.fullName}?`)
+      !window.confirm(
+        `Deactivate ${selectedStaff.fullName}?`,
+      )
     ) {
       return;
     }
@@ -278,11 +317,19 @@ export default function StaffPage() {
     setIsSaving(true);
 
     try {
-      const response = await fetch(`/api/v1/users/${selectedStaff.id}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isActive: false }),
-      });
+      const response = await fetch(
+        `/api/v1/users/${selectedStaff.id}`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            isActive: false,
+          }),
+        },
+      );
+
       const result = await response.json().catch(() => null);
 
       if (!response.ok) {
@@ -639,7 +686,9 @@ export default function StaffPage() {
                   {mode === "create" ? "New account" : "Account settings"}
                 </p>
                 <h2 id="staff-dialog-title">
-                  {mode === "create" ? "Add staff member" : "Edit staff member"}
+                  {mode === "create"
+                    ? "Add staff member"
+                    : "Edit staff member"}
                 </h2>
                 <p className={styles.dialogDescription}>
                   {mode === "create"
@@ -647,6 +696,7 @@ export default function StaffPage() {
                     : "Update this team member’s details and access."}
                 </p>
               </div>
+
               <button
                 type="button"
                 className={styles.closeButton}
@@ -671,6 +721,7 @@ export default function StaffPage() {
                   }
                 />
               </label>
+
               <label>
                 Email address
                 <input
@@ -679,11 +730,16 @@ export default function StaffPage() {
                   autoComplete="email"
                   maxLength={40}
                   value={form.email}
-                  onChange={(event) => updateForm("email", event.target.value)}
+                  onChange={(event) =>
+                    updateForm("email", event.target.value)
+                  }
                 />
               </label>
+
               <label>
-                {mode === "create" ? "Password" : "New password (optional)"}
+                {mode === "create"
+                  ? "Password"
+                  : "New password (optional)"}
                 <input
                   required={mode === "create"}
                   minLength={8}
@@ -696,12 +752,16 @@ export default function StaffPage() {
                   }
                 />
               </label>
+
               <label>
                 Staff role
                 <select
                   value={form.role}
                   onChange={(event) =>
-                    updateForm("role", event.target.value as Role)
+                    updateForm(
+                      "role",
+                      event.target.value as Role,
+                    )
                   }
                 >
                   {roleOptions.map((role) => (
@@ -743,6 +803,7 @@ export default function StaffPage() {
                 >
                   Cancel
                 </button>
+
                 <button
                   type="submit"
                   className={styles.saveButton}

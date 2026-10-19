@@ -1,13 +1,16 @@
+
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import AddGuestModal from "../../../components/AddGuestModal";
-import Pagination from "../../../components/Pagination"; // Adjust path if using alias like "@/components/Pagination"
+import Pagination from "../../../components/Pagination";
 import styles from "./page.module.css";
 import Header from "@/components/Header/Header";
 
-type Room = { roomNumber: string };
+type Room = {
+  roomNumber: string;
+};
 
 type Reservation = {
   id: string;
@@ -27,7 +30,7 @@ type StatusTone = "active" | "instay" | "cancelled" | "upcoming";
 
 type StatusFilter = "all" | "upcoming" | "instay" | "completed" | "cancelled";
 
-const GUESTS_PER_PAGE = 5;
+const GUESTS_PER_PAGE = 8;
 
 const AVATAR_COLORS = ["#4c5a3e", "#a15a3d", "#8a8f5c", "#c1573c"];
 
@@ -48,7 +51,6 @@ function initials(name: string) {
     .toUpperCase();
 }
 
-// Derives the display label + color + a stable filter key from the guest's latest reservation.
 function deriveStay(guest: Guest): {
   label: string;
   tone: StatusTone;
@@ -97,7 +99,7 @@ function deriveStay(guest: Guest): {
   }
 }
 
-function statusClass(tone: StatusTone, styles: Record<string, string>) {
+function statusClass(tone: StatusTone) {
   switch (tone) {
     case "instay":
       return styles.pillInStay;
@@ -130,7 +132,10 @@ export default function GuestsPage() {
     setError(null);
 
     try {
-      const res = await fetch("/api/v1/guests");
+      const res = await fetch("/api/v1/guests", {
+        cache: "no-store",
+      });
+
       const data = await res.json();
 
       if (!res.ok) {
@@ -150,9 +155,6 @@ export default function GuestsPage() {
     loadGuests();
   }, []);
 
-  /**
-   * Search + status filter guests.
-   */
   const filteredGuests = useMemo(() => {
     const query = search.trim().toLowerCase();
 
@@ -179,36 +181,22 @@ export default function GuestsPage() {
     });
   }, [guests, search, statusFilter]);
 
-  /**
-   * Reset to page 1 whenever search or filter changes.
-   */
   useEffect(() => {
     setCurrentPage(1);
   }, [search, statusFilter]);
 
-  /**
-   * Calculate total pages based on the filtered results.
-   */
   const totalPages = Math.max(
     1,
     Math.ceil(filteredGuests.length / GUESTS_PER_PAGE),
   );
 
-  /**
-   * Adjust page number if filtered items decrease below current page boundary.
-   */
   useEffect(() => {
     setCurrentPage((page) => Math.min(page, totalPages));
   }, [totalPages]);
 
-  /**
-   * Get guests for current page.
-   */
   const paginatedGuests = useMemo(() => {
     const startIndex = (currentPage - 1) * GUESTS_PER_PAGE;
-    const endIndex = startIndex + GUESTS_PER_PAGE;
-
-    return filteredGuests.slice(startIndex, endIndex);
+    return filteredGuests.slice(startIndex, startIndex + GUESTS_PER_PAGE);
   }, [filteredGuests, currentPage]);
 
   function goToPage(page: number) {
@@ -233,9 +221,13 @@ export default function GuestsPage() {
       <main className={styles.main}>
         {Header({
           title: "Guests",
-          subtitle: `${guests.length} ${guests.length === 1 ? "guest" : "guests"}`,
+          subtitle: `${guests.length} ${
+            guests.length === 1 ? "guest" : "guests"
+          }`,
           userSubtitle: "Checking guests",
         })}
+
+        {/* Search, filter and add guest */}
         <div className={styles.toolbar}>
           <input
             className={styles.searchInput}
@@ -244,6 +236,7 @@ export default function GuestsPage() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             maxLength={30}
+            aria-label="Search guests"
           />
 
           <div className={styles.filterWrapper}>
@@ -266,6 +259,7 @@ export default function GuestsPage() {
                   className={styles.filterBackdrop}
                   onClick={() => setIsFilterOpen(false)}
                 />
+
                 <ul className={styles.filterMenu} role="listbox">
                   {FILTER_OPTIONS.map((option) => (
                     <li key={option.value}>
@@ -301,82 +295,104 @@ export default function GuestsPage() {
           </button>
         </div>
 
+        {/* Table styled consistently with the Rooms page */}
         <div className={styles.tableCard}>
-          <div className={styles.tableHeaderRow}>
-            <span>Guest</span>
-            <span>Contact</span>
-            <span>Current stay</span>
-            <span></span>
+          <div className={styles.tableWrapper}>
+            <table className={styles.table}>
+              <thead>
+                <tr>
+                  <th scope="col">Guest</th>
+                  <th scope="col">Contact</th>
+                  <th scope="col">Current stay</th>
+                  <th scope="col">Actions</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={4} className={styles.stateRow}>
+                      Loading guests...
+                    </td>
+                  </tr>
+                ) : error ? (
+                  <tr>
+                    <td colSpan={4} className={styles.stateRow}>
+                      {error}
+                    </td>
+                  </tr>
+                ) : filteredGuests.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className={styles.stateRow}>
+                      {search.trim() || statusFilter !== "all"
+                        ? "No guests match your search or filter."
+                        : "No guests yet — add your first one."}
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedGuests.map((guest, index) => {
+                    const stay = deriveStay(guest);
+                    const absoluteIndex =
+                      (currentPage - 1) * GUESTS_PER_PAGE + index;
+
+                    return (
+                      <tr key={guest.id}>
+                        <td>
+                          <div className={styles.guestCell}>
+                            <span
+                              className={styles.avatar}
+                              style={{
+                                background:
+                                  AVATAR_COLORS[
+                                    absoluteIndex % AVATAR_COLORS.length
+                                  ],
+                              }}
+                              aria-hidden="true"
+                            >
+                              {initials(guest.fullName)}
+                            </span>
+
+                            <span className={styles.guestName}>
+                              {guest.fullName}
+                            </span>
+                          </div>
+                        </td>
+
+                        <td className={styles.contactCell}>
+                          {guest.phone || guest.email || "—"}
+                        </td>
+
+                        <td className={styles.stayCell}>
+                          <span className={statusClass(stay.tone)}>
+                            {stay.label}
+                          </span>
+                        </td>
+
+                        <td>
+                          <div className={styles.actionsCell}>
+                            <Link
+                              href={`/Pages/Guests/${guest.id}`}
+                              className={styles.viewLink}
+                            >
+                              View
+                            </Link>
+
+                            <Link
+                              href={`/Pages/Reservations?guestId=${guest.id}`}
+                              className={styles.bookLink}
+                            >
+                              Book a room
+                            </Link>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
           </div>
 
-          {isLoading && (
-            <div className={styles.stateRow}>Loading guests...</div>
-          )}
-
-          {!isLoading && error && (
-            <div className={styles.stateRow}>{error}</div>
-          )}
-
-          {!isLoading && !error && filteredGuests.length === 0 && (
-            <div className={styles.stateRow}>
-              {search.trim() || statusFilter !== "all"
-                ? "No guests match your search or filter."
-                : "No guests yet — add your first one."}
-            </div>
-          )}
-
-          {!isLoading &&
-            !error &&
-            paginatedGuests.map((guest, index) => {
-              const stay = deriveStay(guest);
-              const absoluteIndex = (currentPage - 1) * GUESTS_PER_PAGE + index;
-
-              return (
-                <div className={styles.tableRow} key={guest.id}>
-                  <div className={styles.guestCell}>
-                    <span
-                      className={styles.avatar}
-                      style={{
-                        background:
-                          AVATAR_COLORS[absoluteIndex % AVATAR_COLORS.length],
-                      }}
-                    >
-                      {initials(guest.fullName)}
-                    </span>
-
-                    <span className={styles.guestName}>{guest.fullName}</span>
-                  </div>
-
-                  <div className={styles.contactCell}>
-                    {guest.phone ?? guest.email ?? "—"}
-                  </div>
-
-                  <div className={styles.stayCell}>
-                    <span className={statusClass(stay.tone, styles)}>
-                      {stay.label}
-                    </span>
-                  </div>
-
-                  <div className={styles.actionsCell}>
-                    <Link
-                      href={`/Pages/Guests/${guest.id}`}
-                      className={styles.viewLink}
-                    >
-                      View
-                    </Link>
-
-                    <Link
-                      href={`/Pages/Reservations?guestId=${guest.id}`}
-                      className={styles.bookLink}
-                    >
-                      Book a room
-                    </Link>
-                  </div>
-                </div>
-              );
-            })}
-
-          {/* AFTER (Single self-contained <Pagination /> component): */}
           {!isLoading && !error && filteredGuests.length > 0 && (
             <Pagination
               currentPage={currentPage}
@@ -384,7 +400,9 @@ export default function GuestsPage() {
               onPageChange={goToPage}
               totalItems={filteredGuests.length}
               itemsPerPage={GUESTS_PER_PAGE}
-              isFiltered={Boolean(search.trim() || statusFilter !== "all")}
+              isFiltered={Boolean(
+                search.trim() || statusFilter !== "all",
+              )}
             />
           )}
         </div>

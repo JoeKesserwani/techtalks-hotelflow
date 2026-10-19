@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -28,18 +29,17 @@ export default function AddGuestModal({
   const [note, setNote] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // Only render the portal once mounted in the browser — document.body
-  // doesn't exist during server rendering.
-  const [isMounted, setIsMounted] = useState(false);
-  useEffect(() => setIsMounted(true), []);
-
-  // While the modal is open: lock page scroll and trap Tab/Shift+Tab focus
-  // inside the modal, so the sidebar (and everything else behind the
-  // overlay) is unreachable by keyboard, not just visually covered.
   useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted) return;
+
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
 
@@ -49,7 +49,7 @@ export default function AddGuestModal({
     firstField?.focus();
 
     function handleKeyDown(e: KeyboardEvent) {
-      if (e.key === "Escape") {
+      if (e.key === "Escape" && !isSaving) {
         onClose();
         return;
       }
@@ -57,9 +57,10 @@ export default function AddGuestModal({
       if (e.key !== "Tab" || !modalRef.current) return;
 
       const focusable = modalRef.current.querySelectorAll<HTMLElement>(
-        'input, textarea, button, [href], select, [tabindex]:not([tabindex="-1"])',
+        'input:not(:disabled), textarea:not(:disabled), button:not(:disabled), [href], select, [tabindex]:not([tabindex="-1"])',
       );
-      if (focusable.length === 0) return;
+
+      if (!focusable.length) return;
 
       const first = focusable[0];
       const last = focusable[focusable.length - 1];
@@ -79,9 +80,17 @@ export default function AddGuestModal({
       document.body.style.overflow = previousOverflow;
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose]);
+  }, [isMounted, isSaving, onClose]);
 
   async function handleSave() {
+    const trimmedName = fullName.trim();
+
+    if (!trimmedName) {
+      setError("Please enter the guest's full name.");
+      return;
+    }
+
+    setError(null);
     setIsSaving(true);
 
     try {
@@ -89,11 +98,11 @@ export default function AddGuestModal({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          fullName,
-          phone: phone || undefined,
-          email: email || undefined,
-          passportNumber: passportNumber || undefined,
-          note: note || undefined,
+          fullName: trimmedName,
+          phone: phone.trim() || undefined,
+          email: email.trim() || undefined,
+          passportNumber: passportNumber.trim() || undefined,
+          note: note.trim() || undefined,
         }),
       });
 
@@ -108,6 +117,7 @@ export default function AddGuestModal({
         return;
       }
 
+      onClose();
       onCreated?.();
       notify({ kind: "success", title: "Guest added" });
       onClose();
@@ -125,10 +135,25 @@ export default function AddGuestModal({
     }
   }
 
+  const guestInitials =
+    fullName
+      .trim()
+      .split(/\s+/)
+      .filter(Boolean)
+      .map((part) => part[0])
+      .join("")
+      .slice(0, 2)
+      .toUpperCase() || "G";
+
   if (!isMounted) return null;
 
   return createPortal(
-    <div className={styles.overlay} onClick={onClose}>
+    <div
+      className={styles.overlay}
+      onMouseDown={(e) => {
+        if (e.target === e.currentTarget && !isSaving) onClose();
+      }}
+    >
       <div
         ref={modalRef}
         className={styles.modal}
@@ -138,65 +163,77 @@ export default function AddGuestModal({
         <div className={styles.selectedChip}>
           <span className={styles.chipAvatar}>{initials}</span>
           <div className={styles.chipText}>
-            <strong>{fullName || "Guest's name"}</strong>
+            <strong>{fullName.trim() || "Guest name"}</strong>
             <span>
-              {phone || "Phone number"} - {passportNumber || "ID"}
+              {phone.trim() || "Phone number not added"}
             </span>
           </div>
         </div>
 
-        <label className={styles.label} htmlFor="fullName">
-          Full Name
-        </label>
-        <input
-          id="fullName"
-          className={styles.input}
-          placeholder="full guest's name"
-          value={fullName}
-          onChange={(e) => setFullName(e.target.value)}
-          maxLength={20}
-        />
-
-        <div className={styles.row}>
-          <div className={styles.col}>
-            <label className={styles.label} htmlFor="phone">
-              Phone number
+        <div className={styles.form}>
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="fullName">
+              Full name <span className={styles.required}>*</span>
             </label>
             <input
-              id="phone"
+              id="fullName"
               className={styles.input}
-              placeholder="+961 12345678"
-              value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              maxLength={20}
+              placeholder="Enter the guest's full name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              maxLength={100}
+              autoComplete="name"
+              required
             />
           </div>
-          <div className={styles.col}>
-            <label className={styles.label} htmlFor="passport">
-              Passport Number
+
+          <div className={styles.row}>
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="phone">
+                Phone number
+              </label>
+              <input
+                id="phone"
+                className={styles.input}
+                type="tel"
+                placeholder="+961 XX XXX XXX"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                maxLength={20}
+                autoComplete="tel"
+              />
+            </div>
+
+            <div className={styles.field}>
+              <label className={styles.label} htmlFor="passport">
+                Passport number
+              </label>
+              <input
+                id="passport"
+                className={styles.input}
+                placeholder="Enter passport number"
+                value={passportNumber}
+                onChange={(e) => setPassportNumber(e.target.value)}
+                maxLength={10}
+              />
+            </div>
+          </div>
+
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="email">
+              Email address
             </label>
             <input
-              id="passport"
+              id="email"
               className={styles.input}
-              placeholder="XXXXXXXXXX"
-              value={passportNumber}
-              onChange={(e) => setPassportNumber(e.target.value)}
-              maxLength={10}
+              type="email"
+              placeholder="guest@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              maxLength={40}
+              autoComplete="email"
             />
           </div>
-        </div>
-
-        <label className={styles.label} htmlFor="email">
-          Email
-        </label>
-        <input
-          id="email"
-          className={styles.input}
-          placeholder="XXXX@gmail.com"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          maxLength={40}
-        />
 
         <label className={styles.label} htmlFor="note">
           Note
@@ -211,16 +248,29 @@ export default function AddGuestModal({
         />
 
         <div className={styles.actions}>
-          <button type="button" className={styles.backButton} onClick={onClose}>
-            Back to search
+          <button
+            type="button"
+            className={styles.cancelButton}
+            onClick={onClose}
+            disabled={isSaving}
+          >
+            Cancel
           </button>
+
           <button
             type="button"
             className={styles.saveButton}
             onClick={handleSave}
-            disabled={isSaving || !fullName}
+            disabled={isSaving || !fullName.trim()}
           >
-            {isSaving ? "Saving..." : "Save & Continue"}
+            {isSaving ? (
+              <>
+                <span className={styles.spinner} aria-hidden="true" />
+                Saving...
+              </>
+            ) : (
+              "Save guest"
+            )}
           </button>
         </div>
       </div>

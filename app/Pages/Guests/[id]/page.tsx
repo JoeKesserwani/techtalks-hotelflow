@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState, type FormEvent } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { usePopupMessage } from "@/components/PopupMessage";
 import styles from "./page.module.css";
 import Header from "@/components/Header/Header";
+import Pagination from "@/components/Pagination";
 
 type Room = { roomNumber: string };
 type Reservation = {
@@ -88,6 +89,21 @@ export default function GuestDetailPage() {
     passportNumber: "",
     note: "",
   });
+  const router = useRouter();
+  const [currentPage, setCurrentPage] = useState(1);
+  const reservationsPerPage = 5;
+
+  const totalReservations = guest?.reservations.length ?? 0;
+  const totalPages = Math.ceil(totalReservations / reservationsPerPage);
+
+  const startIndex = (currentPage - 1) * reservationsPerPage;
+
+  const paginatedReservations =
+    guest?.reservations.slice(
+      startIndex,
+      startIndex + reservationsPerPage,
+    ) ?? [];
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!guestId) return;
@@ -172,25 +188,8 @@ export default function GuestDetailPage() {
   return (
     <div className={styles.layout}>
       <main className={styles.main}>
-        <Link href="/Pages/Guests" className={styles.backLink}>
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M15 18L9 12L15 6"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          Back to guests
-        </Link>
-        {Header({
+      
+{Header({
           title: "Guests",
           subtitle:
             `Guests \u2192 ` + `${guest ? guest.fullName : "Loading..."}`,
@@ -328,36 +327,58 @@ export default function GuestDetailPage() {
             </section>
 
             <div className={styles.tableCard}>
-              <div className={styles.tableHeaderRow}>
-                <span>Dates</span>
-                <span>Room</span>
-                <span>Nights</span>
-                <span>status</span>
-              </div>
+  <div className={styles.tableHeaderRow}>
+    <span>Dates</span>
+    <span>Room</span>
+    <span>Nights</span>
+    <span>Status</span>
+  </div>
 
-              {guest.reservations.length === 0 && (
-                <div className={styles.stateText}>No reservations yet.</div>
-              )}
+  {totalReservations === 0 ? (
+    <div className={styles.stateText}>
+      No reservations yet.
+    </div>
+  ) : (
+    paginatedReservations.map((stay) => (
+      <div className={styles.tableRow} key={stay.id}>
+        <span>
+          {new Date(stay.checkInDate).toLocaleDateString()} &rarr;{" "}
+          {new Date(stay.checkOutDate).toLocaleDateString()}
+        </span>
 
-              {guest.reservations.map((stay) => (
-                <div className={styles.tableRow} key={stay.id}>
-                  <span>
-                    {new Date(stay.checkInDate).toLocaleDateString()} &rarr;{" "}
-                    {new Date(stay.checkOutDate).toLocaleDateString()}
-                  </span>
-                  <span>
-                    {stay.status === "CHECKED_IN"
-                      ? `Currently in room ${stay.room.roomNumber}`
-                      : `Room ${stay.room.roomNumber}`}
-                  </span>
-                  <span>{nights(stay.checkInDate, stay.checkOutDate)}</span>
-                  <span>
-                    <span className={statusPillClass(stay.status, styles)}>
-                      {statusLabel(stay.status)}
-                    </span>
-                  </span>
-                </div>
-              ))}
+        <span>
+          {stay.status === "CHECKED_IN"
+            ? `Currently in room ${stay.room.roomNumber}`
+            : `Room ${stay.room.roomNumber}`}
+        </span>
+
+        <span>{nights(stay.checkInDate, stay.checkOutDate)}</span>
+
+        <span>
+          <span className={statusPillClass(stay.status, styles)}>
+            {statusLabel(stay.status)}
+          </span>
+        </span>
+      </div>
+    ))
+  )}
+
+  <Pagination
+    currentPage={currentPage}
+    totalPages={totalPages}
+    onPageChange={setCurrentPage}
+    totalItems={totalReservations}
+    itemsPerPage={reservationsPerPage}
+  />
+</div>
+            <div className={styles.backButtonContainer}>
+              <button
+                type="button"
+                className={styles.backButton}
+                onClick={() => router.push("/Pages/Guests")}
+              >
+                Back to guests
+              </button>
             </div>
           </>
         )}

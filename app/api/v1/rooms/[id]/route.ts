@@ -4,16 +4,66 @@ import { updateRoomStatusSchema, updateRoomSchema } from '../../../../../lib/val
 import { writeAuditLog } from '../../../../../lib/services/audit.service';
 import { ApiError, handleRouteError } from '../../../../../lib/api/errors';
 
-export async function GET(req: Request, { params }: { params: Promise<{ id: string }> }) {
+export async function GET(
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
+) {
   try {
     const { id } = await params;
-    const user = await requireAuth({ roles: ['ADMIN','MANAGER', 'RECEPTIONIST', 'HOUSEKEEPING'] });
-    if (!user) throw new ApiError('Unauthorized', 401);
 
-    const room = await prisma.room.findFirst({ where: { id, hotelId: user.hotelId } });
-    if (!room) throw new ApiError('Room not found', 404);
+    const user = await requireAuth({
+      roles: ["ADMIN", "MANAGER", "RECEPTIONIST", "HOUSEKEEPING"],
+    });
 
-    return Response.json(room);
+    if (!user) {
+      throw new ApiError("Unauthorized", 401);
+    }
+
+    const room = await prisma.room.findFirst({
+      where: {
+        id,
+        hotelId: user.hotelId,
+      },
+      include: {
+        reservations: {
+          where: {
+            status: "CHECKED_IN",
+          },
+          include: {
+            guest: {
+              select: {
+                id: true,
+                fullName: true,
+              },
+            },
+          },
+          orderBy: {
+            checkInDate: "desc",
+          },
+          take: 1,
+        },
+      },
+    });
+
+    if (!room) {
+      throw new ApiError("Room not found", 404);
+    }
+
+    const currentReservation = room.reservations[0] ?? null;
+
+    return Response.json({
+      ...room,
+      currentGuest: currentReservation?.guest ?? null,
+      currentReservation: currentReservation
+        ? {
+            id: currentReservation.id,
+            checkInDate: currentReservation.checkInDate,
+            checkOutDate: currentReservation.checkOutDate,
+            status: currentReservation.status,
+          }
+        : null,
+      reservations: undefined,
+    });
   } catch (err) {
     return handleRouteError(err);
   }

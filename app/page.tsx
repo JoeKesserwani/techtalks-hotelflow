@@ -6,52 +6,58 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { usePopupMessage } from "@/components/PopupMessage";
 import InstallPrompt from "@/components/PWA/InstallPrompt";
+import LoginBackground from "@/app/LoginBackground";
 
 export default function Home() {
-  const Router = useRouter();
+  const router = useRouter();
   const { setUser } = useAuth();
   const { notify } = usePopupMessage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showWelcome, setShowWelcome] = useState(false);
+  const [welcomeName, setWelcomeName] = useState("");
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setIsSubmitting(true);
 
     try {
-      {
-        const response = await fetch("/api/v1/auth/login", {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ email, password }),
-        });
+      const response = await fetch("/api/v1/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email, password }),
+      });
 
-        let data: { message?: string; user?: any } = {};
+      let data: { message?: string; user?: any } = {};
 
-        try {
-          data = await response.json();
-        } catch {
-          // Keep the HTTP status as the fallback if the API returns no JSON.
-        }
-
-        if (!response.ok) {
-          throw new Error(
-            data.message ||
-              `Login failed, Invalid Credentials (${response.status})`,
-          );
-        }
-
-        if (!data.user) {
-          throw new Error("Login failed: user information was not returned.");
-        }
-
-        setUser(data.user);
-        notify({ kind: "success", title: "Signed in successfully" });
-        Router.push("/Pages/Dashboard");
+      try {
+        data = await response.json();
+      } catch {
+        // Keep the HTTP status as the fallback if the API returns no JSON.
       }
+
+      if (!response.ok) {
+        throw new Error(
+          data.message ||
+            `Login failed, Invalid Credentials (${response.status})`,
+        );
+      }
+
+      if (!data.user) {
+        throw new Error("Login failed: user information was not returned.");
+      }
+
+      setUser(data.user);
+      notify({ kind: "success", title: "Signed in successfully" });
+      setWelcomeName(data.user.fullName ?? "");
+      setShowWelcome(true);
+
+      setTimeout(() => {
+        router.push("/Pages/Dashboard");
+      }, 1700);
     } catch (error) {
       notify({
         kind: "error",
@@ -68,9 +74,36 @@ export default function Home() {
 
   return (
     <main className={styles.page}>
+      {showWelcome && (
+        <div className={styles.welcomeOverlay} role="status">
+          <div className={styles.welcomeContent}>
+            <div className={styles.welcomeLogo}>
+              <img src="/favicon.ico" alt="" />
+            </div>
+
+            <h1>HotelFlow</h1>
+
+            <p>
+              {welcomeName
+                ? `Welcome back, ${welcomeName}`
+                : "Preparing your workspace"}
+            </p>
+
+            <div className={styles.progressTrack}>
+              <div className={styles.progressBar} />
+            </div>
+          </div>
+        </div>
+      )}
+
+      <LoginBackground />
+
       <div className={styles.container}>
         <section className={styles.leftPanel}>
           <div className={styles.brand}>
+            <div className={styles.logo}>
+              <img src="/favicon.ico" alt="HotelFlow Logo" />
+            </div>
             <div className={styles.logo}>
               <img src="/favicon.ico" alt="HotelFlow Logo" />
             </div>
@@ -96,6 +129,7 @@ export default function Home() {
             <span>Need help? Contact your admin</span>
           </div>
         </section>
+
         <section className={styles.rightPanel}>
           <div className={styles.loginBox}>
             <h2>Sign In</h2>

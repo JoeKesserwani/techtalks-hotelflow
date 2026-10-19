@@ -103,3 +103,49 @@ h3 {
 a {
   color: inherit;
 }
+
+
+/* =========================================
+   GLOBAL SCROLLBAR — HOTELFLOW
+========================================= */
+
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-input) transparent;
+}
+
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border-input);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: var(--radius-pill);
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-muted);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Keep scroll position changes smooth */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Prevent nested areas from passing scroll to the page */
+.historyContent,
+.detailsModal {
+  overscroll-behavior: contain;
+}
