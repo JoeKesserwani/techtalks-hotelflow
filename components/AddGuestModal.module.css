@@ -114,43 +114,44 @@
   background: var(--color-surface);
 }
 
-.chipAvatar {
+.selectedChip {
   display: flex;
-  flex-shrink: 0;
   align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
+  gap: 10px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-field);
+  padding: 10px 14px;
+  margin-bottom: 18px;
+}
+
+.chipAvatar {
+  width: 30px;
+  height: 30px;
   border-radius: 50%;
   background: var(--color-accent);
   color: var(--color-on-accent);
-  font-size: 0.82rem;
-  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.7rem;
+  font-weight: 600;
+  flex-shrink: 0;
 }
 
 .chipText {
   display: flex;
-  flex: 1;
   flex-direction: column;
-  gap: 4px;
-  min-width: 0;
+  flex: 1;
 }
 
 .chipText strong {
-  overflow: hidden;
-  color: var(--color-text);
-  font-size: 0.88rem;
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  font-size: 0.85rem;
 }
 
 .chipText span {
-  overflow: hidden;
+  font-size: 0.72rem;
   color: var(--color-muted);
-  font-size: 0.76rem;
-  text-overflow: ellipsis;
-  white-space: nowrap;
 }
 
 .previewLabel {

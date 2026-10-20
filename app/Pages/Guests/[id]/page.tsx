@@ -287,8 +287,7 @@ export default function GuestDetailPage() {
                         }
                       />
                     </label>
-                  </div>
-                  <div className={styles.formActions}>
+                    <div className={styles.formActions}>
                     <button
                       type="button"
                       className={styles.cancelButton}
@@ -307,6 +306,8 @@ export default function GuestDetailPage() {
                       {isSaving ? "Saving..." : "Save changes"}
                     </button>
                   </div>
+                  </div>
+                  
                 </form>
               ) : (
                 <div className={styles.detailsGrid}>
