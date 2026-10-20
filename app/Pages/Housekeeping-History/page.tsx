@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import styles from "./HousekeepingHistory.module.css";
@@ -40,13 +40,13 @@ function HousekeepingHistoryPage() {
   const [loading, setLoading] = useState(true);
   const [selected, setSelected] = useState<HistoryItem | null>(null);
 
- 
+
 const [activeTab, setActiveTab] =
   useState<HistoryStatus>("AWAITING_APPROVAL");
 
 const [awaitingPage, setAwaitingPage] = useState(1);
 const [completedPage, setCompletedPage] = useState(1);
-  
+
 
   useEffect(() => {
     async function loadHistory() {
@@ -85,13 +85,13 @@ const [completedPage, setCompletedPage] = useState(1);
                     id: task.id,
 
                     room:
-                      task.room?.roomNumber ?? "—",
+                      task.room?.roomNumber ?? "â€”",
 
                     type:
-                      task.room?.roomType ?? "—",
+                      task.room?.roomType ?? "â€”",
 
                     housekeeper:
-                      task.assignedTo?.fullName ?? "—",
+                      task.assignedTo?.fullName ?? "â€”",
 
                     startedAt: task.startedAt,
                     completedAt: task.completedAt,
@@ -222,7 +222,7 @@ const [completedPage, setCompletedPage] = useState(1);
   </div>
 ) : totalTasks === 0 ? (
   <div className={styles.emptyState}>
-    <div className={styles.emptyIcon}>✓</div>
+    <div className={styles.emptyIcon}>âœ“</div>
     <h2>No housekeeping records yet</h2>
     <p>
       Completed and pending approval housekeeping
@@ -231,7 +231,7 @@ const [completedPage, setCompletedPage] = useState(1);
   </div>
 ) : (
   <>
-    {/* Navigation tabs — outside the scrolling area */}
+    {/* Navigation tabs â€” outside the scrolling area */}
     <nav
       className={styles.historyTabs}
       role="tablist"
@@ -315,7 +315,7 @@ const [completedPage, setCompletedPage] = useState(1);
             onPageChange={setCompletedPage}
             emptyTitle="No completed tasks yet"
             emptyDescription="Approved housekeeping tasks will appear here."
-            emptyIcon="✓"
+            emptyIcon="âœ“"
             variant="completed"
             onView={setSelected}
           />
@@ -366,7 +366,7 @@ function HistoryHeader({
       <div className={styles.role}>
         <div className={styles.roleInfo}>
           <strong>
-            {user?.fullName ?? "—"}
+            {user?.fullName ?? "â€”"}
           </strong>
 
           <span>
@@ -375,7 +375,7 @@ function HistoryHeader({
         </div>
 
         <div className={styles.roleBadge}>
-          {user?.role ?? "—"}
+          {user?.role ?? "â€”"}
         </div>
       </div>
     </header>
@@ -456,7 +456,7 @@ function HistorySection({
                   className={styles.awaitingIcon}
                 />
               ) : (
-                "✓"
+                "âœ“"
               )}
             </span>
 
@@ -606,7 +606,7 @@ function HistoryRow({
 
         <p className={styles.strongText}>
           {formatTime(item.startedAt)}
-          {" — "}
+          {" â€” "}
           {formatTime(item.completedAt)}
         </p>
 
@@ -704,7 +704,7 @@ function HistoryDetails({
             className={styles.closeButton}
             aria-label="Close"
           >
-            ×
+            Ã—
           </button>
         </div>
 
@@ -932,7 +932,7 @@ function getApprovedReviews(
       {
         action: "APPROVED",
         reviewedBy:
-          task.review.reviewedBy ?? "—",
+          task.review.reviewedBy ?? "â€”",
         reviewedAt:
           task.review.reviewedAt ?? "",
         reviewNote:
@@ -953,7 +953,7 @@ function calculateDuration(
   completedAt?: string
 ): string {
   if (!startedAt || !completedAt) {
-    return "—";
+    return "â€”";
   }
 
   const start =
@@ -967,7 +967,7 @@ function calculateDuration(
     Number.isNaN(end) ||
     end < start
   ) {
-    return "—";
+    return "â€”";
   }
 
   const minutes = Math.round(
@@ -998,7 +998,7 @@ function formatTime(
   value?: string
 ): string {
   if (!value) {
-    return "—";
+    return "â€”";
   }
 
   const date = new Date(value);
@@ -1006,7 +1006,7 @@ function formatTime(
   if (
     Number.isNaN(date.getTime())
   ) {
-    return "—";
+    return "â€”";
   }
 
   return date.toLocaleTimeString([], {
@@ -1023,7 +1023,7 @@ function formatDateTime(
   value?: string
 ): string {
   if (!value) {
-    return "—";
+    return "â€”";
   }
 
   const date = new Date(value);
@@ -1031,7 +1031,7 @@ function formatDateTime(
   if (
     Number.isNaN(date.getTime())
   ) {
-    return "—";
+    return "â€”";
   }
 
   return date.toLocaleString([], {
@@ -1115,11 +1115,11 @@ function groupHistoryByDate(
     let label: string;
 
     if (isSameDay(date, today)) {
-      label = `Today · ${formattedDate}`;
+      label = `Today Â· ${formattedDate}`;
     } else if (
       isSameDay(date, yesterday)
     ) {
-      label = `Yesterday · ${formattedDate}`;
+      label = `Yesterday Â· ${formattedDate}`;
     } else {
       label = formattedDate;
     }

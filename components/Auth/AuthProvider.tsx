@@ -34,11 +34,24 @@ type AuthContextValue = {
   loading: boolean;
   setUser: (user: CurrentUser | null) => void;
   hotel: HotelInfo | null;
+  currencySymbol: string;
+  setHotelCurrency: (currency: string) => void;
   hotelLoading: boolean;
   hotelError: string | null;
 };
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+
+function getCurrencySymbol(currency: string | undefined) {
+  const symbols: Record<string, string> = {
+    USD: "$",
+    EUR: "€",
+    GBP: "£",
+    LBP: "ل.ل",
+  };
+
+  return symbols[currency ?? "USD"] ?? currency ?? "$";
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -52,6 +65,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUserState(nextUser);
     setHotel(null);
     setHotelError(null);
+  }, []);
+  const setHotelCurrency = useCallback((currency: string) => {
+    setHotel((currentHotel) =>
+      currentHotel ? { ...currentHotel, currency } : currentHotel,
+    );
   }, []);
 
   useEffect(() => {
@@ -109,6 +127,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         setUser,
         hotel,
+        currencySymbol: getCurrencySymbol(hotel?.currency),
+        setHotelCurrency,
         hotelLoading,
         hotelError,
       }}

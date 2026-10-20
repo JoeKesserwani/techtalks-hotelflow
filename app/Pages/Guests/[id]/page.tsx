@@ -1,10 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useParams } from "next/navigation";
+import { useEffect, useState, type FormEvent } from "react";
+import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import { usePopupMessage } from "@/components/PopupMessage";
 import styles from "./page.module.css";
 import Header from "@/components/Header/Header";
+import Pagination from "@/components/Pagination";
 
 type Room = { roomNumber: string };
 type Reservation = {
@@ -22,6 +24,13 @@ type Guest = {
   passportNumber: string | null;
   note: string | null;
   reservations: Reservation[];
+};
+type GuestForm = {
+  fullName: string;
+  phone: string;
+  email: string;
+  passportNumber: string;
+  note: string;
 };
 
 function initials(name: string) {
@@ -64,12 +73,37 @@ function statusPillClass(
 }
 
 export default function GuestDetailPage() {
+  const { notify } = usePopupMessage();
   const params = useParams();
   const guestId = params?.id as string;
 
   const [guest, setGuest] = useState<Guest | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [form, setForm] = useState<GuestForm>({
+    fullName: "",
+    phone: "",
+    email: "",
+    passportNumber: "",
+    note: "",
+  });
+  const router = useRouter();
+  const [currentPage, setCurrentPage] = useState(1);
+  const reservationsPerPage = 5;
+
+  const totalReservations = guest?.reservations.length ?? 0;
+  const totalPages = Math.ceil(totalReservations / reservationsPerPage);
+
+  const startIndex = (currentPage - 1) * reservationsPerPage;
+
+  const paginatedReservations =
+    guest?.reservations.slice(
+      startIndex,
+      startIndex + reservationsPerPage,
+    ) ?? [];
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!guestId) return;
@@ -96,30 +130,69 @@ export default function GuestDetailPage() {
     loadGuest();
   }, [guestId]);
 
+  function startEditing() {
+    if (!guest) return;
+    setForm({
+      fullName: guest.fullName,
+      phone: guest.phone ?? "",
+      email: guest.email ?? "",
+      passportNumber: guest.passportNumber ?? "",
+      note: guest.note ?? "",
+    });
+    setIsEditing(true);
+  }
+
+  async function saveGuest(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!guest) return;
+
+    setIsSaving(true);
+    try {
+      const response = await fetch(`/api/v1/guests/${guestId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          fullName: form.fullName.trim(),
+          phone: form.phone.trim() || null,
+          email: form.email.trim() || null,
+          passportNumber: form.passportNumber.trim() || null,
+          note: form.note.trim() || null,
+        }),
+      });
+      const result = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        notify({
+          kind: "error",
+          title: "Guest was not updated",
+          description:
+            result?.error ?? result?.message ?? "Could not update guest.",
+        });
+        return;
+      }
+
+      setGuest((current) => (current ? { ...current, ...result } : current));
+      setIsEditing(false);
+      notify({ kind: "success", title: "Guest details updated" });
+    } catch {
+      notify({
+        kind: "error",
+        title: "Guest was not updated",
+        description: "Something went wrong. Please try again.",
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   return (
     <div className={styles.layout}>
       <main className={styles.main}>
-        <Link href="/Pages/Guests" className={styles.backLink}>
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            aria-hidden="true"
-          >
-            <path
-              d="M15 18L9 12L15 6"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-          </svg>
-          Back to guests
-        </Link>
-        {Header({
+      
+{Header({
           title: "Guests",
-          subtitle: `Guests \u2192 `+ `${guest ? guest.fullName : "Loading..."}`,
+          subtitle:
+            `Guests \u2192 ` + `${guest ? guest.fullName : "Loading..."}`,
           userSubtitle: "Checking guests",
         })}
         {isLoading && <p className={styles.stateText}>Loading guest...</p>}
@@ -132,62 +205,181 @@ export default function GuestDetailPage() {
                 <span className={styles.avatar}>
                   {initials(guest.fullName)}
                 </span>
-                <div>
-                  <h3>{guest.fullName}</h3>
-                  <p className={styles.contactLine}>
-                    {guest.phone ?? "No phone on file"} ·{" "}
-                    {guest.email ?? "No email on file"}
-                  </p>
+                <div className={styles.profileIdentity}>
+                  <div>
+                    <h3>{guest.fullName}</h3>
+                    <p className={styles.contactLine}>
+                      {guest.phone ?? "No phone on file"} ·{" "}
+                      {guest.email ?? "No email on file"}
+                    </p>
+                  </div>
                 </div>
+                {!isEditing && (
+                  <button
+                    type="button"
+                    className={styles.editButton}
+                    onClick={startEditing}
+                  >
+                    Edit guest
+                  </button>
+                )}
               </div>
 
-              <div className={styles.detailsGrid}>
-                <div>
-                  <span className={styles.detailLabel}>Passport Number</span>
-                  <span className={styles.detailValue}>
-                    {guest.passportNumber ?? "—"}
-                  </span>
+              {isEditing ? (
+                <form className={styles.editForm} onSubmit={saveGuest}>
+                  <div className={styles.formGrid}>
+                    <label className={styles.formField}>
+                      Full name
+                      <input
+                        autoFocus
+                        required
+                        maxLength={150}
+                        value={form.fullName}
+                        onChange={(event) =>
+                          setForm({ ...form, fullName: event.target.value })
+                        }
+                      />
+                    </label>
+                    <label className={styles.formField}>
+                      Phone
+                      <input
+                        maxLength={30}
+                        value={form.phone}
+                        onChange={(event) =>
+                          setForm({ ...form, phone: event.target.value })
+                        }
+                      />
+                    </label>
+                    <label className={styles.formField}>
+                      Email
+                      <input
+                        type="email"
+                        maxLength={254}
+                        value={form.email}
+                        onChange={(event) =>
+                          setForm({ ...form, email: event.target.value })
+                        }
+                      />
+                    </label>
+                    <label className={styles.formField}>
+                      Passport number
+                      <input
+                        maxLength={60}
+                        value={form.passportNumber}
+                        onChange={(event) =>
+                          setForm({
+                            ...form,
+                            passportNumber: event.target.value,
+                          })
+                        }
+                      />
+                    </label>
+                    <label
+                      className={`${styles.formField} ${styles.formFieldWide}`}
+                    >
+                      Note
+                      <textarea
+                        rows={3}
+                        maxLength={1000}
+                        value={form.note}
+                        onChange={(event) =>
+                          setForm({ ...form, note: event.target.value })
+                        }
+                      />
+                    </label>
+                    <div className={styles.formActions}>
+                    <button
+                      type="button"
+                      className={styles.cancelButton}
+                      disabled={isSaving}
+                      onClick={() => {
+                        setIsEditing(false);
+                      }}
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      className={styles.saveButton}
+                      disabled={isSaving}
+                    >
+                      {isSaving ? "Saving..." : "Save changes"}
+                    </button>
+                  </div>
+                  </div>
+                  
+                </form>
+              ) : (
+                <div className={styles.detailsGrid}>
+                  <div>
+                    <span className={styles.detailLabel}>Passport Number</span>
+                    <span className={styles.detailValue}>
+                      {guest.passportNumber ?? "—"}
+                    </span>
+                  </div>
+                  <div>
+                    <span className={styles.detailLabel}>Note</span>
+                    <span className={styles.detailValue}>
+                      {guest.note ?? "—"}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <span className={styles.detailLabel}>Note</span>
-                  <span className={styles.detailValue}>
-                    {guest.note ?? "—"}
-                  </span>
-                </div>
-              </div>
+              )}
             </section>
 
             <div className={styles.tableCard}>
-              <div className={styles.tableHeaderRow}>
-                <span>Dates</span>
-                <span>Room</span>
-                <span>Nights</span>
-                <span>status</span>
-              </div>
+  <div className={styles.tableHeaderRow}>
+    <span>Dates</span>
+    <span>Room</span>
+    <span>Nights</span>
+    <span>Status</span>
+  </div>
 
-              {guest.reservations.length === 0 && (
-                <div className={styles.stateText}>No reservations yet.</div>
-              )}
+  {totalReservations === 0 ? (
+    <div className={styles.stateText}>
+      No reservations yet.
+    </div>
+  ) : (
+    paginatedReservations.map((stay) => (
+      <div className={styles.tableRow} key={stay.id}>
+        <span>
+          {new Date(stay.checkInDate).toLocaleDateString()} &rarr;{" "}
+          {new Date(stay.checkOutDate).toLocaleDateString()}
+        </span>
 
-              {guest.reservations.map((stay) => (
-                <div className={styles.tableRow} key={stay.id}>
-                  <span>
-                    {new Date(stay.checkInDate).toLocaleDateString()} &rarr;{" "}
-                    {new Date(stay.checkOutDate).toLocaleDateString()}
-                  </span>
-                  <span>
-                    {stay.status === "CHECKED_IN"
-                      ? `Currently in room ${stay.room.roomNumber}`
-                      : `Room ${stay.room.roomNumber}`}
-                  </span>
-                  <span>{nights(stay.checkInDate, stay.checkOutDate)}</span>
-                  <span>
-                    <span className={statusPillClass(stay.status, styles)}>
-                      {statusLabel(stay.status)}
-                    </span>
-                  </span>
-                </div>
-              ))}
+        <span>
+          {stay.status === "CHECKED_IN"
+            ? `Currently in room ${stay.room.roomNumber}`
+            : `Room ${stay.room.roomNumber}`}
+        </span>
+
+        <span>{nights(stay.checkInDate, stay.checkOutDate)}</span>
+
+        <span>
+          <span className={statusPillClass(stay.status, styles)}>
+            {statusLabel(stay.status)}
+          </span>
+        </span>
+      </div>
+    ))
+  )}
+
+  <Pagination
+    currentPage={currentPage}
+    totalPages={totalPages}
+    onPageChange={setCurrentPage}
+    totalItems={totalReservations}
+    itemsPerPage={reservationsPerPage}
+  />
+</div>
+            <div className={styles.backButtonContainer}>
+              <button
+                type="button"
+                className={styles.backButton}
+                onClick={() => router.push("/Pages/Guests")}
+              >
+                Back to guests
+              </button>
             </div>
           </>
         )}

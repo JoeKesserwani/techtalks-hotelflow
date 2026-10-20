@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState } from "react";
 import { useAuth } from "@/components/Auth/AuthProvider";
+import { usePopupMessage } from "@/components/PopupMessage";
 import styles from "./navbar.module.css";
 
 const AdminNavigation = [
@@ -16,6 +17,7 @@ const AdminNavigation = [
   { name: "Staff", href: "/Pages/Staff" },
   { name: "Hotel settings", href: "/Pages/Settings" },
   { name: "Activity log", href: "/Pages/Activity-Log" },
+  { name: "Statistics", href: "/Pages/Statistics" },
 ];
 
 const ManagerNavigation = [
@@ -27,6 +29,7 @@ const ManagerNavigation = [
   { name: "Rooms setup", href: "/Pages/Rooms" },
   { name: "Staff", href: "/Pages/Staff" },
   { name: "Activity log", href: "/Pages/Activity-Log" },
+  { name: "Statistics", href: "/Pages/Statistics" },
 ];
 
 const ReceptionistNavigation = [
@@ -42,7 +45,7 @@ const HousekeepingNavigation = [
   { name: "Dashboard", href: "/Pages/Dashboard" },
   { name: "History", href: "/Pages/Housekeeping-History" },
   { name: "Notifications", href: "/Pages/Housekeeping-Notifications" },
-]
+];
 
 const navigationByRole = {
   ADMIN: AdminNavigation,
@@ -54,22 +57,36 @@ const navigationByRole = {
 export default function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const { notify } = usePopupMessage();
   const { user, setUser, hotel, hotelLoading } = useAuth();
   const [isOpen, setIsOpen] = useState(false);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
-  const [logoutError, setLogoutError] = useState<string | null>(null);
 
   async function handleLogout() {
     setIsLoggingOut(true);
-    setLogoutError(null);
 
-    fetch("/api/v1/auth/logout", {
-      method: "POST",
-      keepalive: true,
-    }).catch(() => undefined);
+    try {
+      const response = await fetch("/api/v1/auth/logout", {
+        method: "POST",
+        keepalive: true,
+      });
 
-    setUser(null);
-    router.replace("/");
+      if (!response.ok) {
+        const payload = await response.json().catch(() => null);
+        throw new Error(payload?.message || payload?.error || "Logout failed.");
+      }
+    } catch (error) {
+      notify({
+        kind: "error",
+        title: "Logout failed",
+        description:
+          error instanceof Error ? error.message : "Please try again.",
+      });
+    } finally {
+      setUser(null);
+      router.replace("/");
+      setIsLoggingOut(false);
+    }
   }
   const navigation =
     user?.role && user.role in navigationByRole
@@ -132,7 +149,6 @@ export default function Sidebar() {
         <div className={styles.userSection}>
           <p>Signed in as</p>
           <strong>{user?.fullName ?? "Loading..."}</strong>
-          {logoutError && <p>{logoutError}</p>}
         </div>
         <button
           type="button"

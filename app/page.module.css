@@ -1,58 +1,176 @@
-.page {
-  min-height: 100vh;
-  background: #faf2e5;
+/* ========================================
+   PAGE & LAYOUT
+======================================== */
 
+.page {
+  position: relative;
+  isolation: isolate;
   display: flex;
   align-items: center;
   justify-content: center;
-
+  min-height: 100vh;
   padding: 30px;
+  overflow: hidden;
+  background: #faf2e5;
 }
 
 .container {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: 1.05fr 1fr;
   width: 100%;
   max-width: 960px;
   min-height: 680px;
-
-  display: grid;
-  grid-template-columns: 1.05fr 1fr;
-
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 24px 70px rgb(31 42 46 / 16%), 0 4px 14px rgb(31 42 46 / 8%);
 }
 
+/* ========================================
+   WELCOME SCREEN (shown after a successful login)
+======================================== */
+
+.welcomeOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  background: radial-gradient(circle at 50% 38%, #566a47 0%, #435238 55%, #36432d 100%);
+  color: #faf2e5;
+  animation: welcomeIn 0.45s ease both;
+}
+
+.welcomeContent {
+  text-align: center;
+  animation: welcomeRise 0.8s 0.1s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+}
+
+.welcomeLogo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  height: 96px;
+  margin: 0 auto 20px;
+  border-radius: 50%;
+  background: #faf2e5d8;
+  animation: logoPop 0.9s 0.15s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+}
+
+.welcomeLogo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.welcomeContent h1 {
+  margin: 0;
+  font-family: Georgia, serif;
+  font-size: 40px;
+  font-weight: 400;
+}
+
+.welcomeContent p {
+  margin: 10px 0 30px;
+  color: rgb(250 242 229 / 78%);
+  font-size: 16px;
+}
+
+.progressTrack {
+  width: 220px;
+  height: 3px;
+  margin: 0 auto;
+  overflow: hidden;
+  border-radius: 3px;
+  background: rgb(250 242 229 / 22%);
+}
+
+.progressBar {
+  width: 100%;
+  height: 100%;
+  background: #ba6035;
+  transform-origin: left;
+  animation: progressFill 1.6s ease-in-out forwards;
+}
+
+@keyframes welcomeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes welcomeRise {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes logoPop {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes progressFill {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+/* ========================================
+   LEFT PANEL
+======================================== */
+
 .leftPanel {
-  background: #435238;
-  color: white;
-
-  padding: 38px 48px 30px;
-
   display: flex;
   flex-direction: column;
+  padding: 38px 48px 30px;
+  background: #435238;
+  color: white;
 }
 
 .brand {
   display: flex;
   flex-direction: column;
 }
+
 .logo {
-  width: 88px;
-  height: 88px;
-  border-radius: 50%;
-  background: #faf2e5d8;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 88px;
+  height: 88px;
   margin-bottom: 16px;
+  border-radius: 50%;
+  background: #faf2e5d8;
 }
+
 .logo img {
+  display: block;
   width: 100%;
   height: 100%;
   object-fit: contain;
-  display: block;
 }
+
 .brand h1 {
   margin: 0;
-
   font-family: Georgia, serif;
   font-size: 39px;
   font-weight: 400;
@@ -60,59 +178,50 @@
 
 .brand p {
   margin: 5px 0;
-
-  color: rgba(255, 255, 255, 0.65);
+  color: rgb(255 255 255 / 65%);
   font-size: 14px;
 }
 
 .quote {
   margin-top: 100px;
-
   text-align: center;
 }
 
 .quote h2 {
   margin: 0;
-
   font-family: Georgia, serif;
   font-size: 31px;
   font-weight: 400;
-
   line-height: 1.3;
 }
 
 .quote p {
   margin-top: 70px;
-
-  color: rgba(255, 255, 255, 0.55);
-
+  color: rgb(255 255 255 / 55%);
   font-family: Georgia, serif;
 }
 
 .footer {
-  margin-top: auto;
-
-  padding-top: 12px;
-
-  border-top: 1px solid rgba(255, 255, 255, 0.25);
-
   display: flex;
   justify-content: space-between;
   gap: 15px;
-
+  margin-top: auto;
+  padding-top: 12px;
+  border-top: 1px solid rgb(255 255 255 / 25%);
+  color: rgb(255 255 255 / 55%);
   font-size: 12px;
-
-  color: rgba(255, 255, 255, 0.55);
 }
 
-.rightPanel {
-  background: #f5f1e8;
+/* ========================================
+   RIGHT PANEL & LOGIN FORM
+======================================== */
 
+.rightPanel {
   display: flex;
   align-items: center;
   justify-content: center;
-
   padding: 40px 30px;
+  background: #f5f1e8;
 }
 
 .loginBox {
@@ -122,17 +231,14 @@
 
 .loginBox h2 {
   margin: 0;
-
+  color: #202020;
   font-family: Georgia, serif;
   font-size: 32px;
   font-weight: 400;
-
-  color: #202020;
 }
 
 .subtitle {
   margin: 10px 0 42px;
-
   color: #777;
   font-size: 13px;
 }
@@ -143,36 +249,26 @@
 
 .formGroup label {
   display: block;
-
   margin-bottom: 10px;
-
+  color: #555;
   font-size: 12px;
   font-weight: 700;
-
-  color: #555;
 }
 
 .formGroup input {
   width: 100%;
   height: 48px;
-
   padding: 0 12px;
-
   border: 1px solid #d8d5cf;
-
-  background: white;
-
-  font-size: 16px;
-
   outline: none;
-
-  transition: 0.2s;
+  background: white;
+  font-size: 16px;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .formGroup input:focus {
   border-color: #ba6035;
-
-  box-shadow: 0 0 0 3px rgba(186, 96, 53, 0.1);
+  box-shadow: 0 0 0 3px rgb(186 96 53 / 10%);
 }
 
 .passwordContainer {
@@ -185,74 +281,64 @@
 
 .showPassword {
   position: absolute;
-
-  right: 10px;
   top: 50%;
-
+  right: 10px;
   transform: translateY(-50%);
-
   border: none;
   background: transparent;
-
   color: #8b603c;
-
   font-size: 13px;
   font-weight: 600;
-
   cursor: pointer;
 }
 
 .error {
   display: block;
-
   margin-top: 6px;
-
   color: #b94040;
-
   font-size: 12px;
+}
+
+.loginError {
+  margin: -8px 0 18px;
+  padding: 12px 14px;
+  border: 1px solid #e2a3a3;
+  border-radius: 4px;
+  background: #fff1f1;
+  color: #b94040;
+  font-size: 13px;
+  line-height: 1.45;
 }
 
 .options {
   display: flex;
-
-  justify-content: space-between;
   align-items: center;
-
+  justify-content: space-between;
   gap: 15px;
-
   margin-bottom: 18px;
 }
 
 .remember {
   display: flex;
-
   align-items: center;
-
   gap: 8px;
-
-  font-size: 14px;
-
   color: #444;
-
+  font-size: 14px;
   cursor: pointer;
 }
 
 .remember input {
   width: 18px;
   height: 18px;
-
   cursor: pointer;
 }
 
 .forgotPassword {
   border: none;
   background: transparent;
-
   color: #8b603c;
-
   font-size: 14px;
   font-weight: 600;
-
   cursor: pointer;
 }
 
@@ -261,22 +347,19 @@
 }
 
 .signInButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
   width: 100%;
   height: 50px;
-
   border: none;
-
   background: #ba6035;
   color: white;
-
   font-size: 19px;
   font-weight: 600;
-
   cursor: pointer;
-
-  transition:
-    transform 0.2s,
-    background 0.2s;
+  transition: transform 0.2s, background 0.2s;
 }
 
 .signInButton:hover {
@@ -289,19 +372,34 @@
 
 .signInButton:disabled {
   opacity: 0.7;
-
   cursor: not-allowed;
+}
+
+.spinner {
+  width: 19px;
+  height: 19px;
+  border: 2px solid rgb(255 255 255 / 45%);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: loginSpin 0.7s linear infinite;
+}
+
+@keyframes loginSpin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .redirectText {
   margin-top: 18px;
-
-  text-align: center;
-
-  font-size: 13px;
-
   color: #777;
+  font-size: 13px;
+  text-align: center;
 }
+
+/* ========================================
+   TABLET RESPONSIVENESS
+======================================== */
 
 @media (max-width: 850px) {
   .page {
@@ -310,7 +408,6 @@
 
   .container {
     grid-template-columns: 1fr;
-
     max-width: 520px;
   }
 
@@ -327,42 +424,37 @@
   }
 }
 
-@media (max-width: 550px) {
-  .page {
-    padding: 0;
+/* ========================================
+   MOBILE RESPONSIVENESS
+======================================== */
 
+@media (max-width: 600px) {
+  .page {
     align-items: stretch;
+    padding: 0;
   }
 
   .container {
     min-height: 100vh;
-
     box-shadow: none;
   }
 
   .leftPanel {
     min-height: auto;
-
     padding: 30px 25px;
   }
 
   .brand {
     flex-direction: row;
-
     align-items: center;
-
     gap: 15px;
   }
 
   .logo {
+    flex-shrink: 0;
     width: 52px;
     height: 52px;
-
     margin: 0;
-
-    flex-shrink: 0;
-
-    font-size: 25px;
   }
 
   .brand h1 {
@@ -379,13 +471,11 @@
 
   .quote h2 {
     font-size: 23px;
-
     line-height: 1.35;
   }
 
   .quote p {
     margin-top: 25px;
-
     font-size: 14px;
   }
 
@@ -393,12 +483,9 @@
     display: none;
   }
 
-  /* LOGIN */
-
   .rightPanel {
-    padding: 40px 25px;
-
     align-items: flex-start;
+    padding: 40px 25px;
   }
 
   .loginBox h2 {
@@ -407,7 +494,6 @@
 
   .subtitle {
     margin-bottom: 35px;
-
     line-height: 1.5;
   }
 
@@ -417,15 +503,12 @@
 
   .formGroup input {
     height: 52px;
-
     font-size: 16px;
   }
 
   .options {
     flex-direction: column;
-
     align-items: flex-start;
-
     gap: 18px;
   }
 
@@ -435,7 +518,6 @@
 
   .signInButton {
     height: 54px;
-
     font-size: 18px;
   }
 }
@@ -458,35 +540,21 @@
   }
 }
 
-.loginError {
-  margin: -8px 0 18px;
-  padding: 12px 14px;
-  border: 1px solid #e2a3a3;
-  border-radius: 4px;
-  background: #fff1f1;
-  color: #b94040;
-  font-size: 13px;
-  line-height: 1.45;
-}
+/* ========================================
+   ACCESSIBILITY
+======================================== */
 
-.signInButton {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-}
+@media (prefers-reduced-motion: reduce) {
+  .spinner,
+  .welcomeOverlay,
+  .welcomeContent,
+  .welcomeLogo {
+    animation: none !important;
+  }
 
-.spinner {
-  width: 19px;
-  height: 19px;
-  border: 2px solid rgba(255, 255, 255, 0.45);
-  border-top-color: #ffffff;
-  border-radius: 50%;
-  animation: loginSpin 0.7s linear infinite;
-}
-
-@keyframes loginSpin {
-  to {
-    transform: rotate(360deg);
+  /* keep the bar full instead of animating it */
+  .progressBar {
+    animation: none !important;
+    transform: scaleX(1);
   }
 }

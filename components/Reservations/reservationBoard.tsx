@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import s from "./reservationBoard.module.css";
 import {
   api,
@@ -8,9 +8,9 @@ import {
   dayOnly,
   formatDate,
   guestName,
-  money,
   nightsBetween,
   payment,
+  paymentSummary,
   roomLabel,
   type Reservation,
   type Room,
@@ -21,15 +21,19 @@ import {
   EditReservationDialog,
 } from "../../app/Pages/Reservations/edit-dialogs";
 import AssignTaskModal from "../Housekeeping/AssignTaskModal";
+import type { ReservationFeedback } from "@/components/PopupMessage";
+
+import { useAuth } from "../Auth/AuthProvider";
 
 const PAGE_SIZE = 4;
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? "" : "s"}`;
 
 type ColumnKey = "arriving" | "departing" | "staying";
-const NO_PAGES: Record<ColumnKey, number> = {
-  arriving: 0,
-  departing: 0,
-  staying: 0,
+type ColumnPage = { signature: string; page: number };
+const NO_PAGES: Record<ColumnKey, ColumnPage> = {
+  arriving: { signature: "", page: 0 },
+  departing: { signature: "", page: 0 },
+  staying: { signature: "", page: 0 },
 };
 
 export interface ReservationsBoardProps {
@@ -47,8 +51,8 @@ export interface ReservationsBoardProps {
   onRemove: (id: string) => void;
   /** Refetch reservations and rooms (room statuses change after most actions). */
   onReload: () => void;
-  /** Show a message in the owner's toast. */
-  onToast: (message: string) => void;
+  /** Show the outcome of a reservation action in the owner's popup. */
+  onToast: (feedback: ReservationFeedback) => void;
 }
 
 /** Arriving / Departing / Staying columns with check-in, check-out, payment, edit and cancel actions. */
@@ -63,6 +67,7 @@ export function ReservationsBoard({
   onReload,
   onToast,
 }: ReservationsBoardProps) {
+  const { currencySymbol } = useAuth();
   const [busy, setBusy] = useState<string | null>(null);
   const [pages, setPages] = useState(NO_PAGES);
   const [confirm, setConfirm] = useState<Reservation | null>(null);
@@ -73,8 +78,6 @@ export function ReservationsBoard({
   );
   const [markPaidAfterTask, setMarkPaidAfterTask] = useState(false);
 
-  useEffect(() => setPages(NO_PAGES), [date]);
-
   const day = useMemo(
     () => bucketDay(items ?? [], date, today),
     [items, date, today],
@@ -82,18 +85,31 @@ export function ReservationsBoard({
   const isToday = date === today;
 
   /* Pagination: clamp the page when a list shrinks (after a check-out or a cancellation). */
-  const pageOf = (key: ColumnKey, total: number) =>
-    Math.min(pages[key], Math.max(0, Math.ceil(total / PAGE_SIZE) - 1));
-  const slice = <T,>(key: ColumnKey, list: T[]) => {
-    const p = pageOf(key, list.length);
+  const signatureOf = (list: Reservation[]) =>
+    JSON.stringify([date, list.map((reservation) => reservation.id)]);
+  const pageOf = (key: ColumnKey, list: Reservation[]) => {
+    const storedPage =
+      pages[key].signature === signatureOf(list) ? pages[key].page : 0;
+    return Math.min(
+      storedPage,
+      Math.max(0, Math.ceil(list.length / PAGE_SIZE) - 1),
+    );
+  };
+  const slice = (key: ColumnKey, list: Reservation[]) => {
+    const p = pageOf(key, list);
     return list.slice(p * PAGE_SIZE, p * PAGE_SIZE + PAGE_SIZE);
   };
-  const pager = (key: ColumnKey, total: number) => (
+  const pager = (key: ColumnKey, list: Reservation[]) => (
     <Pager
-      page={pageOf(key, total)}
-      total={total}
+      page={pageOf(key, list)}
+      total={list.length}
       label={key}
-      onPage={(p) => setPages((prev) => ({ ...prev, [key]: p }))}
+      onPage={(page) =>
+        setPages((prev) => ({
+          ...prev,
+          [key]: { signature: signatureOf(list), page },
+        }))
+      }
     />
   );
 
@@ -101,38 +117,57 @@ export function ReservationsBoard({
     r: Reservation,
     path: string,
     init: RequestInit,
-    message: string,
+    successTitle: string,
+    failureTitle: string,
   ) {
     setBusy(r.id);
     try {
       onUpdate(await api<Reservation>(`/reservations/${r.id}/${path}`, init));
-      onToast(message);
+      onToast({ status: "success", title: successTitle });
       onReload(); // room statuses changed too (occupied / needs cleaning): keep the board truthful
       return true;
     } catch (e) {
-      onToast((e as Error).message);
+      onToast({
+        status: "error",
+        title: failureTitle,
+        message: e instanceof Error ? e.message : "Please try again.",
+      });
       return false;
     } finally {
       setBusy(null);
     }
   }
   const checkIn = (r: Reservation) =>
-    run(r, "check-in", { method: "POST" }, `${guestName(r)} checked in.`);
+    run(
+      r,
+      "check-in",
+      { method: "POST" },
+      `${guestName(r)} checked in`,
+      "Check-in failed",
+    );
   const checkOut = (r: Reservation) =>
-    run(r, "check-out", { method: "POST" }, `${guestName(r)} checked out.`);
+    run(
+      r,
+      "check-out",
+      { method: "POST" },
+      `${guestName(r)} checked out`,
+      "Check-out failed",
+    );
   const checkOutAfterTask = async (r: Reservation) => {
     if (markPaidAfterTask && !(await markPaid(r))) {
       throw new Error(
-        "The housekeeping task was created, but payment could not be updated. Retry to continue check-out.",
+        "Payment could not be updated, so check-out and task assignment were stopped.",
       );
     }
 
     const checkedOut = await checkOut(r);
     if (!checkedOut) {
       throw new Error(
-        "The housekeeping task was created, but check-out failed. Retry check-out or close this dialog.",
+        "Check-out failed, so no housekeeping task was created.",
       );
     }
+  };
+  const finishCheckoutTaskFlow = () => {
     setTaskReservation(null);
     setMarkPaidAfterTask(false);
   };
@@ -149,7 +184,8 @@ export function ReservationsBoard({
       r,
       "payment",
       { method: "PATCH", body: JSON.stringify({ paymentStatus: "PAID" }) },
-      `${guestName(r)} marked as paid.`,
+      `${guestName(r)} marked as paid`,
+      "Payment update failed",
     );
 
   async function cancelReservation(r: Reservation, reason: string) {
@@ -160,9 +196,16 @@ export function ReservationsBoard({
         body: JSON.stringify({ reason }),
       });
       onRemove(r.id);
-      onToast(`Reservation for ${guestName(r)} cancelled.`);
+      onToast({
+        status: "success",
+        title: `Reservation for ${guestName(r)} cancelled`,
+      });
     } catch (e) {
-      onToast((e as Error).message);
+      onToast({
+        status: "error",
+        title: "Cancellation failed",
+        message: e instanceof Error ? e.message : "Please try again.",
+      });
     } finally {
       setBusy(null);
       setCancelling(null);
@@ -231,14 +274,14 @@ export function ReservationsBoard({
           tone={s.slate}
           loading={loading}
           empty="No arrivals on this date."
-          footer={pager("arriving", day.arriving.length)}
+          footer={pager("arriving", day.arriving)}
         >
           {slice("arriving", day.arriving).map((r) => (
             <Row
               key={r.id}
               name={guestName(r)}
               extras={links(r)}
-              meta={`Room ${roomLabel(r)} · ${plural(nightsBetween(r.checkInDate, r.checkOutDate), "night")} · ${payment(r).label}`}
+              meta={`Room ${roomLabel(r)} · ${plural(nightsBetween(r.checkInDate, r.checkOutDate), "night")} · ${paymentSummary(r)}`}
             >
               {paidBtn(r)}
               {r.status === "BOOKED" ? (
@@ -264,16 +307,15 @@ export function ReservationsBoard({
           tone={s.clay}
           loading={loading}
           empty="No departures on this date."
-          footer={pager("departing", day.departing.length)}
+          footer={pager("departing", day.departing)}
         >
           {slice("departing", day.departing).map((r) => {
-            const p = payment(r);
             return (
               <Row
                 key={r.id}
                 name={guestName(r)}
                 extras={links(r)}
-                meta={`Room ${roomLabel(r)} · ${p.kind === "unpaid" ? `Unpaid ${money(r.totalPrice)}` : p.label}`}
+                meta={`Room ${roomLabel(r)} · ${paymentSummary(r)}`}
               >
                 {paidBtn(r)}
                 {r.status === "CHECKED_IN" && isToday ? (
@@ -295,17 +337,16 @@ export function ReservationsBoard({
           loading={loading}
           wide
           empty="No in-house guests."
-          footer={pager("staying", day.staying.length)}
+          footer={pager("staying", day.staying)}
         >
           {slice("staying", day.staying).map((r) => (
             <Row
               key={r.id}
               name={guestName(r)}
               extras={links(r)}
-              meta={`Room ${roomLabel(r)} · until ${formatDate(dayOnly(r.checkOutDate), { month: "short", day: "numeric" })}`}
+              meta={`Room ${roomLabel(r)} · until ${formatDate(dayOnly(r.checkOutDate), { month: "short", day: "numeric" })} · ${paymentSummary(r)}`}
             >
               {paidBtn(r)}
-              <span className={s.note}>{payment(r).label}</span>
             </Row>
           ))}
         </Column>
@@ -319,12 +360,21 @@ export function ReservationsBoard({
           reservations={items ?? []}
           onClose={() => setEditing(null)}
           onConflict={onReload}
+          onFailure={(message) =>
+            onToast({
+              status: "error",
+              title: "Reservation update failed",
+              message,
+            })
+          }
           onSaved={(u) => {
             onUpdate(u);
             setEditing(null);
-            onToast(
-              `Reservation updated for ${guestName(u)} · Room ${roomLabel(u)}.`,
-            );
+            onToast({
+              status: "success",
+              title: `Reservation updated for ${guestName(u)}`,
+              message: `Room ${roomLabel(u)}`,
+            });
             onReload(); // a room move changes two rooms' statuses
           }}
         />
@@ -366,7 +416,8 @@ export function ReservationsBoard({
             setTaskReservation(null);
             setMarkPaidAfterTask(false);
           }}
-          onCreated={() => checkOutAfterTask(taskReservation)}
+          onBeforeCreate={() => checkOutAfterTask(taskReservation)}
+          onCreated={finishCheckoutTaskFlow}
         />
       )}
     </>
