@@ -104,6 +104,7 @@ export default function Home() {
             <div className={styles.logo}>
               <img src="/favicon.ico" alt="HotelFlow Logo" />
             </div>
+           
             
 
             <h1>HotelFlow</h1>

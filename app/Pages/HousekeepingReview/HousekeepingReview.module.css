@@ -656,7 +656,7 @@
 
 @media (max-width: 768px) {
   .container {
-    padding: 80px 24px 32px;
+    padding: 40px 24px 32px;
   }
 }
 
@@ -666,7 +666,7 @@
   }
 
   .container {
-    padding: 80px 16px 24px;
+    padding: 30px 16px 24px;
   }
 
   .header {

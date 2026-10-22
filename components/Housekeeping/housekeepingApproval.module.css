@@ -431,7 +431,7 @@
   -webkit-appearance: none !important;
   border: 1px solid #4f7549 !important;
   border-radius: 6px !important;
-  background: #4f7549 !important;
+  background: var(--color-primary) !important;
   background-color: #4f7549 !important;
   color: #ffffff !important;
   font-family: var(--hk-font-body) !important;

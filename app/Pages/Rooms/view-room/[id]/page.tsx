@@ -33,6 +33,17 @@ type Room = {
     checkOutDate: string;
     status: string;
   } | null;
+ 
+activeHousekeepingTask?: {
+  id: string;
+  status: "PENDING" | "IN_PROGRESS" | "IN_REVIEW";
+  assignedToUserId: string;
+  assignedTo: {
+    id: string;
+    fullName: string;
+  };
+} | null;
+
 };/* -------------------------------------------------------------------------- */
 /* Room Status                                                                */
 /* -------------------------------------------------------------------------- */
@@ -116,7 +127,16 @@ const ViewRoomPage = () => {
   function closeTaskModal() {
     setIsTaskModalOpen(false);
   }
+async function reloadRoom() {
+  const response = await fetch(`/api/v1/rooms/${roomId}`);
+  const data = await response.json();
 
+  if (!response.ok) {
+    throw new Error(data.error ?? "Unable to reload room.");
+  }
+
+  setRoom(data as Room);
+}
   /* ------------------------------------------------------------------------ */
   /* Load Room                                                                */
   /* ------------------------------------------------------------------------ */
@@ -367,12 +387,18 @@ const ViewRoomPage = () => {
 
         <div className={styles.actions}>
           <button
-            type="button"
-            className={styles.assignTask}
-            onClick={openTaskModal}
-          >
-            Assign cleaning task
-          </button>
+  type="button"
+  className={styles.assignTask}
+  onClick={openTaskModal}
+>{room.activeHousekeepingTask && (
+  <p>
+    Assigned to: {room.activeHousekeepingTask.assignedTo.fullName}
+  </p>
+)}
+  {room.activeHousekeepingTask
+    ? "Reassign cleaning task"
+    : "Assign cleaning task"}
+</button>
           <button
             type="button"
             className={styles.backAction}
@@ -386,13 +412,23 @@ const ViewRoomPage = () => {
       </main>
 
       {room && (
-        <AssignTaskModal
-          isOpen={isTaskModalOpen}
-          roomId={room.id}
-          roomNumber={room.roomNumber}
-          onClose={closeTaskModal}
-        />
-      )}
+  <AssignTaskModal
+    isOpen={isTaskModalOpen}
+    roomId={room.id}
+    roomNumber={room.roomNumber}
+    taskId={
+      room.activeHousekeepingTask?.status === "PENDING" ||
+      room.activeHousekeepingTask?.status === "IN_PROGRESS"
+        ? room.activeHousekeepingTask.id
+        : undefined
+    }
+    currentHousekeeperId={
+      room.activeHousekeepingTask?.assignedToUserId
+    }
+    onClose={closeTaskModal}
+    onCreated={reloadRoom}
+  />
+)}
     </div>
   );
 };

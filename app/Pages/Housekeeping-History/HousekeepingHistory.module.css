@@ -1273,7 +1273,7 @@
     height: 100dvh;
     min-height: 0;
     overflow: hidden;
-    padding: 80px 24px 32px;
+    padding: 40px 24px 32px;
   }
 
   .historyContent {
