@@ -163,9 +163,9 @@ export default function AddGuestModal({
         <div className={styles.selectedChip}>
           <span className={styles.chipAvatar}>{initials}</span>
           <div className={styles.chipText}>
-            <strong>{fullName.trim() || "Guest name"}</strong>
+            <strong>{fullName || "Guest's name"}</strong>
             <span>
-              {phone.trim() || "Phone number not added"}
+              {phone || "Phone number"} - {passportNumber || "ID"}
             </span>
           </div>
         </div>
@@ -235,46 +235,49 @@ export default function AddGuestModal({
             />
           </div>
 
-        <label className={styles.label} htmlFor="note">
-          Note
-        </label>
-        <textarea
-          id="note"
-          className={styles.textarea}
-          placeholder="Notes"
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          maxLength={250}
-        />
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="note">
+              Note
+            </label>
+            <textarea
+              id="note"
+              className={styles.textarea}
+              placeholder="Notes"
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              maxLength={250}
+            />
+          </div>
 
-        <div className={styles.actions}>
-          <button
-            type="button"
-            className={styles.cancelButton}
-            onClick={onClose}
-            disabled={isSaving}
-          >
-            Cancel
-          </button>
+          <div className={styles.actions}>
+            <button
+              type="button"
+              className={styles.cancelButton}
+              onClick={onClose}
+              disabled={isSaving}
+            >
+              Cancel
+            </button>
 
-          <button
-            type="button"
-            className={styles.saveButton}
-            onClick={handleSave}
-            disabled={isSaving || !fullName.trim()}
-          >
-            {isSaving ? (
-              <>
-                <span className={styles.spinner} aria-hidden="true" />
-                Saving...
-              </>
-            ) : (
-              "Save guest"
-            )}
-          </button>
+            <button
+              type="button"
+              className={styles.saveButton}
+              onClick={handleSave}
+              disabled={isSaving || !fullName.trim()}
+            >
+              {isSaving ? (
+                <>
+                  <span className={styles.spinner} aria-hidden="true" />
+                  Saving...
+                </>
+              ) : (
+                "Save guest"
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>,
-    document.body,
+    document.body
   );
 }
