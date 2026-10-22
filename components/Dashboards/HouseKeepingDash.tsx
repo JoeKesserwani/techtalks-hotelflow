@@ -4,7 +4,7 @@ import React from "react";
 import { usePopupMessage } from "@/components/PopupMessage";
 import styles from "./HouseKeepingDash.module.css";
 import { useAuth } from "../Auth/AuthProvider";
-
+import Header from "../Header/Header";
 type TaskStatus = "PENDING" | "IN_PROGRESS" | "IN_REVIEW" | "DONE";
 
 interface HousekeepingTask {
@@ -319,8 +319,30 @@ export default function HouseKeepingDash() {
   ).length;
   const completedTasks = tasks.filter((task) => task.status === "DONE").length;
   const activeTasks = waitingTasks + cleaningTasks;
-  const currentCleaningTask = tasks.find((task) => task.status === "IN_PROGRESS") ?? null;
-  const visibleTasks = tasks.filter((task) => task.status === "PENDING" || task.status === "IN_PROGRESS");
+  const currentCleaningTask =
+  tasks.find((task) => task.status === "IN_PROGRESS") ?? null;
+
+const visibleTasks = tasks
+  .filter(
+    (task) =>
+      task.status === "PENDING" || task.status === "IN_PROGRESS",
+  )
+  .sort((a, b) => {
+    // Always show the room currently being cleaned first.
+    if (a.status === "IN_PROGRESS" && b.status !== "IN_PROGRESS") {
+      return -1;
+    }
+
+    if (a.status !== "IN_PROGRESS" && b.status === "IN_PROGRESS") {
+      return 1;
+    }
+
+    // For tasks with the same status, show the oldest first.
+    return (
+      new Date(a.createdAt).getTime() -
+      new Date(b.createdAt).getTime()
+    );
+  });
 
   const displayDate = new Date().toLocaleDateString("en-US", {
     weekday: "long",
@@ -345,22 +367,11 @@ export default function HouseKeepingDash() {
   return (
     <div className={styles.dashboard}>
       <main className={styles.main}>
-        <header className={styles.header}>
-          <div className={styles.headerCopy}>
-            <p className={styles.eyebrow}>HOTELFLOW · HOUSEKEEPING</p>
-            <h1 className={styles.title}>Hello, {user?.fullName || "Housekeeping team"}!</h1>
-            <p className={styles.date} suppressHydrationWarning>{displayDate}</p>
-          </div>
-          <div className={styles.user}>
-            <span className={styles.userAvatar} aria-hidden="true">
-              {(user?.fullName || "H").trim().charAt(0).toUpperCase()}
-            </span>
-            <div className={styles.userDetails}>
-              <span className={styles.userName}>{user?.fullName || "Housekeeping"}</span>
-              <span className={styles.roleBadge}>{user?.role || "HOUSEKEEPING"}</span>
-            </div>
-          </div>
-        </header>
+       <Header
+    title={`Hello, ${user?.fullName || "Housekeeping team"}!`}
+    subtitle={displayDate}
+    userSubtitle="Housekeeper"
+  />
 
         {error && (
           <div className={styles.error} role="alert">

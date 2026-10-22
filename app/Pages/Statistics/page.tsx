@@ -1,6 +1,7 @@
 "use client";
 import React, { useCallback, useEffect, useState } from "react";
 import { useAuth } from "@/components/Auth/AuthProvider";
+import Header from "@/components/Header/Header";
 import {
   ResponsiveContainer,
   CartesianGrid,
@@ -207,25 +208,24 @@ export default function StatisticsPage() {
   return (
     <div className={styles.page}>
       <main className={styles.content}>
-        <header className={styles.header}>
-          <div>
-            <p className={styles.eyebrow}>HOTEL PERFORMANCE</p>
-            <h1>Statistics</h1>
-            <p className={styles.subtitle}>
-              Track occupancy, reservations, reservation value, and
-              housekeeping performance.
-            </p>
-          </div>
+        <Header
+  title="Statistics"
+  subtitle="Track occupancy, reservations, reservation value, and housekeeping performance."
+  userSubtitle="Hotel performance overview"
+/>
 
-          <button
-            className={styles.refreshButton}
-            onClick={() => void loadStatistics()}
-            disabled={loading}
-            type="button"
-          >
-            {loading ? "Refreshing..." : "↻ Refresh"}
-          </button>
-        </header>
+<div className={styles.toolbar}>
+  <span className={styles.eyebrow}>HOTEL PERFORMANCE</span>
+
+  <button
+    className={styles.refreshButton}
+    onClick={() => void loadStatistics()}
+    disabled={loading}
+    type="button"
+  >
+    {loading ? "Refreshing..." : "↻ Refresh"}
+  </button>
+</div>
 
         <form className={styles.filters} onSubmit={handleApplyDates}>
           <div className={styles.dateField}>

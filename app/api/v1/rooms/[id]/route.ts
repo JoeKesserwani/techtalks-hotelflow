@@ -4,6 +4,7 @@ import { updateRoomStatusSchema, updateRoomSchema } from '../../../../../lib/val
 import { writeAuditLog } from '../../../../../lib/services/audit.service';
 import { ApiError, handleRouteError } from '../../../../../lib/api/errors';
 
+
 export async function GET(
   req: Request,
   { params }: { params: Promise<{ id: string }> }
@@ -42,6 +43,28 @@ export async function GET(
           },
           take: 1,
         },
+        housekeepingTasks: {
+          where: {
+            status: {
+              in: ["PENDING", "IN_PROGRESS", "IN_REVIEW"],
+            },
+          },
+          orderBy: {
+            createdAt: "desc",
+          },
+          take: 1,
+          select: {
+            id: true,
+            status: true,
+            assignedToUserId: true,
+            assignedTo: {
+              select: {
+                id: true,
+                fullName: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -50,9 +73,16 @@ export async function GET(
     }
 
     const currentReservation = room.reservations[0] ?? null;
+    const activeHousekeepingTask = room.housekeepingTasks[0] ?? null;
+
+    const {
+      reservations,
+      housekeepingTasks,
+      ...roomDetails
+    } = room;
 
     return Response.json({
-      ...room,
+      ...roomDetails,
       currentGuest: currentReservation?.guest ?? null,
       currentReservation: currentReservation
         ? {
@@ -62,12 +92,13 @@ export async function GET(
             status: currentReservation.status,
           }
         : null,
-      reservations: undefined,
+      activeHousekeepingTask,
     });
   } catch (err) {
     return handleRouteError(err);
   }
 }
+
 
 export async function PATCH(req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {

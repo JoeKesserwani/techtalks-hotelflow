@@ -11,20 +11,26 @@ type Housekeeper = {
   isActive: boolean | 0 | 1;
 };
 
+
 type AssignTaskModalProps = {
   isOpen: boolean;
   roomId: string;
   roomNumber: string;
+  taskId?: string;
+  currentHousekeeperId?: string;
   onClose: () => void;
   onBeforeCreate?: () => void | Promise<void>;
   onCreated?: () => void | Promise<void>;
   disableCloseButtons?: boolean;
 };
 
+
 export default function AssignTaskModal({
   isOpen,
   roomId,
   roomNumber,
+  taskId,
+  currentHousekeeperId,
   onClose,
   onBeforeCreate,
   onCreated,
@@ -63,7 +69,13 @@ export default function AssignTaskModal({
 
         if (!cancelled) {
           setHousekeepers(availableHousekeepers);
-          setSelectedHousekeeperId(availableHousekeepers[0]?.id ?? "");
+          setSelectedHousekeeperId(
+  availableHousekeepers.some(
+    (housekeeper) => housekeeper.id === currentHousekeeperId,
+  )
+    ? currentHousekeeperId!
+    : availableHousekeepers[0]?.id ?? "",
+);
         }
       } catch (error) {
         if (!cancelled) {
@@ -86,7 +98,7 @@ export default function AssignTaskModal({
     return () => {
       cancelled = true;
     };
-  }, [housekeepers.length, isOpen]);
+  }, [housekeepers.length, isOpen, currentHousekeeperId]);
 
   function handleClose() {
     if (disableCloseButtons || isSavingTask) return;
@@ -94,52 +106,91 @@ export default function AssignTaskModal({
     onClose();
   }
 
-  async function createTask() {
-    if (!selectedHousekeeperId) {
-      setTaskError("Select a housekeeper before assigning the task.");
-      return;
-    }
-
-    setIsSavingTask(true);
-    setTaskError(null);
-
-    let checkoutComplete = false;
-    try {
-      await onBeforeCreate?.();
-      checkoutComplete = true;
-
-      const response = await fetch("/api/v1/housekeeping/tasks", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          roomId,
-          assignedToUserId: selectedHousekeeperId,
-          notes: taskComment.trim() || undefined,
-        }),
-      });
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error ?? "Unable to create the task.");
-      }
-
-      setTaskComment("");
-      await onCreated?.();
-      notify({ kind: "success", title: "Cleaning task assigned" });
-    } catch (error) {
-      notify({
-        kind: "error",
-        title:
-          onBeforeCreate && !checkoutComplete
-            ? "Check-out failed"
-            : "Cleaning task was not assigned",
-        description:
-          error instanceof Error ? error.message : "Unable to create the task.",
-      });
-    } finally {
-      setIsSavingTask(false);
-    }
+ 
+async function createTask() {
+  if (!selectedHousekeeperId) {
+    setTaskError("Select a housekeeper before assigning the task.");
+    return;
   }
+
+  if (taskId && selectedHousekeeperId === currentHousekeeperId) {
+    setTaskError("Select a different housekeeper to reassign this task.");
+    return;
+  }
+
+  setIsSavingTask(true);
+  setTaskError(null);
+
+  let checkoutComplete = false;
+
+  try {
+    // Only perform checkout when creating a new task.
+    if (!taskId) {
+      await onBeforeCreate?.();
+    }
+
+    checkoutComplete = true;
+
+    const isReassignment = Boolean(taskId);
+
+    const response = await fetch("/api/v1/housekeeping/tasks", {
+      method: isReassignment ? "PATCH" : "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(
+        isReassignment
+          ? {
+              taskId,
+              assignedToUserId: selectedHousekeeperId,
+            }
+          : {
+              roomId,
+              assignedToUserId: selectedHousekeeperId,
+              notes: taskComment.trim() || undefined,
+            },
+      ),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(
+        data.error ??
+          (isReassignment
+            ? "Unable to reassign the task."
+            : "Unable to create the task."),
+      );
+    }
+
+    setTaskComment("");
+    await onCreated?.();
+
+    notify({
+      kind: "success",
+      title: isReassignment
+        ? "Housekeeping task reassigned"
+        : "Cleaning task assigned",
+    });
+
+    onClose();
+  } catch (error) {
+    notify({
+      kind: "error",
+      title:
+        !taskId && onBeforeCreate && !checkoutComplete
+          ? "Check-out failed"
+          : taskId
+            ? "Task was not reassigned"
+            : "Cleaning task was not assigned",
+      description:
+        error instanceof Error
+          ? error.message
+          : "Something went wrong.",
+    });
+  } finally {
+    setIsSavingTask(false);
+  }
+}
+
 
   if (!isOpen) return null;
 
@@ -154,11 +205,14 @@ export default function AssignTaskModal({
         <div className={styles.modalHeader}>
           <div>
             <p className={styles.cardLabel}>HOUSEKEEPING</p>
-            <h2 id={`${id}-title`}>Assign cleaning task</h2>
+            <h2 id={`${id}-title`}>
+  {taskId ? "Reassign cleaning task" : "Assign cleaning task"}
+</h2>
             <p className={styles.modalSubtitle}>
-              Room {roomNumber} will be added to the selected housekeeper&apos;s
-              queue.
-            </p>
+  {taskId
+    ? `Change the housekeeper assigned to Room ${roomNumber}.`
+    : `Room ${roomNumber} will be added to the selected housekeeper's queue.`}
+</p>
           </div>
           <button
             type="button"
@@ -229,7 +283,11 @@ export default function AssignTaskModal({
               housekeepers.length === 0
             }
           >
-            {isSavingTask ? "Processing..." : "Assign task"}
+            {isSavingTask
+  ? "Processing..."
+  : taskId
+    ? "Reassign task"
+    : "Assign task"}
           </button>
         </div>
       </section>

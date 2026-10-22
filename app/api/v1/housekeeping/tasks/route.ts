@@ -182,3 +182,166 @@ export async function POST(req: Request) {
     return handleRouteError(err);
   }
 }
+
+export async function PATCH(req: Request) {
+  try {
+    const user = await requireAuth({
+      roles: ["ADMIN", "MANAGER", "RECEPTIONIST"],
+    });
+
+    if (!user) {
+      throw new ApiError("Unauthorized", 401);
+    }
+
+    const body = await req.json();
+
+    const taskId =
+      typeof body.taskId === "string" ? body.taskId.trim() : "";
+
+    const assignedToUserId =
+      typeof body.assignedToUserId === "string"
+        ? body.assignedToUserId.trim()
+        : "";
+
+    if (!taskId || !assignedToUserId) {
+      throw new ApiError(
+        "taskId and assignedToUserId are required",
+        400,
+      );
+    }
+
+    const task = await prisma.housekeepingTask.findFirst({
+      where: {
+        id: taskId,
+        hotelId: user.hotelId,
+      },
+      include: {
+        room: {
+          select: {
+            roomNumber: true,
+          },
+        },
+        assignedTo: {
+          select: {
+            id: true,
+            fullName: true,
+          },
+        },
+      },
+    });
+
+    if (!task) {
+      throw new ApiError("Housekeeping task not found", 404);
+    }
+
+    if (task.status === "IN_REVIEW") {
+      throw new ApiError(
+        "Resolve the pending review before reassigning this task.",
+        409,
+      );
+    }
+
+    if (task.status === "DONE") {
+      throw new ApiError(
+        "Completed tasks cannot be reassigned.",
+        409,
+      );
+    }
+
+    if (
+      task.status !== "PENDING" &&
+      task.status !== "IN_PROGRESS"
+    ) {
+      throw new ApiError(
+        "This task cannot be reassigned in its current status.",
+        409,
+      );
+    }
+
+    if (task.assignedToUserId === assignedToUserId) {
+      throw new ApiError(
+        "This task is already assigned to that housekeeper.",
+        400,
+      );
+    }
+
+    const newAssignee = await prisma.user.findFirst({
+      where: {
+        id: assignedToUserId,
+        hotelId: user.hotelId,
+        role: "HOUSEKEEPING",
+        isActive: true,
+      },
+      select: {
+        id: true,
+        fullName: true,
+      },
+    });
+
+    if (!newAssignee) {
+      throw new ApiError(
+        "Select an active housekeeper from this hotel.",
+        400,
+      );
+    }
+
+    const notification = {
+      hotelId: user.hotelId,
+      userId: newAssignee.id,
+      title: "Housekeeping task reassigned",
+      message: `Room ${task.room.roomNumber} has been reassigned to you.`,
+      type: "TASK_ASSIGNED" as const,
+    };
+
+    const updatedTask = await prisma.$transaction(async (tx) => {
+      const updated = await tx.housekeepingTask.update({
+        where: { id: task.id },
+        data: { assignedToUserId: newAssignee.id },
+        include: {
+          assignedTo: {
+            select: {
+              id: true,
+              fullName: true,
+            },
+          },
+        },
+      });
+
+      await createNotification(
+        { ...notification, taskId: task.id },
+        tx,
+      );
+
+      await writeAuditLog(tx, {
+        hotelId: user.hotelId,
+        userId: user.userId,
+        action: "HOUSEKEEPING_TASK_REASSIGNED",
+        entityType: "housekeeping_task",
+        metadata: {
+          taskId: task.id,
+          roomId: task.roomId,
+          previousAssigneeId: task.assignedToUserId,
+          previousAssigneeName: task.assignedTo.fullName,
+          newAssigneeId: newAssignee.id,
+          newAssigneeName: newAssignee.fullName,
+          previousStatus: task.status,
+        },
+      });
+
+      return updated;
+    });
+
+    try {
+      await sendNotificationPush(notification);
+    } catch (error) {
+      console.error("Reassignment push notification failed:", error);
+    }
+
+    return Response.json({
+      message: "Housekeeping task reassigned successfully.",
+      task: updatedTask,
+    });
+  } catch (err) {
+    return handleRouteError(err);
+  }
+}

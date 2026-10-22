@@ -63,6 +63,28 @@
   font-size: 13px;
   font-weight: 600;
 }
+@media (max-width: 768px) {
+  .header {
+    margin-top: 22px;
+    flex-direction: column;
+    gap: 16px;
+    padding-bottom: 16px;
+    margin-bottom: 16px;
+  }
+
+  .role {
+    width: 100%;
+  }
+
+  .roleInfo {
+    flex: 1;
+    text-align: left;
+  }
+
+  .roleBadge {
+    flex-shrink: 0;
+  }
+}
 
 @media (max-width: 600px) {
   .header {
